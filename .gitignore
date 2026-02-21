@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# No se pueden subir base de datos massivos
+src/data/raw/colon_image_sets/colon_aca/*.jpeg
+src/data/raw/colon_image_sets/colon_n/*.jpeg
