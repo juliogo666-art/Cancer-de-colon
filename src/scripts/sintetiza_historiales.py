@@ -18,7 +18,7 @@ diagnostico = np.random.choice([0, 1], size=n_pacientes)
 # -------------------------------------------------------------------------------------------
 # 2. Generar Edad entre 50 y 69 años
 edad = np.random.normal(loc=60, scale=8, size=n_pacientes)
-edad = np.clip(edad, 30, 90).astype(int)  # Limitamos la edad entre 30 y 90 años
+edad = np.clip(edad, 50, 69).astype(int)
 
 # -------------------------------------------------------------------------------------------
 # 3. Generar Género
