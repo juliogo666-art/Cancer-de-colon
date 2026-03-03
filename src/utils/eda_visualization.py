@@ -5,10 +5,6 @@ import seaborn as sns
 
 
 def eda_datos_globales(df):
-    """
-    Genera las visualizaciones para el análisis exploratorio de datos (EDA)
-    del conjunto de datos globales (pacientes reales).
-    """
     st.header("Análisis exploratorio de datos globales")
 
     col1, col2 = st.columns(2)
@@ -222,10 +218,6 @@ def eda_datos_globales(df):
 
 
 def eda_datos_sinteticos(df):
-    """
-    Genera las visualizaciones para el análisis exploratorio del
-    dataset simulado (datos sintéticos de pacientes).
-    """
     st.header("Análisis exploratorio: datos simulados (sintéticos)")
 
     col1, col2 = st.columns(2)
@@ -379,10 +371,6 @@ def eda_datos_sinteticos(df):
 
 
 def eda_datos_combinados(df):
-    """
-    Genera un análisis exploratorio que integra y compara
-    los datos reales (globales) frente a los sintéticos (simulados).
-    """
     st.header("Análisis exploratorio: datos combinados")
 
     # --- 1. Análisis de riesgo ---
@@ -470,7 +458,7 @@ def eda_datos_combinados(df):
     df["Rango_Edad"] = pd.cut(
         df["Age"],
         bins=[0, 18, 40, 65, 100],
-        labels=["Menor", "Adulto Joven", "Adulto", "Senior"],
+        labels=["Adulto Joven", "Adulto", "Senior"],
     )
 
     # 'Derretimos' (melt) el dataset. Transformamos varias columnas de hábitos (ancho)

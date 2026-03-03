@@ -5,7 +5,7 @@ import os
 from src.scripts.data_cleaning import (
     limpiar_datos_globales,
     limpiar_datos_sinteticos,
-    combinar_datos,
+    combinar_datos_y_sintetizarlos,
 )
 from src.utils.eda_visualization import (
     eda_datos_globales,
@@ -97,7 +97,7 @@ def eda(base_path):
             df_s = limpiar_datos_sinteticos(df_s, file_path_sinteticos)
 
             # Combinar los datos limpios
-            df = combinar_datos(df_g, df_s, file_path_combinados)
+            df = combinar_datos_y_sintetizarlos(df_g, df_s, file_path_combinados)
 
             mostrar_vista_previa(df)
 

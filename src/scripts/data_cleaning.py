@@ -1,3 +1,5 @@
+from sys import path
+
 import pandas as pd
 import os
 import streamlit as st
@@ -105,96 +107,89 @@ def limpiar_datos_sinteticos(df, file_path_con_d):
         
     return df
 
-# --- 3. FUNCIÓN DE SINTETIZACIÓN DE RELLENO ---
-def combinar_y_sintetizar_faltantes(df_global, df_simulado):
-    # 1. Preparar df_simulado con nombres compatibles
+def limpiar_datos_globales_combinado(df):
+    # Asegurar tipos de datos básicos y eliminar nulos si existieran
+    df = df.dropna(subset=['Patient_ID'])
+    # Convertir variables categóricas a numéricas si es necesario para el ML futuro
+
+    if 'FOBT_Resultado_n' in df.columns and 'FOBT_Resultado (Sangre en heces)' not in df.columns:
+        df['FOBT_Resultado (Sangre en heces)'] = df['FOBT_Resultado_n'].map({1: 'Positive', 0: 'Negative'})
+    return df
+
+def limpiar_datos_sinteticos_com(df):
+    # En el simulador, 'Diagnostico' parece ser el target (0 o 1)
+    # Estandarizamos el resultado de sangre en heces a numérico
+    if 'FOBT_Resultado (Sangre en heces)' in df.columns:
+        df['FOBT_Resultado_n'] = df['FOBT_Resultado (Sangre en heces)'].map({'Positive': 1, 'Negative': 0}).fillna(0).astype(int)
+    return df
+
+def combinar_datos_y_sintetizarlos(df_global, df_simulado, output_dir):
+    df_global = df_global.copy()
+    df_simulado = df_simulado.copy()
+
+    df_glob_ext = limpiar_datos_globales_combinado(df_global)
+    df_sim_raw = limpiar_datos_sinteticos_com(df_simulado)
+
     mapeo = {
-        'Edad': 'Age', 
-        'Genero': 'Gender', 
-        'Fumador': 'Smoking',
-        'Consume_Alcohol': 'Alcohol_Use', 
-        'Obesidad': 'Obesity_Level',
-        'Componente_Hereditario': 'Genetic_Risk', 
-        'Diagnostico': 'Target_Severity_Score',
-        'FOBT_Resultado (Sangre en heces)': 'FOBT_n' # Estandarizamos nombre
+        'Edad': 'Age', 'Genero': 'Gender', 'Fumador': 'Smoking',
+        'Consume_Alcohol': 'Alcohol_Use', 'Obesidad': 'Obesity_Level',
+        'Componente_Hereditario': 'Genetic_Risk', 'Diagnostico': 'Target_Severity_Score'
     }
-    df_sim = df_simulado.rename(columns=mapeo).copy()
-    
-    # Convertimos el FOBT original del simulador a numérico si es string
-    if df_sim['FOBT_n'].dtype == 'object':
-        df_sim['FOBT_n'] = df_sim['FOBT_n'].map({'Positive': 1, 'Negative': 0}).fillna(0)
+    df_sim = df_sim_raw.rename(columns=mapeo).copy()
 
-    # --- A. RELLENAR DATOS GLOBALES PARA LOS 5.000 REGISTROS SIMULADOS ---
-    cols_global_faltantes = [c for c in df_global.columns if c not in df_sim.columns]
+    # --- A. RELLENAR COLUMNAS DEL GLOBAL EN EL SIMULADOR ---
     n_sim = len(df_sim)
-    
-    for col in cols_global_faltantes:
+    cols_faltantes_en_sim = [c for c in df_glob_ext.columns if c not in df_sim.columns]
+
+    for col in cols_faltantes_en_sim:
         if col == 'Country_Region':
-            paises_probs = df_global['Country_Region'].value_counts(normalize=True)
-            df_sim[col] = np.random.choice(paises_probs.index, size=n_sim, p=paises_probs.values)
+            probs = df_glob_ext['Country_Region'].value_counts(normalize=True)
+            df_sim[col] = np.random.choice(probs.index, size=n_sim, p=probs.values)
         elif col == 'Year':
-            df_sim[col] = np.random.choice(df_global['Year'].unique(), size=n_sim)
-        elif col == 'Cancer_Type':
-            df_sim[col] = 'Colon'
+            df_sim[col] = np.random.choice(df_glob_ext['Year'].unique(), size=n_sim)
+        elif col in ['Treatment_Cost_USD', 'Survival_Years', 'Air_Pollution']:
+            mu, sigma = df_glob_ext[col].mean(), df_glob_ext[col].std()
+            df_sim[col] = np.random.normal(mu, sigma, n_sim).round(2).clip(min=0)
         elif col == 'Cancer_Stage':
-            etapas_reales = [e for e in df_global['Cancer_Stage'].unique() if e != 'None']
+            etapas = ['Stage 0', 'Stage I', 'Stage II', 'Stage III', 'Stage IV']
             df_sim[col] = df_sim['Target_Severity_Score'].apply(
-                lambda x: np.random.choice(etapas_reales) if x > 0 else 'None'
+                lambda x: np.random.choice(etapas[2:]) if x > 5 else np.random.choice(etapas[:2])
             )
-        elif col in ['Air_Pollution', 'Treatment_Cost_USD', 'Survival_Years']:
-            mu, sigma = df_global[col].mean(), df_global[col].std()
-            df_sim[col] = np.random.normal(mu, sigma, n_sim).round(2)
-
-    # --- B. RELLENAR DATOS MÉDICOS PARA LOS 50.000 REGISTROS GLOBALES ---
-    df_glob_copy = df_global.copy()
-    n_glob = len(df_glob_copy)
-    
-    # Definimos qué columnas del simulador queremos "inventar" para el Global
-    # Usamos nombres limpios y numéricos
-    nuevas_cols_medicas = {
-        'FOBT_n': 'binario',
-        'CEA_Level_ng_mL (Marcador Tumoral)': 'float',
-        'Sedentarismo': 'binario',
-        'Diabetes_tipo_2': 'binario',
-        'Antecedentes_Familiares': 'binario',
-        'Dieta_rica_en_grasas_animales': 'binario'
-    }
-    
-    for col, tipo in nuevas_cols_medicas.items():
-        if col == 'FOBT_n':
-            # 80% prob de positivo si severidad > 5
-            df_glob_copy[col] = df_glob_copy['Target_Severity_Score'].apply(
-                lambda x: np.random.binomial(n=1, p=0.8) if x > 5 else np.random.binomial(n=1, p=0.05)
-            )
-        elif 'CEA_Level' in col:
-            df_glob_copy[col] = df_glob_copy['Target_Severity_Score'].apply(
-                lambda x: np.random.normal(12.0, 5.0) if x > 5 else np.random.normal(2.0, 1.0)
-            ).round(2).clip(lower=0.1)
         else:
-            # Factores de riesgo generales (30% de probabilidad base)
-            df_glob_copy[col] = np.random.binomial(n=1, p=0.3, size=n_glob)
+            df_sim[col] = 0
 
-    # --- C. UNIÓN FINAL ---
-    df_final = pd.concat([df_glob_copy, df_sim], axis=0, ignore_index=True)
+    # --- B. RELLENAR COLUMNAS DEL SIMULADOR EN EL GLOBAL ---
+    n_glob = len(df_glob_ext)
+    cols_que_vienen_del_sim = [c for c in df_sim.columns if c not in df_glob_ext.columns]
+
+    for col in cols_que_vienen_del_sim:
+        if 'CEA_Level' in col:
+            df_glob_ext[col] = df_glob_ext['Target_Severity_Score'].apply(
+                lambda x: np.random.normal(12.0, 4.0) if x > 6 else np.random.normal(2.0, 1.0)
+            ).round(2).clip(lower=0.1)
+        
+        elif col == 'FOBT_Resultado (Sangre en heces)':
+            # Generamos el STRING directamente para el Global basado en severidad
+            df_glob_ext[col] = df_glob_ext['Target_Severity_Score'].apply(
+                lambda x: 'Positive' if (x > 5 and np.random.rand() > 0.2) else 'Negative'
+            )
+        
+        elif col == 'FOBT_Resultado_n':
+            # Sincronizamos la numérica con la de texto que acabamos de crear arriba
+            df_glob_ext[col] = df_glob_ext['FOBT_Resultado (Sangre en heces)'].map({'Positive': 1, 'Negative': 0})
+
+        else:
+            # Otros factores binarios (Sedentarismo, etc.)
+            df_glob_ext[col] = np.random.binomial(n=1, p=0.3, size=n_glob)
+
+    # --- C. UNIÓN ---
+    df_final = pd.concat([df_glob_ext, df_sim], axis=0, ignore_index=True).fillna(0)
     
-    # Asegurar que no queden NaNs en las columnas nuevas por diferencias de nombres
-    df_final = df_final.fillna(0)
+    # Asegurar que el tipo de datos de la columna numérica sea int
+    if 'FOBT_Resultado_n' in df_final.columns:
+        df_final['FOBT_Resultado_n'] = df_final['FOBT_Resultado_n'].astype(int)
+
+    output_path = os.path.join(output_dir, 'datos_combinados_completos.csv')
+    df_final.to_csv(output_path, index=False)
     
     return df_final
-
-# --- 4. FUNCIÓN PRINCIPAL DE COMBINACIÓN ---
-def combinar_datos(df_global, df_simulado, output_dir):
-    # Ahora esta función devuelve 55.000 filas con datos en casi todas las columnas
-    df_combinado = combinar_y_sintetizar_faltantes(df_global, df_simulado)
-
-    # Identificador de origen
-    df_combinado['Is_Simulated'] = 0
-    # Los últimos n_sim registros son los simulados
-    df_combinado.iloc[-len(df_simulado):, df_combinado.columns.get_loc('Is_Simulated')] = 1
-
-    # Limpieza final de seguridad
-    df_combinado = df_combinado.fillna(0)
-    
-    # Guardar...
-    df_combinado.to_csv(os.path.join(output_dir, 'datos_combinados_limpios.csv'), index=False)
-    return df_combinado
