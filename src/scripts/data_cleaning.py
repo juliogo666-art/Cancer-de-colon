@@ -1,9 +1,9 @@
-from sys import path
-
 import pandas as pd
 import os
 import streamlit as st
 import numpy as np
+
+from src.scripts.sintetiza_historiales import sintetizar_historiales
 
 def limpiar_datos_globales(df, file_path_sin_d):
     df = df.copy()
@@ -107,89 +107,8 @@ def limpiar_datos_sinteticos(df, file_path_con_d):
         
     return df
 
-def limpiar_datos_globales_combinado(df):
-    # Asegurar tipos de datos básicos y eliminar nulos si existieran
-    df = df.dropna(subset=['Patient_ID'])
-    # Convertir variables categóricas a numéricas si es necesario para el ML futuro
-
-    if 'FOBT_Resultado_n' in df.columns and 'FOBT_Resultado (Sangre en heces)' not in df.columns:
-        df['FOBT_Resultado (Sangre en heces)'] = df['FOBT_Resultado_n'].map({1: 'Positive', 0: 'Negative'})
-    return df
-
-def limpiar_datos_sinteticos_com(df):
-    # En el simulador, 'Diagnostico' parece ser el target (0 o 1)
-    # Estandarizamos el resultado de sangre en heces a numérico
-    if 'FOBT_Resultado (Sangre en heces)' in df.columns:
-        df['FOBT_Resultado_n'] = df['FOBT_Resultado (Sangre en heces)'].map({'Positive': 1, 'Negative': 0}).fillna(0).astype(int)
-    return df
-
-def combinar_datos_y_sintetizarlos(df_global, df_simulado, output_dir):
+def combinar_datos_s_g (df_global, output_dir):
     df_global = df_global.copy()
-    df_simulado = df_simulado.copy()
+    df_global = sintetizar_historiales(df_global, output_dir)
 
-    df_glob_ext = limpiar_datos_globales_combinado(df_global)
-    df_sim_raw = limpiar_datos_sinteticos_com(df_simulado)
-
-    mapeo = {
-        'Edad': 'Age', 'Genero': 'Gender', 'Fumador': 'Smoking',
-        'Consume_Alcohol': 'Alcohol_Use', 'Obesidad': 'Obesity_Level',
-        'Componente_Hereditario': 'Genetic_Risk', 'Diagnostico': 'Target_Severity_Score'
-    }
-    df_sim = df_sim_raw.rename(columns=mapeo).copy()
-
-    # --- A. RELLENAR COLUMNAS DEL GLOBAL EN EL SIMULADOR ---
-    n_sim = len(df_sim)
-    cols_faltantes_en_sim = [c for c in df_glob_ext.columns if c not in df_sim.columns]
-
-    for col in cols_faltantes_en_sim:
-        if col == 'Country_Region':
-            probs = df_glob_ext['Country_Region'].value_counts(normalize=True)
-            df_sim[col] = np.random.choice(probs.index, size=n_sim, p=probs.values)
-        elif col == 'Year':
-            df_sim[col] = np.random.choice(df_glob_ext['Year'].unique(), size=n_sim)
-        elif col in ['Treatment_Cost_USD', 'Survival_Years', 'Air_Pollution']:
-            mu, sigma = df_glob_ext[col].mean(), df_glob_ext[col].std()
-            df_sim[col] = np.random.normal(mu, sigma, n_sim).round(2).clip(min=0)
-        elif col == 'Cancer_Stage':
-            etapas = ['Stage 0', 'Stage I', 'Stage II', 'Stage III', 'Stage IV']
-            df_sim[col] = df_sim['Target_Severity_Score'].apply(
-                lambda x: np.random.choice(etapas[2:]) if x > 5 else np.random.choice(etapas[:2])
-            )
-        else:
-            df_sim[col] = 0
-
-    # --- B. RELLENAR COLUMNAS DEL SIMULADOR EN EL GLOBAL ---
-    n_glob = len(df_glob_ext)
-    cols_que_vienen_del_sim = [c for c in df_sim.columns if c not in df_glob_ext.columns]
-
-    for col in cols_que_vienen_del_sim:
-        if 'CEA_Level' in col:
-            df_glob_ext[col] = df_glob_ext['Target_Severity_Score'].apply(
-                lambda x: np.random.normal(12.0, 4.0) if x > 6 else np.random.normal(2.0, 1.0)
-            ).round(2).clip(lower=0.1)
-        
-        elif col == 'FOBT_Resultado (Sangre en heces)':
-            # Generamos el STRING directamente para el Global basado en severidad
-            df_glob_ext[col] = df_glob_ext['Target_Severity_Score'].apply(
-                lambda x: 'Positive' if (x > 5 and np.random.rand() > 0.2) else 'Negative'
-            )
-        
-        elif col == 'FOBT_Resultado_n':
-            # Sincronizamos la numérica con la de texto que acabamos de crear arriba
-            df_glob_ext[col] = df_glob_ext['FOBT_Resultado (Sangre en heces)'].map({'Positive': 1, 'Negative': 0})
-
-        else:
-            # Otros factores binarios (Sedentarismo, etc.)
-            df_glob_ext[col] = np.random.binomial(n=1, p=0.3, size=n_glob)
-
-    # --- C. UNIÓN ---
-    df_final = pd.concat([df_glob_ext, df_sim], axis=0, ignore_index=True).fillna(0)
-    
-    # Asegurar que el tipo de datos de la columna numérica sea int
-    if 'FOBT_Resultado_n' in df_final.columns:
-        df_final['FOBT_Resultado_n'] = df_final['FOBT_Resultado_n'].astype(int)
-
-    output_path = os.path.join(output_dir, 'datos_combinados_completos.csv')
-    df_final.to_csv(output_path, index=False)
-    
-    return df_final
+    return df_global

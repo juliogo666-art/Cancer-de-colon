@@ -457,7 +457,7 @@ def eda_datos_combinados(df):
     # Agrupamos todas las edades brutas en rangos analíticos estandarizados
     df["Rango_Edad"] = pd.cut(
         df["Age"],
-        bins=[0, 18, 40, 65, 100],
+        bins=[0, 40, 65, 100],
         labels=["Adulto Joven", "Adulto", "Senior"],
     )
 

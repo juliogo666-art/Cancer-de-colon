@@ -2,6 +2,8 @@
 # Verion 1 - sintetiza historiales ficticios de pacientes
 ########################################################################################
 
+import os
+
 import pandas as pd
 import numpy as np
 
@@ -141,3 +143,71 @@ df_simulador.to_csv(
     "src/data/raw/historial_pacientes/historiales_sinteticos/pacientes_simulador_colon.csv",
     index=False,
 )
+
+def sintetizar_historiales(df_global, output_dir):
+    if 'Target_Severity_Score' in df_global.columns:
+        df_global['diagnostico'] = (df_global['Target_Severity_Score'] > 4).astype(int)
+    else:
+        # Si no hay score, asumimos una probabilidad base para no romper el código
+        df_global['diagnostico'] = np.random.binomial(1, 0.5, size=len(df_global))
+
+    # 2. Ahora sí, las probabilidades funcionarán porque 'diagnostico' tiene datos
+    n = len(df_global)
+    # sintetizar datos para las nuevas columnas
+    df_global['Dieta_rica_en_grasas_animales'] = np.random.binomial(n=1, p=0.3, size=len(df_global))
+
+    # Si está enfermo, 65% de probabilidad de ser sedentario. Si está sano, 40%.
+    prob_sedentarismo = np.where(df_global['diagnostico'] == 1, 0.65, 0.40)
+    df_global['Sedentarismo'] = np.random.binomial(n=1, p=prob_sedentarismo, size=len(df_global))
+
+    # La diabetes aumenta el riesgo, pero no es tan común.
+    # Si está enfermo, 25% de probabilidad de tener diabetes. Si está sano, 10%.
+    prob_diabetes = np.where(df_global['diagnostico'] == 1, 0.25, 0.10)
+    df_global['Diabetes_tipo_2'] = np.random.binomial(n=1, p=prob_diabetes, size=len(df_global))
+
+    prob_familiar = np.where(df_global['diagnostico'] == 1, 0.25, 0.10)
+    df_global['Antecedentes_Familiares'] = np.random.binomial(n=1, p=prob_familiar, size=len(df_global))
+
+    # 2. Componente hereditario (< 10% de todos los casos)
+    # Le daremos un 8% a los enfermos y un 2% a los sanos.
+    prob_hereditario = np.where(df_global['diagnostico'] == 1, 0.08, 0.02)
+    df_global['Componente_Hereditario'] = np.random.binomial(n=1, p=prob_hereditario, size=len(df_global))
+
+    # 3. Síndromes predisponentes (< 5% de todos los casos)
+    # Le daremos un 4% a los enfermos y un 0.5% a los sanos.
+    prob_sindromes = np.where(df_global['diagnostico'] == 1, 0.04, 0.005)
+    df_global['Sindromes_Predisponentes'] = np.random.binomial(n=1, p=prob_sindromes, size=len(df_global))
+
+    # 4. Enfermedades Inflamatorias Intestinales (EII: Crohn, Colitis Ulcerosa)
+    # El texto dice: < 1% de todos los cánceres.
+    # Le daremos un 0.9% a los enfermos y un 0.4% a los sanos.
+    prob_eii = np.where(df_global['diagnostico'] == 1, 0.009, 0.004)
+    df_global['Enfermedad_Inflamatoria_Intestinal'] = np.random.binomial(n=1, p=prob_eii, size=len(df_global))
+
+    # -------------------------------------------------------------------------------------------
+    # 5. Pruebas Médicas (La clave del diagnóstico temprano para tu simulador)
+
+    # Sangre Oculta en Heces (FOBT - Prueba General):
+    # Si está enfermo, 85% probabilidad de positivo. Si está sano, solo 5% (falsos positivos comunes)
+    fobt_prob = np.where(df_global['diagnostico'] == 1, 0.85, 0.05)
+    df_global['FOBT_Resultado_n'] = np.random.binomial(n=1, p=fobt_prob, size=len(df_global))
+    df_global['FOBT_Resultado (Sangre en heces)'] = df_global['FOBT_Resultado_n'].map({1: 'Positive', 0: 'Negative'})
+
+    # Marcador Tumoral CEA (Prueba Tumoral):
+    # Lo normal es < 5 ng/mL.
+    cea_level = np.where(
+        df_global['diagnostico'] == 1,
+        np.random.normal(
+            loc=8.5, scale=4.0, size=len(df_global)
+        ),  # Enfermos: valores más altos
+        np.random.normal(loc=2.5, scale=1.0, size=len(df_global)),
+    )  # Sanos: valores bajos
+    cea_level = np.clip(cea_level, 0.1, 50.0).round(2)
+    df_global['CEA_Level_ng_mL (Marcador Tumoral)'] = cea_level
+
+    df_global['FOBT_Resultado_n'] = df_global['FOBT_Resultado_n'].astype(int)
+
+    output_path = os.path.join(output_dir, 'datos_combinados_global_extendido.csv')
+    df_global.to_csv(output_path, index=False)
+
+    return df_global
