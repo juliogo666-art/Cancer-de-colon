@@ -6,16 +6,16 @@ import seaborn as sns
 
 def eda_datos_globales(df):
     """
-    Genera las visualizaciones para el Análisis Exploratorio de Datos (EDA)
+    Genera las visualizaciones para el análisis exploratorio de datos (EDA)
     del conjunto de datos globales (pacientes reales).
     """
-    st.header("Análisis Exploratorio de Datos Globales")
+    st.header("Análisis exploratorio de datos globales")
 
     col1, col2 = st.columns(2)
 
     with col1:
         # --- 1. MATRIZ DE CORRELACIÓN ---
-        st.subheader("Matriz de Correlación General")
+        st.subheader("Matriz de correlación general")
         # Filtramos solo las columnas numéricas para poder calcular la correlación
         numeric_cols = df.select_dtypes(include=["number"]).columns
         if not numeric_cols.empty:
@@ -32,7 +32,7 @@ def eda_datos_globales(df):
 
     with col2:
         # --- 2. DISTRIBUCIÓN DE EDADES ---
-        st.subheader("Distribución de Edades por Tiempo")
+        st.subheader("Distribución de edades por tiempo")
 
         # Obtenemos los años disponibles y creamos un selector para filtrar el gráfico
         años_disponibles = sorted(df["Year"].unique().tolist())
@@ -52,12 +52,12 @@ def eda_datos_globales(df):
                 multiple="stack",
                 ax=ax_hist,
             )
-            ax_hist.set_title("Distribución de Edades: Todos los años (Apilados)")
+            ax_hist.set_title("Distribución de edades: Todos los años (Apilados)")
         else:
             # Si se selecciona un año particular, mostramos el histograma básico de ese año
             df_año = df[df["Year"] == int(año_sel)]
             sns.histplot(data=df_año, x="Age", color="skyblue", kde=True, ax=ax_hist)
-            ax_hist.set_title(f"Distribución de Edades en el año {año_sel}")
+            ax_hist.set_title(f"Distribución de edades en el año {año_sel}")
 
         st.pyplot(fig_hist)
 
@@ -66,7 +66,7 @@ def eda_datos_globales(df):
 
     with col1:
         # --- 3. PROPORCIÓN DE GÉNERO POR PAÍS ---
-        st.subheader("Género por País")
+        st.subheader("Género por país")
         pais_sel = st.selectbox(
             "País para el gráfico de queso:", df["Country_Region"].unique()
         )
@@ -87,7 +87,7 @@ def eda_datos_globales(df):
 
     with col2:
         # --- 4. EDAD VS REGIÓN (BOXPLOT) ---
-        st.subheader("Edad por Región")
+        st.subheader("Edad por región")
         fig_box, ax_box = plt.subplots()
         # Generamos un boxplot para ver la dispersión de las edades en cada región y buscar posibles valores atípicos
         sns.boxplot(data=df, x="Age", y="Country_Region", palette="Set2", ax=ax_box)
@@ -98,7 +98,7 @@ def eda_datos_globales(df):
 
     with col1:
         # --- 5. DEMOGRAFÍA FILTRADA POR CONTAMINACIÓN ---
-        st.subheader("Distribución Demográfica por Ciudad y Contaminación")
+        st.subheader("Distribución demográfica por ciudad y contaminación")
 
         col_a, col_b = st.columns(2)
         with col_a:
@@ -151,7 +151,7 @@ def eda_datos_globales(df):
 
     with col2:
         # --- 6. FACTORES DE RIESGO POR PAÍS (GRÁFICO PASTEL) ---
-        st.subheader("Composición de Factores de Riesgo por País")
+        st.subheader("Composición de factores de riesgo por país")
 
         pais_riesgo = st.selectbox(
             "Selecciona el país de interés:",
@@ -180,7 +180,7 @@ def eda_datos_globales(df):
     st.divider()
 
     # --- 7. FACTORES DE RIESGO (HISTOGRAMA PORCENTUAL) ---
-    st.subheader("Distribución Porcentual Relativa de Factores de Riesgo")
+    st.subheader("Distribución porcentual relativa de factores de riesgo")
 
     pais_riesgo_bar = st.selectbox(
         "Selecciona un país (Gráfico Barras):",
@@ -214,7 +214,7 @@ def eda_datos_globales(df):
         )
 
     ax_riesgo_bar.set_title(f"Peso de los diferentes riesgos en {pais_riesgo_bar}")
-    ax_riesgo_bar.set_ylabel("Importancia Relativa (%)")
+    ax_riesgo_bar.set_ylabel("Importancia relativa (%)")
     ax_riesgo_bar.set_ylim(
         0, df_pais_pct.max() + 10
     )  # Damos espacio extra arriba para la etiqueta
@@ -223,16 +223,16 @@ def eda_datos_globales(df):
 
 def eda_datos_sinteticos(df):
     """
-    Genera las visualizaciones para el Análisis Exploratorio del
-    Dataset Simulado (datos sintéticos de pacientes).
+    Genera las visualizaciones para el análisis exploratorio del
+    dataset simulado (datos sintéticos de pacientes).
     """
-    st.header("Análisis Exploratorio: Datos Simulados (Sintéticos)")
+    st.header("Análisis exploratorio: datos simulados (sintéticos)")
 
     col1, col2 = st.columns(2)
 
     with col1:
         # --- 1. MATRIZ DE CORRELACIÓN SINTÉTICA ---
-        st.subheader("Correlación de Factores")
+        st.subheader("Correlación de factores")
         # Filtramos solo numéricas y quitamos ID si existe
         df_num = df.select_dtypes(include=["number"])
         if not df_num.empty:
@@ -250,7 +250,7 @@ def eda_datos_sinteticos(df):
 
     with col2:
         # --- 2. DIAGNÓSTICO VS GÉNERO ---
-        st.subheader("Frecuencia de Diagnóstico por Género")
+        st.subheader("Frecuencia de diagnóstico por género")
         # Un countplot que nos muestra cómo balanceó el simulador los pacientes enfermos vs sanos
         fig_diag, ax_diag = plt.subplots(figsize=(10, 8))
         sns.countplot(
@@ -265,7 +265,7 @@ def eda_datos_sinteticos(df):
 
     with col3:
         # --- 3. EDAD Y DIAGNÓSTICO ---
-        st.subheader("Distribución de Edad según Estado")
+        st.subheader("Distribución de edad según estado")
         estado = st.radio(
             "Filtro de visualización por estado:",
             ["Todos", "Sanos (0)", "Positivos (1)"],
@@ -296,7 +296,7 @@ def eda_datos_sinteticos(df):
 
     with col4:
         # --- 4. RIESGO HEREDITARIO ---
-        st.subheader("Riesgo Genético Hereditario por Género")
+        st.subheader("Riesgo genético hereditario por género")
         # Usamos barplot para ver el porcentaje/media de riesgo hereditario
         fig_gen, ax_gen = plt.subplots(figsize=(10, 6))
         # Verifica si hay algún sesgo de riesgo genético artificial por género en los datos sintéticos
@@ -309,7 +309,7 @@ def eda_datos_sinteticos(df):
     st.divider()
 
     # --- 5. PREVALENCIA DE FACTORES DE RIESGO (HISTOGRAMA) ---
-    st.subheader("Prevalencia de Hábitos y Factores de Riesgo Simulado")
+    st.subheader("Prevalencia de hábitos y factores de riesgo simulado")
 
     factores_clave = [
         "Fumador",
@@ -338,14 +338,14 @@ def eda_datos_sinteticos(df):
             fontweight="bold",
         )
 
-    ax_f.set_ylabel("Aparición en Pacientes Simulados (%)")
+    ax_f.set_ylabel("Aparición en pacientes simulados (%)")
     ax_f.set_title("Frecuencia de factores de riesgo introducidos en la simulación")
     st.pyplot(fig_factores)
 
     st.divider()
 
     # --- 6. MARCADORES MÉDICOS VS DIAGNÓSTICO ---
-    st.subheader("Resultados de Pruebas Médicas frente a Diagnósticos")
+    st.subheader("Resultados de pruebas médicas frente a diagnósticos")
     col5, col6 = st.columns(2)
 
     with col5:
@@ -359,11 +359,11 @@ def eda_datos_sinteticos(df):
             palette="Set2",
             ax=ax_cea,
         )
-        ax_cea.set_title("Relación de Marcador Tumoral CEA con Diagnóstico")
+        ax_cea.set_title("Relación de marcador tumoral CEA con diagnóstico")
         st.pyplot(fig_cea)
 
     with col6:
-        st.write("**Prevalencia de Falsos/Verdaderos en Test Sangre Oculta (FOBT)**")
+        st.write("**Prevalencia de falsos/verdaderos en test sangre oculta (FOBT)**")
         fobt_counts = df["FOBT_Resultado (Sangre en heces)"].value_counts()
         fig_fobt, ax_fobt = plt.subplots()
         # Mostramos la proporción total de pruebas de heces positivas vs negativas generadas
@@ -380,10 +380,10 @@ def eda_datos_sinteticos(df):
 
 def eda_datos_combinados(df):
     """
-    Genera un Análisis Exploratorio que integra y compara
-    los datos reales (Globales) frente a los Sintéticos (Simulados).
+    Genera un análisis exploratorio que integra y compara
+    los datos reales (globales) frente a los sintéticos (simulados).
     """
-    st.header("Análisis Exploratorio: Datos Combinados")
+    st.header("Análisis exploratorio: datos combinados")
 
     # --- 1. Análisis de riesgo ---
     st.subheader("Heatmap de Correlación Integrada de Factores Médicos")
@@ -464,7 +464,7 @@ def eda_datos_combinados(df):
     st.divider()
 
     # --- BLOQUE 3: IMPACTO DE LOS FACTORES CLÍNICOS ---
-    st.subheader("4. Análisis de Factores de Riesgo por Grupos de Edad")
+    st.subheader("4. Análisis de factores de riesgo por grupos de edad")
 
     # Agrupamos todas las edades brutas en rangos analíticos estandarizados
     df["Rango_Edad"] = pd.cut(
@@ -498,7 +498,7 @@ def eda_datos_combinados(df):
     st.divider()
 
     # --- 4. TABLA RESUMEN GENERAL ---
-    st.subheader("Resumen Ejecutivo (Medias Comparativas)")
+    st.subheader("Resumen ejecutivo (medias comparativas)")
     # Muestra una tabla comparando la media de cada riesgo entre el mundo real vs la simulación
     resumen = df.groupby("Origen")[factores + ["Target_Severity_Score"]].mean()
     st.table(resumen)
