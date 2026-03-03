@@ -47,7 +47,7 @@ def eda(base_path):
         "Navegación",
         [
             "1. Datos globales",
-            "2. Datos simulados (Próximamente)",
+            "2. Datos simulados",
             "3. Datos combinados",
         ],
     )
@@ -69,7 +69,7 @@ def eda(base_path):
             st.error("No se encuentra el archivo de datos globales. Verifica la ruta.")
 
     # 2. Análisis de datos simulados
-    elif menu == "2. datos simulados (Próximamente)":
+    elif menu == "2. Datos simulados":
         st.header("Análisis de datos simulados")
 
         if os.path.exists(file_path_sinteticos):
@@ -85,7 +85,7 @@ def eda(base_path):
             st.error("No se encuentra el archivo CSV simulado. Verifica la ruta.")
 
     # 3. Análisis de Datos Combinados
-    elif menu == "3. Datos Combinados":
+    elif menu == "3. Datos combinados":
         st.header("Análisis de Datos Combinados")
 
         if os.path.exists(file_path_globales) and os.path.exists(file_path_sinteticos):
