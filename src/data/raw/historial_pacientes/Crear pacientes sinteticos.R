@@ -1,5 +1,5 @@
 # Leer CSV
-ruta <- "src/data/raw/historial_pacientes/datos_combinados_completos.csv"
+ruta <- "datos_combinados_completos.csv"
 datos <- read.csv(ruta, stringsAsFactors = FALSE)
 
 
