@@ -1,5 +1,5 @@
 # Leer CSV
-ruta <- "datos_combinados_completos.csv"
+ruta <- "datos_combinados_global_extendido_2.csv"
 datos <- read.csv(ruta, stringsAsFactors = FALSE)
 
 
@@ -7,8 +7,8 @@ n <- nrow(datos)
 
 # Listas de nombres
 nombres_h <- c("Juan","Carlos","Pedro","David","Luis","Javier")
-nombres_m <- c("María","Lucía","Ana","Laura","Carmen","Elena")
-apellidos <- c("García","Martínez","López","Sánchez","Pérez","Gómez")
+nombres_m <- c("Maria","Lucia","Ana","Laura","Carmen","Elena")
+apellidos <- c("Garcia","Martinez","Lopez","Sanchez","Perez","Gomez")
 
 # Nombre según Gender existente
 datos$nombre <- ifelse(

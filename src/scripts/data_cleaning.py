@@ -9,7 +9,6 @@ def limpiar_datos_globales(df, file_path_sin_d):
     df = df.copy()
     
     # 1. Eliminar columnas que realmente no sirven
-    df = df.drop(columns=['Cancer_Type'], errors='ignore')
     df = df.dropna()
 
     # 2. CREAR NUEVAS COLUMNAS (Sin tocar las originales)
@@ -19,9 +18,9 @@ def limpiar_datos_globales(df, file_path_sin_d):
     df['Gender_n'] = df['Gender'].map(gender_map)
 
     # País numérico -> Country_n
-    paises = df['Country_Region'].unique()
-    country_map = {pais: i+1 for i, pais in enumerate(paises)}
-    df['Country_n'] = df['Country_Region'].map(country_map)
+    # paises = df['Country_Region'].unique()
+    # country_map = {pais: i+1 for i, pais in enumerate(paises)}
+    # df['Country_n'] = df['Country_Region'].map(country_map)
 
     # Etapa numérica -> Stage_n
     stage_map = {

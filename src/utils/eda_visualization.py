@@ -376,30 +376,68 @@ def eda_datos_combinados(df):
     # --- 1. Análisis de riesgo ---
     st.subheader("Heatmap de Correlación Integrada de Factores Médicos")
 
+    df_numeric = df.copy()
+
     # Adaptación: Para calcular correlaciones homogéneas, primero numerizamos
     # la columna de género solo si es categórica y no ha sido convertida aún
     if "Gender" in df.columns:
         gender_map = {"Male": 0, "Female": 1, "Other": 2}
         df["Gender_n"] = df["Gender"].map(gender_map).fillna(0)
 
-    # Variables estandarizadas que deberían estar presentes en ambos datasets compartidos
-    cols_estudio = [
-        "Age",
-        "Gender_n",
-        "Smoking",
-        "Alcohol_Use",
-        "Obesity_Level",
-        "Genetic_Risk",
-        "Target_Severity_Score",  # la métrica resultante de severidad del caso
-    ]
+
     # Calculamos la correlación general combinando las dos naturalezas de los datos
-    matriz_corr = df[cols_estudio].corr(numeric_only=True)
-    fig_corr, ax_corr = plt.subplots(figsize=(10, 8))
-    sns.heatmap(matriz_corr, annot=True, cmap="coolwarm", fmt=".2f", ax=ax_corr)
-    st.pyplot(fig_corr)
-    st.caption(
-        "Interpretación: Los valores cercanos a 1 indican una relación fuerte entre el hábito y la severidad/diagnóstico."
+    matriz_corr = df_numeric.select_dtypes(include=['number']).corr()
+
+    num_cols = len(matriz_corr.columns)
+    fig_size = max(10, num_cols * 0.8)
+
+    fig_corr, ax_corr = plt.subplots(figsize=(fig_size, fig_size * 0.7))
+
+    # 5. Dibujamos el heatmap
+    sns.heatmap(
+        matriz_corr, 
+        annot=True,          # Muestra los números
+        cmap="coolwarm",     # Color de azul (frío) a rojo (calor)
+        fmt=".2f",           # Dos decimales
+        ax=ax_corr,
+        annot_kws={"size": 8} # Tamaño de letra pequeño para que quepan todos
     )
+    plt.xticks(rotation=45, ha='right') # Rotamos nombres de columnas para que no se pisen
+    st.pyplot(fig_corr)
+
+    st.caption(
+        f"Se están analizando {num_cols} variables numéricas del dataset. "
+        "Las variables de texto (nombres, identificadores) han sido omitidas por no ser cuantitativas."
+    )
+    st.divider()
+
+    # --- SECCIÓN RANKING COMPLETO ---
+    st.subheader("Ranking de Correlaciones (De mejor a peor)")
+
+    # Transformamos la matriz en una serie de parejas
+    full_ranking = matriz_corr.unstack()
+    
+    # Convertimos a DataFrame para manipularlo mejor
+    ranking_df = full_ranking.reset_index()
+    ranking_df.columns = ['Variable A', 'Variable B', 'Correlacion']
+
+    # LIMPIEZA:
+    # 1. Quitamos la autocorrelación (A == B)
+    ranking_df = ranking_df[ranking_df['Variable A'] != ranking_df['Variable B']]
+    
+    # 2. Quitamos duplicados (A-B vs B-A)
+    ranking_df['temp'] = ranking_df.apply(lambda x: "-".join(sorted([x['Variable A'], x['Variable B']])), axis=1)
+    ranking_df = ranking_df.drop_duplicates('temp').drop(columns=['temp'])
+
+    # 3. ORDENAMOS de mejor a peor usando el valor absoluto
+    ranking_df['Fuerza'] = ranking_df['Correlacion'].abs()
+    ranking_df = ranking_df.sort_values(by='Fuerza', ascending=False).drop(columns=['Fuerza'])
+
+    # 4. FORMATEO SIMPLE: Redondeamos a 4 decimales
+    ranking_df['Correlacion'] = ranking_df['Correlacion'].round(4)
+
+    # Mostramos la tabla normal (solo las columnas de las variables y el resultado)
+    st.dataframe(ranking_df) # st.table es para tablas estáticas normales, st.dataframe si quieres que se pueda hacer scroll
 
     st.divider()
 
@@ -482,11 +520,3 @@ def eda_datos_combinados(df):
     )
     ax_fact.set_title("Dispersión de los hábitos perjudiciales categorizado por edad")
     st.pyplot(fig_fact)
-
-    st.divider()
-
-    # --- 4. TABLA RESUMEN GENERAL ---
-    st.subheader("Resumen ejecutivo (medias comparativas)")
-    # Muestra una tabla comparando la media de cada riesgo entre el mundo real vs la simulación
-    resumen = df.groupby("Origen")[factores + ["Target_Severity_Score"]].mean()
-    st.table(resumen)
