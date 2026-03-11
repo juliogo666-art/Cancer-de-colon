@@ -145,6 +145,12 @@ df_simulador.to_csv(
 )
 
 def sintetizar_historiales(df_global, output_dir):
+
+    df_global = df_global.copy()
+
+    df_global['City'] = 'Barcelona'
+    df_global['Country'] = 'Spain'
+
     if 'Target_Severity_Score' in df_global.columns:
         df_global['diagnostico'] = (df_global['Target_Severity_Score'] > 4).astype(int)
     else:
@@ -207,7 +213,7 @@ def sintetizar_historiales(df_global, output_dir):
 
     df_global['FOBT_Resultado_n'] = df_global['FOBT_Resultado_n'].astype(int)
 
-    output_path = os.path.join(output_dir, 'datos_combinados_global_extendido.csv')
+    output_path = os.path.join(output_dir, 'datos_combinados_global_extendido_3.csv')
     df_global.to_csv(output_path, index=False)
 
     return df_global

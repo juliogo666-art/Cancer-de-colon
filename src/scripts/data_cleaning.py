@@ -7,7 +7,11 @@ from src.scripts.sintetiza_historiales import sintetizar_historiales
 
 def limpiar_datos_globales(df, file_path_sin_d):
     df = df.copy()
-    
+    if 'Cancer_Type' in df.columns:
+        df = df[df['Cancer_Type'] == 'Colon']
+        # Una vez filtrado, ya podemos eliminar la columna porque todos son 'Colon'
+        # df = df.drop(columns=['Cancer_Type'])
+
     # 1. Eliminar columnas que realmente no sirven
     df = df.dropna()
 
@@ -16,11 +20,6 @@ def limpiar_datos_globales(df, file_path_sin_d):
     # Género numérico -> Gender_n
     gender_map = {'Male': 0, 'Female': 1, 'Other': 2}
     df['Gender_n'] = df['Gender'].map(gender_map)
-
-    # País numérico -> Country_n
-    # paises = df['Country_Region'].unique()
-    # country_map = {pais: i+1 for i, pais in enumerate(paises)}
-    # df['Country_n'] = df['Country_Region'].map(country_map)
 
     # Etapa numérica -> Stage_n
     stage_map = {
@@ -42,6 +41,8 @@ def limpiar_datos_globales(df, file_path_sin_d):
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
         elif 'float' in str(df[col].dtype):
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.0).astype(float)
+
+    df = df.drop(columns=['Country_Region'])
 
     # 4. Guardado del CSV con las nuevas columnas incluidas
     directorio_destino = os.path.dirname(file_path_sin_d)

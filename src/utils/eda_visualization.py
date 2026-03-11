@@ -441,53 +441,53 @@ def eda_datos_combinados(df):
 
     st.divider()
 
-    # --- BLOQUE 2: COMPARATIVA POR ORIGEN DE DATOS ---
-    # Creamos una columna temporal para identificar de dónde viene cada fila
-    # (El simulador no tiene 'Country_Region', así que lo usamos para distinguir)
-    df["Origen"] = df["Country_Region"].apply(
-        lambda x: "Global" if pd.notnull(x) and x != 0 else "Simulador"
-    )
+    # # --- BLOQUE 2: COMPARATIVA POR ORIGEN DE DATOS ---
+    # # Creamos una columna temporal para identificar de dónde viene cada fila
+    # # (El simulador no tiene 'Country_Region', así que lo usamos para distinguir)
+    # df["Origen"] = df["Country_Region"].apply(
+    #     lambda x: "Global" if pd.notnull(x) and x != 0 else "Simulador"
+    # )
 
-    col1, col2 = st.columns(2)
+    # col1, col2 = st.columns(2)
 
-    with col1:
-        st.subheader("Distribución de Severidad por Origen")
-        fig_sev, ax_sev = plt.subplots()
-        # El gráfico KDE es ideal para superponer curvas y ver
-        # si los datos simulados tienen el mismo perfil de severidad clínica que la realidad
-        sns.kdeplot(
-            data=df,
-            x="Target_Severity_Score",
-            hue="Origen",
-            fill=True,
-            common_norm=False,
-            ax=ax_sev,
-        )
-        ax_sev.set_title("Comparativa: Simulador vs Realidad")
-        st.pyplot(fig_sev)
-        st.write(
-            "Útil para validar si el simulador refleja de forma realista la tasa de severidad global."
-        )
+    # with col1:
+    #     st.subheader("Distribución de Severidad por Origen")
+    #     fig_sev, ax_sev = plt.subplots()
+    #     # El gráfico KDE es ideal para superponer curvas y ver
+    #     # si los datos simulados tienen el mismo perfil de severidad clínica que la realidad
+    #     sns.kdeplot(
+    #         data=df,
+    #         x="Target_Severity_Score",
+    #         hue="Origen",
+    #         fill=True,
+    #         common_norm=False,
+    #         ax=ax_sev,
+    #     )
+    #     ax_sev.set_title("Comparativa: Simulador vs Realidad")
+    #     st.pyplot(fig_sev)
+    #     st.write(
+    #         "Útil para validar si el simulador refleja de forma realista la tasa de severidad global."
+    #     )
 
-    with col2:
-        st.subheader("3. Perfil de Edad y Estilo de Vida")
-        # Gráfico de burbujas: Edad vs Severidad, tamaño por Obesidad
-        fig_scat, ax_scat = plt.subplots()
-        # Extraer una muestra aleatoria prevendrá un colapso visual si el registro conjunto es enorme
-        sample_df = df.sample(n=min(1000, len(df)))
-        # Gráfico de puntos multivariable (Edad en X, Severidad en Y, Nivel de obesidad como tamaño)
-        sns.scatterplot(
-            data=sample_df,
-            x="Age",
-            y="Target_Severity_Score",
-            hue="Origen",
-            size="Obesity_Level",
-            alpha=0.5,
-            ax=ax_scat,
-        )
-        st.pyplot(fig_scat)
+    # with col2:
+    #     st.subheader("3. Perfil de Edad y Estilo de Vida")
+    #     # Gráfico de burbujas: Edad vs Severidad, tamaño por Obesidad
+    #     fig_scat, ax_scat = plt.subplots()
+    #     # Extraer una muestra aleatoria prevendrá un colapso visual si el registro conjunto es enorme
+    #     sample_df = df.sample(n=min(1000, len(df)))
+    #     # Gráfico de puntos multivariable (Edad en X, Severidad en Y, Nivel de obesidad como tamaño)
+    #     sns.scatterplot(
+    #         data=sample_df,
+    #         x="Age",
+    #         y="Target_Severity_Score",
+    #         hue="Origen",
+    #         size="Obesity_Level",
+    #         alpha=0.5,
+    #         ax=ax_scat,
+    #     )
+    #     st.pyplot(fig_scat)
 
-    st.divider()
+    # st.divider()
 
     # --- BLOQUE 3: IMPACTO DE LOS FACTORES CLÍNICOS ---
     st.subheader("4. Análisis de factores de riesgo por grupos de edad")

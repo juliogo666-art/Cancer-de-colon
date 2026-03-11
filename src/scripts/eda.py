@@ -43,7 +43,7 @@ def eda(base_path):
     file_path_combinados = ruta_historial
 
     file_path_final = os.path.join(
-        ruta_historial, "historiales_sinteticos", "datos_combinados_global_extendido_2.csv"
+        ruta_historial, "datos_combinados_global_extendido_3.csv"
     )
 
     # Menú lateral para navegación
@@ -100,21 +100,26 @@ def eda(base_path):
                 st.write("Generando gráficos...")
                 eda_datos_combinados(df_combinados)
 
-        elif os.path.exists(file_path_globales) and os.path.exists(file_path_sinteticos):
-            # Cargar y limpiar ambos datasets
-            df_g = pd.read_csv(file_path_globales)
-
-            df_g = limpiar_datos_globales(df_g, file_path_globales)
-
-            # Combinar los datos limpios
-            df = combinar_datos_s_g(df_g, file_path_combinados)
-
-            mostrar_vista_previa(df)
-
-            with st.container():
-                st.write("Generando gráficos...")
-                eda_datos_combinados(df)
         else:
-            st.error(
-                "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
-            )
+            if os.path.exists(file_path_globales) and os.path.exists(file_path_sinteticos):
+                # Cargar y limpiar ambos datasets
+                df_g = pd.read_csv(file_path_globales)
+
+                df_g = limpiar_datos_globales(df_g, file_path_globales)
+
+                # Combinar los datos limpios
+                df = combinar_datos_s_g(df_g, file_path_combinados)
+
+                mostrar_vista_previa(df)
+
+                with st.container():
+                    st.write("Generando gráficos...")
+                    eda_datos_combinados(df)
+            else:
+                st.error(
+                    "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
+                )
+    else:
+        st.error(
+            "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
+        )
