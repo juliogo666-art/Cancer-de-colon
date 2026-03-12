@@ -569,5 +569,80 @@ def eda_datos_kaggle(df):
         plt.ylabel("Cantidad de Pacientes")
         st.pyplot(fig_bar)
 
-def eda_datos_Kaggle_f():
-    return
+def eda_datos_Kaggle_f(df):
+    st.title("EDA: Análisis de Datos Finales")
+    
+    # --- 1. HEATMAP DE CORRELACIONES ---
+    st.subheader("1. Mapa de Calor de Correlaciones")
+    # Filtramos solo columnas numéricas y eliminamos las que no aportan al heatmap (IDs, etc.)
+    cols_to_drop = ['Patient_ID', 'Unnamed: 0']
+    df_numeric = df.select_dtypes(include=['number']).drop(columns=[c for c in cols_to_drop if c in df.columns])
+    
+    fig_heat, ax_heat = plt.subplots(figsize=(16, 12))
+    corr = df_numeric.corr()
+    # Usamos annot=True para ver los valores y un mapa de color divergente
+    sns.heatmap(corr, annot=True, fmt=".2f", cmap='RdBu_r', center=0, ax=ax_heat, annot_kws={"size": 7})
+    plt.title("Matriz de Correlación Completa")
+    st.pyplot(fig_heat)
+
+    # --- 2. ESTADO DEL CÁNCER: CONTEO Y EDADES ---
+    st.subheader("2. Estado del Cáncer y Distribución de Edad")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Distribución por Estado**")
+        fig_count, ax_count = plt.subplots()
+        # Mapeo inverso para que las etiquetas sean legibles
+        stage_labels = {0: 'Localized', 1: 'Metastatic', 2: 'Regional'}
+        temp_df = df.copy()
+        temp_df['Cancer_Stage_Label'] = temp_df['Cancer_Stage'].map(stage_labels)
+        
+        sns.countplot(data=temp_df, x='Cancer_Stage_Label', palette='viridis', ax=ax_count)
+        plt.ylabel("Número de Pacientes")
+        st.pyplot(fig_count)
+        
+    with col2:
+        st.write("**Edades por Estado**")
+        fig_box, ax_box = plt.subplots()
+        sns.boxplot(data=temp_df, x='Cancer_Stage_Label', y='Age', palette='viridis', ax=ax_box)
+        st.pyplot(fig_box)
+
+    # --- 3. MORTALIDAD ---
+    st.subheader("3. Análisis de Mortalidad")
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        st.write("**Proporción de Mortalidad**")
+        mort_counts = df['Mortality'].value_counts()
+        fig_pie, ax_pie = plt.subplots()
+        ax_pie.pie(mort_counts, labels=['Vive', 'Fallecido'], autopct='%1.1f%%', startangle=90, colors=['#66b3ff','#ff9999'])
+        st.pyplot(fig_pie)
+        
+    with col4:
+        st.write("**Mortalidad por Género (0:M, 1:F)**")
+        fig_mort_gen, ax_mort_gen = plt.subplots()
+        sns.countplot(data=df, x='Gender', hue='Mortality', palette='magma', ax=ax_mort_gen)
+        plt.legend(title='Mortalidad', labels=['Vive', 'Fallecido'])
+        st.pyplot(fig_mort_gen)
+
+    # --- 4. GRÁFICOS ADICIONALES (Factores de Riesgo e Indicadores Médicos) ---
+    st.subheader("4. Factores de Riesgo e Indicadores Médicos")
+    
+    col5, col6 = st.columns(2)
+    
+    with col5:
+        st.write("**Nivel de Marcador Tumoral (CEA) según Mortalidad**")
+        fig_cea, ax_cea = plt.subplots()
+        sns.kdeplot(data=df, x='CEA_Level_ng_mL..Marcador.Tumoral.', hue='Mortality', fill=True, common_norm=False, ax=ax_cea)
+        plt.xlabel("CEA Level (ng/mL)")
+        st.pyplot(fig_cea)
+        
+    with col6:
+        st.write("**Relación entre Sedentarismo y Dieta**")
+        # Visualizamos cómo se cruzan dos variables sintéticas
+        diet_sed = pd.crosstab(df['Dieta_rica_en_grasas_animales'], df['Sedentarismo'])
+        fig_heat_small, ax_heat_small = plt.subplots()
+        sns.heatmap(diet_sed, annot=True, fmt='d', cmap='YlGnBu', ax=ax_heat_small)
+        plt.xlabel("Sedentarismo (1=Sí)")
+        plt.ylabel("Dieta Grasas (1=Sí)")
+        st.pyplot(fig_heat_small)
