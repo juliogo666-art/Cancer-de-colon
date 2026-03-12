@@ -217,3 +217,66 @@ def sintetizar_historiales(df_global, output_dir):
     df_global.to_csv(output_path, index=False)
 
     return df_global
+
+def sintetizar_datos_kaggle(df_k, output_dir):
+    df_k = df_k.copy()
+
+    # 1. Definir columnas base
+    df_k['City'] = 'Barcelona'
+    df_k['Country'] = 'Spain'
+    
+    # Usamos 'Mortality' como indicador de enfermedad grave/diagnóstico para la síntesis
+    # Si 'Mortality' no es la que quieres usar, cámbiala por 'Cancer_Stage' o la que prefieras
+    condicion = df_k['Mortality'] 
+
+    # 2. Generar datos sintéticos basados en condiciones
+    n = len(df_k)
+
+    # Dieta (Probabilidad fija)
+    df_k['Dieta_rica_en_grasas_animales'] = np.random.binomial(n=1, p=0.3, size=n)
+
+    # Sedentarismo: Si Mortality=1 (enfermo), 65% prob. Si 0, 40% prob.
+    prob_sed = np.where(condicion == 1, 0.65, 0.40)
+    df_k['Sedentarismo'] = np.random.binomial(n=1, p=prob_sed)
+
+    # Diabetes tipo 2
+    prob_diab = np.where(condicion == 1, 0.25, 0.10)
+    df_k['Diabetes_tipo_2'] = np.random.binomial(n=1, p=prob_diab)
+
+    # Antecedentes Familiares
+    prob_fam = np.where(condicion == 1, 0.25, 0.10)
+    df_k['Antecedentes_Familiares'] = np.random.binomial(n=1, p=prob_fam)
+
+    # Componente hereditario
+    prob_herd = np.where(condicion == 1, 0.08, 0.02)
+    df_k['Componente_Hereditario'] = np.random.binomial(n=1, p=prob_herd)
+
+    # Síndromes predisponentes
+    prob_sind = np.where(condicion == 1, 0.04, 0.005)
+    df_k['Sindromes_Predisponentes'] = np.random.binomial(n=1, p=prob_sind)
+
+    # Enfermedad Inflamatoria Intestina
+    prob_eii = np.where(condicion == 1, 0.009, 0.004)
+    df_k['Enfermedad_Inflamatoria_Intestinal'] = np.random.binomial(n=1, p=prob_eii)
+
+    # FOBT (Sangre en heces) - Probabilidades corregidas (0.85, no 85)
+    prob_fobt = np.where(condicion == 1, 0.85, 0.05)
+    df_k['FOBT_Resultado_n'] = np.random.binomial(n=1, p=prob_fobt)
+    df_k['FOBT_Resultado (Sangre en heces)'] = df_k['FOBT_Resultado_n'].map({1: 'Positive', 0: 'Negative'})
+
+    # 3. Marcador Tumoral CEA (Distribución Normal)
+    # Generamos valores para ambos casos y elegimos con np.where
+    cea_enfermo = np.random.normal(loc=8.5, scale=4.0, size=n)
+    cea_sano = np.random.normal(loc=2.5, scale=1.0, size=n)
+    
+    df_k['CEA_Level_ng_mL (Marcador Tumoral)'] = np.where(condicion == 1, cea_enfermo, cea_sano)
+    df_k['CEA_Level_ng_mL (Marcador Tumoral)'] = df_k['CEA_Level_ng_mL (Marcador Tumoral)'].clip(0.1, 50.0).round(2)
+
+    # Asegurar tipos
+    df_k['FOBT_Resultado_n'] = df_k['FOBT_Resultado_n'].astype(int)
+
+    # 4. Guardado
+    output_path = os.path.join(output_dir, 'datos_finales_Kaggle.csv')
+    df_k.to_csv(output_path, index=False)
+
+    return df_k

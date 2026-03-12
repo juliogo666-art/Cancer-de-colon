@@ -520,3 +520,54 @@ def eda_datos_combinados(df):
     )
     ax_fact.set_title("Dispersión de los hábitos perjudiciales categorizado por edad")
     st.pyplot(fig_fact)
+
+def eda_datos_kaggle(df):
+    st.subheader("Visualización Avanzada de Datos (Dataset Colorectal)")
+
+    # 1. Mapa de Calor de Correlaciones (Heatmap)
+    st.write("### Mapa de Calor de Correlaciones")
+
+    # Filtramos solo numéricas y quitamos ID si existe
+    df_numeric = df.select_dtypes(include=["number"])
+    if not df_numeric.empty:
+        fig_corr, ax_corr = plt.subplots(figsize=(10, 8))
+        # Mostramos un mapa de calor que ayude a ver qué reglas de simulación crearon relaciones fuertes
+        sns.heatmap(
+            df_numeric.corr(),
+            annot=True,
+            cmap="coolwarm",
+            fmt=".2f",
+            ax=ax_corr,
+            annot_kws={"size": 8},
+        )
+        st.pyplot(fig_corr)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("### Edad vs Mortalidad")
+        fig_age, ax_age = plt.subplots()
+        sns.boxplot(x='Mortality', y='Age', data=df, palette='Set2', ax=ax_age)
+        ax_age.set_xticklabels(['Vive', 'Fallecido'] if 'Mortality' in df.columns else ['0', '1'])
+        st.pyplot(fig_age)
+
+    with col2:
+        st.write("### Tamaño del Tumor por Estadio")
+        fig_tumor, ax_tumor = plt.subplots()
+        sns.violinplot(x='Cancer_Stage', y='Tumor_Size_mm', data=df, ax=ax_tumor)
+        # Ajuste de etiquetas dinámico
+        st.pyplot(fig_tumor)
+
+    st.divider()
+
+    # 4. Relación entre Dieta y Obesidad
+    st.write("### Relación: Dieta vs Obesidad (BMI)")
+    if 'Diet_Risk' in df.columns and 'Obesity_BMI' in df.columns:
+        diet_bmi = pd.crosstab(df['Diet_Risk'], df['Obesity_BMI'])
+        fig_bar, ax_bar = plt.subplots()
+        diet_bmi.plot(kind='bar', stacked=True, ax=ax_bar)
+        plt.xlabel("Riesgo de Dieta")
+        plt.ylabel("Cantidad de Pacientes")
+        st.pyplot(fig_bar)
+
+def eda_datos_Kaggle_f():
+    return

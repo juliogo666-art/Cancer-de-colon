@@ -4,13 +4,18 @@ import os
 
 from src.scripts.data_cleaning import (
     limpiar_datos_globales,
+    limpiar_datos_kaggle_finales,
     limpiar_datos_sinteticos,
     combinar_datos_s_g,
+    limpiar_datos_kaggle,
+    
 )
 from src.utils.eda_visualization import (
     eda_datos_globales,
     eda_datos_sinteticos,
     eda_datos_combinados,
+    eda_datos_kaggle,
+    eda_datos_Kaggle_f
 )
 
 # Configuración principal de la página de Streamlit
@@ -28,23 +33,17 @@ def eda(base_path):
     st.title("Sistema de análisis de cáncer de colón")
 
     # Definición de rutas de archivos base
-    ruta_historial = os.path.join(
-        base_path, "src", "data", "raw", "historial_pacientes"
-    )
+    ruta_historial = os.path.join(base_path, "src", "data", "raw", "historial_pacientes")
 
-    file_path_globales = os.path.join(
-        ruta_historial,
-        "pacientes_con_cancer_tratado",
-        "global_cancer_patients_2015_2024.csv",
-    )
-    file_path_sinteticos = os.path.join(
-        ruta_historial, "historiales_sinteticos", "pacientes_simulador_colon.csv"
-    )
+    file_path_globales = os.path.join(ruta_historial,"pacientes_con_cancer_tratado","global_cancer_patients_2015_2024.csv",)
+    file_path_sinteticos = os.path.join(ruta_historial, "historiales_sinteticos", "pacientes_simulador_colon.csv")
     file_path_combinados = ruta_historial
 
-    file_path_final = os.path.join(
-        ruta_historial, "datos_combinados_global_extendido_3.csv"
-    )
+    file_path_final = os.path.join(ruta_historial, "datos_combinados_global_extendido_3.csv")
+
+    file_path_kaggle = os.path.join(ruta_historial,"pacientes_con_cancer_tratado","colorectal_cancer_dataset.csv",)
+
+    file_path_kaggle_f = os.path.join(ruta_historial, "datos_finales_Kaggle.csv")
 
     # Menú lateral para navegación
     menu = st.sidebar.radio(
@@ -53,6 +52,8 @@ def eda(base_path):
             "1. Datos globales",
             "2. Datos simulados",
             "3. Datos combinados",
+            "4. Datos Kaggle", 
+            "5. Datos finales",
         ],
     )
 
@@ -115,6 +116,54 @@ def eda(base_path):
                 with st.container():
                     st.write("Generando gráficos...")
                     eda_datos_combinados(df)
+            else:
+                st.error(
+                    "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
+                )
+    elif menu == "4. Datos Kaggle":
+        st.header("Análisis de Datos Kaggle")
+
+        if os.path.exists(file_path_kaggle):
+            # Cargar y limpiar ambos datasets
+            df_k = pd.read_csv(file_path_kaggle, sep=';')
+
+            df_k =  limpiar_datos_kaggle(df_k, file_path_kaggle)
+
+            mostrar_vista_previa(df_k)
+
+            with st.container():
+                st.write("Generando gráficos...")
+                eda_datos_kaggle(df_k)
+        else:
+            st.error(
+                "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
+            )
+    elif menu == "5. Datos finales":
+        st.header("Análisis de Datos Finales")
+
+        if os.path.exists(file_path_kaggle_f):
+            df_combinados = pd.read_csv(file_path_kaggle_f)
+            mostrar_vista_previa(df_combinados)
+
+            with st.container():
+                st.write("Generando gráficos...")
+                eda_datos_Kaggle_f(df_combinados)
+
+        else:
+            if os.path.exists(file_path_kaggle):
+                # Cargar y limpiar ambos datasets
+                df_g = pd.read_csv(file_path_kaggle, sep=';')
+
+                df_g = limpiar_datos_kaggle(df_g, file_path_kaggle)
+
+                # Combinar los datos limpios
+                df = limpiar_datos_kaggle_finales(df_g, file_path_combinados)
+
+                mostrar_vista_previa(df)
+
+                with st.container():
+                    st.write("Generando gráficos...")
+                    eda_datos_Kaggle_f(df)
             else:
                 st.error(
                     "Faltan archivos necesarios para combinar los datos. Verifica las rutas."

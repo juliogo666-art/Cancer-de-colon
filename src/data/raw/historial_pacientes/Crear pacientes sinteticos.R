@@ -1,5 +1,5 @@
 # Leer CSV
-ruta <- "datos_combinados_global_extendido_3.csv"
+ruta <- "datos_finales_Kaggle.csv"
 datos <- read.csv(ruta, stringsAsFactors = FALSE)
 
 
@@ -48,27 +48,37 @@ generar_dni <- function(n){
   paste0(numeros, letra)
 }
 
-# 7. FUNCIÓN: Generar NUSS (Seguridad Social) para Barcelona (08)
 generar_nuss_bcn <- function(n) {
-  provincia <- "08" # Prefijo de Barcelona
+  provincia <- "08" 
   
-  # Generamos un número secuencial de 8 dígitos
-  # Usamos strings para evitar problemas de precisión con números muy largos
-  base_num <- sample(10000000:99999999, n, replace = TRUE)
+  # 1. Generar el número base de 8 dígitos como texto
+  # Usamos sprintf para asegurar que siempre tenga 8 caracteres (rellena con 0 si es necesario)
+  base_num <- sprintf("%08d", sample(0:99999999, n, replace = TRUE))
   
-  # Cálculo del dígito de control (estándar SS España: número total mod 97)
-  # Concatenamos provincia y base para el cálculo
-  full_num_str <- paste0(provincia, base_num)
+  # 2. Cálculo del dígito de control siguiendo la norma técnica:
+  # Si el número base es menor a 10.000.000, se suma la provincia al número base.
+  # Pero la forma más robusta es: concatenar provincia + base y hacer mod 97.
   
-  # En R, para números tan grandes usamos as.numeric o transformamos
-  control <- as.numeric(full_num_str) %% 97
-  control_str <- sprintf("%02d", control) # Asegura 2 dígitos (ej: 05)
+  resultados <- sapply(1:n, function(i) {
+    # Concatenamos para el cálculo
+    full_str <- paste0(provincia, base_num[i])
+    
+    # Convertimos a numérico de alta precisión para el módulo
+    # Si no quieres instalar librerías, usamos una alternativa simple:
+    val_num <- as.numeric(full_str)
+    control <- val_num %% 97
+    
+    control_str <- sprintf("%02d", control)
+    
+    # IMPORTANTE: Retornar como cadena de texto para no perder el 08 inicial
+    return(paste0(provincia, base_num[i], control_str))
+  })
   
-  paste0(provincia, base_num, control_str)
+  return(resultados)
 }
 
 datos$dni <- generar_dni(n)
-datos$nuss <- generar_nuss_bcn(n)
+datos$nuss <- generar_nuss_bcn(nrow(datos))
 
 # Guardar CSV actualizado
 write.csv(datos, ruta, row.names = FALSE)

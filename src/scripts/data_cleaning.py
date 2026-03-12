@@ -3,12 +3,12 @@ import os
 import streamlit as st
 import numpy as np
 
-from src.scripts.sintetiza_historiales import sintetizar_historiales
+from src.scripts.sintetiza_historiales import sintetizar_historiales, sintetizar_datos_kaggle
 
 def limpiar_datos_globales(df, file_path_sin_d):
     df = df.copy()
-    if 'Cancer_Type' in df.columns:
-        df = df[df['Cancer_Type'] == 'Colon']
+    # if 'Cancer_Type' in df.columns:
+    #     df = df[df['Cancer_Type'] == 'Colon']
         # Una vez filtrado, ya podemos eliminar la columna porque todos son 'Colon'
         # df = df.drop(columns=['Cancer_Type'])
 
@@ -42,7 +42,7 @@ def limpiar_datos_globales(df, file_path_sin_d):
         elif 'float' in str(df[col].dtype):
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.0).astype(float)
 
-    df = df.drop(columns=['Country_Region'])
+    # df = df.drop(columns=['Country_Region'])
 
     # 4. Guardado del CSV con las nuevas columnas incluidas
     directorio_destino = os.path.dirname(file_path_sin_d)
@@ -110,5 +110,89 @@ def limpiar_datos_sinteticos(df, file_path_con_d):
 def combinar_datos_s_g (df_global, output_dir):
     df_global = df_global.copy()
     df_global = sintetizar_historiales(df_global, output_dir)
+
+    return df_global
+
+def limpiar_datos_kaggle(df, file_path_sin_d):
+    df = df.copy()
+    
+    # 1. Limpieza inicial
+    df = df.dropna()
+    df = df.drop_duplicates()
+
+    # 2. TRANSFORMACIÓN A NUMÉRICO (Mapeos exhaustivos)
+    
+    # Género: M -> 0, F -> 1
+    gender_map = {'M': 0, 'F': 1}
+    df['Gender'] = df['Gender'].map(gender_map)
+
+    # Estadio del Cáncer (Corregido 'Localized' en lugar de 'Localizes')
+    df['Cancer_Stage'] = df['Cancer_Stage'].map({'Localized': 0, 'Metastatic': 1, 'Regional': 2})
+
+    # Columnas Binarias (Yes/No)
+    columnas_yes_no = [
+        'Family_History', 'Smoking_History', 'Alcohol_Consumption', 
+        'Diabetes', 'Inflammatory_Bowel_Disease', 'Genetic_Mutation', 
+        'Early_Detection', 'Survival_5_years', 'Mortality', 'Survival_Prediction'
+    ]
+    for col in columnas_yes_no:
+        if col in df.columns:
+            df[col] = df[col].map({'No': 0, 'Yes': 1})
+
+    # Niveles de Riesgo y Actividad (Low/Moderate/High)
+    riesgo_map = {'Low': 0, 'Moderate': 1, 'High': 2}
+    if 'Diet_Risk' in df.columns:
+        df['Diet_Risk'] = df['Diet_Risk'].map(riesgo_map)
+    if 'Physical_Activity' in df.columns:
+        df['Physical_Activity'] = df['Physical_Activity'].map(riesgo_map)
+    if 'Healthcare_Access' in df.columns:
+        df['Healthcare_Access'] = df['Healthcare_Access'].map(riesgo_map)
+
+    # Obesidad BMI (Normal/Overweight/Obese)
+    bmi_map = {'Normal': 0, 'Overweight': 1, 'Obese': 2}
+    if 'Obesity_BMI' in df.columns:
+        df['Obesity_BMI'] = df['Obesity_BMI'].map(bmi_map)
+
+    # Screening History (Never/Irregular/Regular)
+    screening_map = {'Never': 0, 'Irregular': 1, 'Regular': 2}
+    if 'Screening_History' in df.columns:
+        df['Screening_History'] = df['Screening_History'].map(screening_map)
+
+    # Entorno y Economía
+    if 'Urban_or_Rural' in df.columns:
+        df['Urban_or_Rural'] = df['Urban_or_Rural'].map({'Rural': 0, 'Urban': 1})
+    
+    if 'Economic_Classification' in df.columns:
+        df['Economic_Classification'] = df['Economic_Classification'].map({'Developing': 0, 'Developed': 1})
+    
+    if 'Insurance_Status' in df.columns:
+        df['Insurance_Status'] = df['Insurance_Status'].map({'Uninsured': 0, 'Insured': 1})
+
+    # Tipo de Tratamiento
+    tratamiento_map = {'Surgery': 0, 'Chemotherapy': 1, 'Radiation': 2, 'Combination': 3}
+    if 'Treatment_Type' in df.columns:
+        df['Treatment_Type'] = df['Treatment_Type'].map(tratamiento_map)
+
+    # 3. Eliminar columnas de texto que no se pueden numerar o no sirven
+    if 'Country' in df.columns:
+        df = df.drop(columns=['Country'])
+
+    # 4. Forzar que todo lo que quede sea numérico (por si acaso)
+    df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
+
+    # 5. Guardado
+    directorio_destino = os.path.dirname(file_path_sin_d)
+    output_path = os.path.join(directorio_destino, 'ej_kaggle_cancer_limpio.csv')
+    
+    if not os.path.exists(directorio_destino):
+        os.makedirs(directorio_destino)
+        
+    df.to_csv(output_path, index=False)
+    
+    return df
+
+def limpiar_datos_kaggle_finales (df_global, output_dir):
+    df_global = df_global.copy()
+    df_global = sintetizar_datos_kaggle(df_global, output_dir)
 
     return df_global
