@@ -1,6 +1,9 @@
+from src.scripts.eda import eda
+import os
+
 def main():
-    print("Hello from proyecto-2-cancer-colon!")
-
-
+    base_path = os.path.dirname(__file__)
+    eda(base_path)
+            
 if __name__ == "__main__":
     main()
