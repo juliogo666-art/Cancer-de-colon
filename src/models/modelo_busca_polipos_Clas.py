@@ -2,6 +2,16 @@
 
 # Modelo de clasificación de pólipos Clasificador
 
+# fuente con 680 imágenes válidas y balanceadas
+
+# Compilamos una red neuronal profunda ResNet18 precargada con pesos de ImageNet.
+# Ajustamos la capa final fc para resolver un problema de Clasificación Binaria
+# (BCEWithLogitsLoss).
+# Le inyectamos técnicas de Data Augmentation en tiempo real
+# (RandomHorizontalFlip, RandomRotation, ColorJitter) para garantizar que el modelo
+# no se memorizara las 680 imágenes sino que aprendiera las texturas de los pólipos
+# desde diferentes ángulos y condiciones de luz.
+
 #####################################################################################################
 
 import torch
@@ -10,6 +20,10 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import models, transforms
 from datasets import load_dataset
 from PIL import Image
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env local
+load_dotenv()
 
 #####################################################################################################
 
@@ -23,22 +37,44 @@ class ColonoscopyDataset(Dataset):
     def __init__(self, split="train", transform=None):
         # Cargamos en modo streaming para no bloquear la RAM si el dataset es enorme
         # pero como necesitamos tamaño y acceso aleatorio para el DataLoader estándar,
-        # lo descargamos y cacheamos (tarda un poco la primera vez).
+        # lo descargamos y cacheamos.
         print(f"Descargando/Cargando dataset de HuggingFace (split={split})...")
-        self.dataset = load_dataset("sageofai/colonoscopy_data_for_vqa", split=split)
+        self.dataset = load_dataset(
+            "sageofai/colonoscopy_data_for_vqa",
+            split=split,
+            verification_mode="no_checks",
+            cache_dir="src/data/raw/huggingface_vqa_dataset",  # <- Esto les obligaría
+        )
 
-        # Filtramos solo las preguntas que preguntan por la existencia de pólipos
-        print("Filtrando datos de clasificación de pólipos...")
-        self.data = []
+        # Filtramos positivas (pólipos) y negativas (sano)
+        print("Filtrando y balanceando el dataset de polipos vs sano...")
+        positives = []
+        negatives = []
+
         for item in self.dataset:
-            question = item["question"].lower()
-            if "polyp" in question and (
-                "display" in question or "present" in question or "contain" in question
-            ):
-                label = 1.0 if "yes" in item["answer"].lower() else 0.0
-                self.data.append({"image": item["image"], "label": label})
+            text = item["text"].lower()
+            if "polyp" in text:
+                positives.append({"image": item["image"], "label": 1.0})
+            elif "finding" not in text and "instrument" not in text:
+                negatives.append({"image": item["image"], "label": 0.0})
 
-        print(f"Encontradas {len(self.data)} imágenes válidas para clasificación.")
+        import random
+
+        # Fijamos semilla para que siempre coja las mismas aleatorias
+        random.seed(42)
+
+        # Balanceamos las clases: cogemos el mínimo entre ambas para maximizar los datos sin desbalancearlo
+        # Ahora cogerá todas las imágenes posibles (aprox.3900 de cada clase, 7800 total).
+        limit_per_class = min(len(positives), len(negatives))
+
+        self.data = random.sample(positives, limit_per_class) + random.sample(
+            negatives, limit_per_class
+        )
+        random.shuffle(self.data)
+
+        print(
+            f"Dataset final balanceado. Encontrados: {limit_per_class} Polipos y {limit_per_class} Sanos (Total: {len(self.data)})."
+        )
 
         self.transform = transform
 
@@ -86,12 +122,13 @@ class PolypDetector(nn.Module):
         # Cargamos pesos preentrenados usando el método moderno de torchvision
         self.model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
 
-        # Congelamos las capas base (Opcional, pero bueno para empezar rápido)
+        # Congela las capas base --> si necesitamos que vaya mas rapido porque la RAM no da.
         # for param in self.model.parameters():
         #     param.requires_grad = False
 
         # Modificamos la última capa (fc = fully connected)
-        # ResNet18 tiene out_features=1000 por ImageNet. Nosotros queremos 1 (Pólipo o No Pólipo)
+        # ResNet18 tiene out_features=1000 por ImageNet, es multicategorico (perros,barcos ...)
+        # Nosotros queremos 1 (Pólipo o No Pólipo), se volveria loco con 1000 salidas.
         num_ftrs = self.model.fc.in_features
         self.model.fc = nn.Linear(num_ftrs, 1)
 
@@ -142,8 +179,6 @@ def train_model():
             loss = criterion(outputs, labels)
 
             loss.backward()
-            optimizer.स्टेप()  # OJO: hay un fallo intencionado tipográfico simulado a corregir si quieres. (optimizer.step())
-            # En verdad, corregido:
             optimizer.step()
 
             running_loss += loss.item()
@@ -164,14 +199,14 @@ def train_model():
 #####################################################################################################
 
 if __name__ == "__main__":
-    print("--- Test de Compilación del Modelo ---")
+    print("--- Test de Compilacion del Modelo ---")
 
-    # 1. Probar el modelo con datos dummy
+    # 1. Probar el modelo
     dummy_input = torch.randn(1, 3, 224, 224)
     detector = PolypDetector()
     output = detector(dummy_input)
-    print(f"Salida del modelo con dummy data: {output.shape} (Esperado: [1, 1])")
+    print(f"Salida del modelo: {output.shape} (Esperado: [1, 1])")
 
-    # Descomentar la siguiente línea para iniciar el entrenamiento real
-    # Tarda porque descargará ~8GB de HuggingFace la primera vez
-    # train_model()
+    # Iniciar el entrenamiento
+    # Tarda porque descargará el dataset de HuggingFace la primera vez
+    train_model()

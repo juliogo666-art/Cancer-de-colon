@@ -211,3 +211,7 @@ __marimo__/
 src/data/raw/colon_image_sets/colon_aca/*.jpeg
 src/data/raw/colon_image_sets/colon_n/*.jpeg
 src/data/raw/colonoscopic_processed
+
+
+# No compartir passwords, key y tokens
+.env
