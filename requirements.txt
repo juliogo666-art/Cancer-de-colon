@@ -24,10 +24,23 @@ contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
+<<<<<<< HEAD
 entrypoints==0.4
     # via altair
 fonttools==4.61.1
     # via matplotlib
+=======
+filelock==3.25.2
+    # via
+    #   huggingface-hub
+    #   torch
+fonttools==4.61.1
+    # via matplotlib
+fsspec==2026.2.0
+    # via
+    #   huggingface-hub
+    #   torch
+>>>>>>> 0d95fdd (Modelos pruebas)
 gitdb==4.0.12
     # via gitpython
 gitpython==3.1.46
@@ -40,6 +53,7 @@ jinja2==3.1.6
     # via
     #   altair
     #   pydeck
+    #   torch
 joblib==1.5.3
     # via scikit-learn
 jsonschema==4.26.0
@@ -58,8 +72,18 @@ matplotlib==3.10.8
     #   seaborn
 mdurl==0.1.2
     # via markdown-it-py
+mpmath==1.3.0
+    # via sympy
 narwhals==2.17.0
+<<<<<<< HEAD
     # via plotly
+=======
+    # via
+    #   altair
+    #   plotly
+networkx==3.6.1
+    # via torch
+>>>>>>> 0d95fdd (Modelos pruebas)
 numpy==2.4.2
     # via
     #   altair
@@ -73,6 +97,11 @@ numpy==2.4.2
     #   seaborn
     #   statsmodels
     #   streamlit
+<<<<<<< HEAD
+=======
+    #   torchvision
+    #   xgboost
+>>>>>>> 0d95fdd (Modelos pruebas)
 packaging==26.0
     # via
     #   matplotlib
@@ -92,6 +121,7 @@ pillow==12.1.1
     # via
     #   matplotlib
     #   streamlit
+    #   torchvision
 plotly==6.5.2
     # via proyecto-2-cancer-colon (pyproject.toml)
 protobuf==3.20.3
@@ -143,18 +173,37 @@ statsmodels==0.14.6
     # via proyecto-2-cancer-colon (pyproject.toml)
 streamlit==1.19.0
     # via proyecto-2-cancer-colon (pyproject.toml)
+<<<<<<< HEAD
+=======
+sympy==1.14.0
+    # via torch
+tenacity==9.1.4
+    # via streamlit
+text-unidecode==1.3
+    # via python-slugify
+>>>>>>> 0d95fdd (Modelos pruebas)
 threadpoolctl==3.6.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
+<<<<<<< HEAD
 toolz==1.1.0
     # via altair
+=======
+torch==2.10.0
+    # via
+    #   proyecto-2-cancer-colon (pyproject.toml)
+    #   torchvision
+torchvision==0.25.0
+    # via proyecto-2-cancer-colon (pyproject.toml)
+>>>>>>> 0d95fdd (Modelos pruebas)
 tornado==6.5.4
     # via streamlit
 typing-extensions==4.15.0
     # via
     #   referencing
     #   streamlit
+    #   torch
 tzdata==2025.3
     # via
     #   pandas

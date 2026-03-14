@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "altair>=5.0.0",
+    "datasets>=4.7.0",
+    "huggingface-hub>=1.7.1",
     "kaggle>=2.0.0",
     "matplotlib>=3.8.0",
     "pandas>=2.2.0,<3.0.0",
@@ -14,4 +16,8 @@ dependencies = [
     "seaborn>=0.13.0",
     "statsmodels>=0.14.0",
     "streamlit>=1.35.0",
+    "torch>=2.10.0",
+    "torchvision>=0.25.0",
+    "tqdm>=4.67.3",
+    "xgboost>=3.2.0",
 ]
