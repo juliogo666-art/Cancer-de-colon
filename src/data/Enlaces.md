@@ -8,11 +8,11 @@
 
 - Enlace: https://www.kaggle.com/datasets/amandam1/colorectal-cancer-patients?select=Colorectal+Cancer+Patient+Data.csv
 
-2.- Conjunto de datos globales de pacientes oncológicos reportados entre 2015 y 2024, diseñados para simular los factores clave que influyen en el diagnóstico, tratamiento y supervivencia del cáncer. --> Tiene 50.000 filas --> Sin datos de españa
+  2.- Conjunto de datos globales de pacientes oncológicos reportados entre 2015 y 2024, diseñados para simular los factores clave que influyen en el diagnóstico, tratamiento y supervivencia del cáncer. --> Tiene 50.000 filas --> Sin datos de españa
 
 - Enlace: https://www.kaggle.com/datasets/zahidmughal2343/global-cancer-patients-2015-2024?select=global_cancer_patients_2015_2024.csv
 
-3.- Conjutno de datos gobales --> Extendido a 167.497 filas --> Sin datos de españa
+  3.- Conjutno de datos gobales --> Extendido a 167.497 filas --> Sin datos de españa
 
 - Enalce: https://www.kaggle.com/datasets/ankushpanday2/colorectal-cancer-global-dataset-and-predictions?select=colorectal_cancer_dataset.csv
 
@@ -26,4 +26,8 @@
 
 ## Datos imagenes de colonoscopia
 
-- Enlace: https://huggingface.co/datasets/ZhenbinWang/Colonoscopic_processed/blob/main/Colonoscopic_processed.zip
+- Sin clasificar:
+  - Enlace: https://huggingface.co/datasets/ZhenbinWang/Colonoscopic_processed/blob/main/Colonoscopic_processed.zip
+
+- Clasificadas:
+  - Enlace: https://huggingface.co/datasets/sageofai/colonoscopy_data_for_vqa/tree/main
