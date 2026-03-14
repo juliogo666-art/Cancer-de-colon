@@ -1,13 +1,20 @@
+import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
+import os
+
+# Cargar el dataset correcto con ruta absoluta y dinámica
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__))) # apunta a la raiz
+csv_path = os.path.join(base_dir, 'src', 'data', 'raw', 'historial_pacientes', 'historiales_sinteticos', 'pacientes_simulador_colon.csv')
+df = pd.read_csv(csv_path)
 
 # Preprocesamiento rápido
 df_model = df.drop(columns=['Paciente_ID'])
 le = LabelEncoder()
 df_model['Genero'] = le.fit_transform(df_model['Genero'])
-df_model['FOBT_Resultado'] = le.fit_transform(df_model['FOBT_Resultado'])
+df_model['FOBT_Resultado (Sangre en heces)'] = le.fit_transform(df_model['FOBT_Resultado (Sangre en heces)'])
 
 X = df_model.drop('Diagnostico', axis=1)
 y = df_model['Diagnostico']

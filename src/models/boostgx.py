@@ -3,10 +3,13 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import os
 import matplotlib.pyplot as plt
 
 # cargar datos
-data = pd.read_csv("src/data/raw/historial_pacientes/datos_combinados_completos.csv")
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__))) # apunta a la raiz
+csv_path = os.path.join(base_dir, 'src', 'data', 'raw', 'historial_pacientes', 'datos_combinados_completos.csv')
+data = pd.read_csv(csv_path)
 # separar variables
 
 data["cancer"] = data["Cancer_Stage"] != "Stage 0"
