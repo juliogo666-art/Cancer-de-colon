@@ -25,6 +25,7 @@ def eda_datos_globales(df):
                 ax=ax_corr,
             )
             st.pyplot(fig_corr)
+            plt.close(fig_corr)
 
     with col2:
         # --- 2. DISTRIBUCIÓN DE EDADES ---
@@ -56,6 +57,7 @@ def eda_datos_globales(df):
             ax_hist.set_title(f"Distribución de edades en el año {año_sel}")
 
         st.pyplot(fig_hist)
+        plt.close(fig_hist)
 
     st.divider()
     col1, col2 = st.columns(2)
@@ -80,6 +82,7 @@ def eda_datos_globales(df):
                 startangle=140,
             )
             st.pyplot(fig_pie)
+            plt.close(fig_pie)
 
     with col2:
         # --- 4. EDAD VS REGIÓN (BOXPLOT) ---
@@ -88,6 +91,7 @@ def eda_datos_globales(df):
         # Generamos un boxplot para ver la dispersión de las edades en cada región y buscar posibles valores atípicos
         sns.boxplot(data=df, x="Age", y="Country_Region", palette="Set2", ax=ax_box)
         st.pyplot(fig_box)
+        plt.close(fig_box)
 
     st.divider()
     col1, col2 = st.columns(2)
@@ -142,6 +146,7 @@ def eda_datos_globales(df):
                 f"Demografía en {ciudad_sel} expuesta a Contaminación >= {nivel_aire}"
             )
             st.pyplot(fig_q4)
+            plt.close(fig_q4)
         else:
             st.warning("No hay datos que coincidan con estos filtros.")
 
@@ -172,6 +177,7 @@ def eda_datos_globales(df):
         )
         ax_riesgo.set_title(f"Distribución Media de Riesgos en {pais_riesgo}")
         st.pyplot(fig_riesgo)
+        plt.close(fig_riesgo)
 
     st.divider()
 
@@ -215,6 +221,7 @@ def eda_datos_globales(df):
         0, df_pais_pct.max() + 10
     )  # Damos espacio extra arriba para la etiqueta
     st.pyplot(fig_riesgo_bar)
+    plt.close(fig_riesgo_bar)
 
 
 def eda_datos_sinteticos(df):
@@ -239,6 +246,7 @@ def eda_datos_sinteticos(df):
                 annot_kws={"size": 8},
             )
             st.pyplot(fig_corr)
+            plt.close(fig_corr)
 
     with col2:
         # --- 2. DIAGNÓSTICO VS GÉNERO ---
@@ -250,6 +258,7 @@ def eda_datos_sinteticos(df):
         )
         ax_diag.set_title("Casos Simulados (0=Sano, 1=Cáncer)")
         st.pyplot(fig_diag)
+        plt.close(fig_diag)
 
     st.divider()
 
@@ -285,6 +294,7 @@ def eda_datos_sinteticos(df):
             )
 
         st.pyplot(fig_age)
+        plt.close(fig_age)
 
     with col4:
         # --- 4. RIESGO HEREDITARIO ---
@@ -297,6 +307,7 @@ def eda_datos_sinteticos(df):
         )
         ax_gen.set_ylabel("Valor Medio de Riesgo Hereditario")
         st.pyplot(fig_gen)
+        plt.close(fig_gen)
 
     st.divider()
 
@@ -333,6 +344,7 @@ def eda_datos_sinteticos(df):
     ax_f.set_ylabel("Aparición en pacientes simulados (%)")
     ax_f.set_title("Frecuencia de factores de riesgo introducidos en la simulación")
     st.pyplot(fig_factores)
+    plt.close(fig_factores)
 
     st.divider()
 
@@ -353,6 +365,7 @@ def eda_datos_sinteticos(df):
         )
         ax_cea.set_title("Relación de marcador tumoral CEA con diagnóstico")
         st.pyplot(fig_cea)
+        plt.close(fig_cea)
 
     with col6:
         st.write("**Prevalencia de falsos/verdaderos en test sangre oculta (FOBT)**")
@@ -368,6 +381,7 @@ def eda_datos_sinteticos(df):
             wedgeprops={"edgecolor": "white"},
         )
         st.pyplot(fig_fobt)
+        plt.close(fig_fobt)
 
 
 def eda_datos_combinados(df):
@@ -404,6 +418,7 @@ def eda_datos_combinados(df):
     )
     plt.xticks(rotation=45, ha='right') # Rotamos nombres de columnas para que no se pisen
     st.pyplot(fig_corr)
+    plt.close(fig_corr)
 
     st.caption(
         f"Se están analizando {num_cols} variables numéricas del dataset. "
@@ -520,6 +535,7 @@ def eda_datos_combinados(df):
     )
     ax_fact.set_title("Dispersión de los hábitos perjudiciales categorizado por edad")
     st.pyplot(fig_fact)
+    plt.close(fig_fact)
 
 def eda_datos_kaggle(df):
     st.subheader("Visualización Avanzada de Datos (Dataset Colorectal)")
@@ -541,6 +557,7 @@ def eda_datos_kaggle(df):
             annot_kws={"size": 8},
         )
         st.pyplot(fig_corr)
+        plt.close(fig_corr)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -549,6 +566,7 @@ def eda_datos_kaggle(df):
         sns.boxplot(x='Mortality', y='Age', data=df, palette='Set2', ax=ax_age)
         ax_age.set_xticklabels(['Vive', 'Fallecido'] if 'Mortality' in df.columns else ['0', '1'])
         st.pyplot(fig_age)
+        plt.close(fig_age)
 
     with col2:
         st.write("### Tamaño del Tumor por Estadio")
@@ -556,6 +574,7 @@ def eda_datos_kaggle(df):
         sns.violinplot(x='Cancer_Stage', y='Tumor_Size_mm', data=df, ax=ax_tumor)
         # Ajuste de etiquetas dinámico
         st.pyplot(fig_tumor)
+        plt.close(fig_tumor)
 
     st.divider()
 
@@ -568,6 +587,7 @@ def eda_datos_kaggle(df):
         plt.xlabel("Riesgo de Dieta")
         plt.ylabel("Cantidad de Pacientes")
         st.pyplot(fig_bar)
+        plt.close(fig_bar)
 
 def eda_datos_Kaggle_f(df):
     st.title("EDA: Análisis de Datos Finales")
@@ -584,6 +604,7 @@ def eda_datos_Kaggle_f(df):
     sns.heatmap(corr, annot=True, fmt=".2f", cmap='RdBu_r', center=0, ax=ax_heat, annot_kws={"size": 7})
     plt.title("Matriz de Correlación Completa")
     st.pyplot(fig_heat)
+    plt.close(fig_heat)
 
     # --- 2. ESTADO DEL CÁNCER: CONTEO Y EDADES ---
     st.subheader("2. Estado del Cáncer y Distribución de Edad")
@@ -600,12 +621,14 @@ def eda_datos_Kaggle_f(df):
         sns.countplot(data=temp_df, x='Cancer_Stage_Label', palette='viridis', ax=ax_count)
         plt.ylabel("Número de Pacientes")
         st.pyplot(fig_count)
+        plt.close(fig_count)
         
     with col2:
         st.write("**Edades por Estado**")
         fig_box, ax_box = plt.subplots()
         sns.boxplot(data=temp_df, x='Cancer_Stage_Label', y='Age', palette='viridis', ax=ax_box)
         st.pyplot(fig_box)
+        plt.close(fig_box)
 
     # --- 3. MORTALIDAD ---
     st.subheader("3. Análisis de Mortalidad")
@@ -617,6 +640,7 @@ def eda_datos_Kaggle_f(df):
         fig_pie, ax_pie = plt.subplots()
         ax_pie.pie(mort_counts, labels=['Vive', 'Fallecido'], autopct='%1.1f%%', startangle=90, colors=['#66b3ff','#ff9999'])
         st.pyplot(fig_pie)
+        plt.close(fig_pie)
         
     with col4:
         st.write("**Mortalidad por Género (0:M, 1:F)**")
@@ -624,6 +648,7 @@ def eda_datos_Kaggle_f(df):
         sns.countplot(data=df, x='Gender', hue='Mortality', palette='magma', ax=ax_mort_gen)
         plt.legend(title='Mortalidad', labels=['Vive', 'Fallecido'])
         st.pyplot(fig_mort_gen)
+        plt.close(fig_mort_gen)
 
     # --- 4. GRÁFICOS ADICIONALES (Factores de Riesgo e Indicadores Médicos) ---
     st.subheader("4. Factores de Riesgo e Indicadores Médicos")
@@ -636,6 +661,7 @@ def eda_datos_Kaggle_f(df):
         sns.kdeplot(data=df, x='CEA_Level_ng_mL..Marcador.Tumoral.', hue='Mortality', fill=True, common_norm=False, ax=ax_cea)
         plt.xlabel("CEA Level (ng/mL)")
         st.pyplot(fig_cea)
+        plt.close(fig_cea)
         
     with col6:
         st.write("**Relación entre Sedentarismo y Dieta**")
@@ -646,3 +672,4 @@ def eda_datos_Kaggle_f(df):
         plt.xlabel("Sedentarismo (1=Sí)")
         plt.ylabel("Dieta Grasas (1=Sí)")
         st.pyplot(fig_heat_small)
+        plt.close(fig_heat_small)
