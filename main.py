@@ -29,7 +29,7 @@ def run_train_polyps():
 def run_train_rf():
     """Entrena el modelo Random Forest con datos sintéticos."""
     import pandas as pd
-    from src.models.testeos import entrenar_random_forest
+    from test.test_ml_v0 import entrenar_random_forest
 
     base_path = os.path.dirname(os.path.abspath(__file__))
     csv_path = os.path.join(
