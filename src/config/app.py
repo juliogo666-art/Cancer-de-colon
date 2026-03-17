@@ -7,7 +7,57 @@ from datetime import datetime
 
 # 1. Configuración de la página y Estilos
 st.set_page_config(page_title="Portal Médico v1.0", layout="wide")
+st.markdown("""
+<style>
+/* Fondo general futurista */
+.stApp {
+    background: radial-gradient(circle at 20% 30%, #1a2a6c, transparent 40%),
+                radial-gradient(circle at 80% 70%, #0f2027, transparent 40%),
+                linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: white;
+}
 
+/* Sidebar más oscuro */
+section[data-testid="stSidebar"] {
+    background-color: #0a0f1c;
+}
+
+/* Tarjetas tipo glassmorphism */
+.stInfo {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+}
+
+
+
+/* Inputs futuristas */
+input, textarea {
+    background-color: rgba(255,255,255,0.05) !important;
+    color: white !important;
+    border: 1px solid rgba(0,255,255,0.2) !important;
+    border-radius: 8px;
+}
+
+/* Botones estilo neon */
+button {
+    background: linear-gradient(90deg, #00c6ff, #0072ff) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px !important;
+    transition: 0.3s;
+}
+
+button:hover {
+    box-shadow: 0 0 10px #00c6ff;
+}
+
+/* Títulos */
+h1, h2, h3 {
+    color: #e0f7ff;
+}
+</style>
+""", unsafe_allow_html=True)
 # Simulación de base de datos (En la vida real sería SQL o MongoDB)
 if 'db_pacientes' not in st.session_state:
     data = {
