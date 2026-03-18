@@ -82,6 +82,6 @@ def save_r(folder, selector, edad, genero, estadio, tumor, fam, fuma, alc, diab,
         header_necesario = not os.path.exists(path_nuevo)
         df.to_csv(path_nuevo, mode='a', index=False, header=header_necesario)
         
-        return "✅ Registro guardado correctamente en local."
+        return "Registro guardado correctamente en local."
     except Exception as e:
-        return f"❌ Error al guardar: {str(e)}"
+        return f"Error al guardar: {str(e)}"

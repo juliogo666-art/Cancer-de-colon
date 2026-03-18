@@ -12,11 +12,11 @@ os.environ["TF_USE_LEGACY_KERAS"] = "1"
 directorio_actual = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(directorio_actual)
 
-from utils.cargar_modelos_s import predecir, colonos, obtener_modelo_cnn
-from utils.data_load_s import datos_p, nombres_p, save_r
+from src.utils.cargar_modelos_s import predecir, colonos, obtener_modelo_cnn
+from src.utils.data_load_s import datos_p, nombres_p, save_r
 
-CSV_PATH = os.path.join(directorio_actual, 'datos_finales_Kaggle.csv')
-MODEL_ML_PATH = os.path.join(directorio_actual, 'modelos', 'ml', 'best_rf_model.pkl')
+CSV_PATH = os.path.join(directorio_actual, 'src', 'historial_pacientes', 'datos_finales_Kaggle.csv')
+MODEL_ML_PATH = os.path.join(directorio_actual, 'src', 'models', 'ml', 'best_rf_model.pkl')
 
 # Carga de modelos con caché para evitar recargas constantes
 @st.cache_resource
@@ -26,15 +26,15 @@ def cargar_recursos():
         obtener_modelo_cnn()
         return modelo
     except Exception as e:
-        st.error(f"⚠️ Error inicial: {e}")
+        st.error(f"Error inicial: {e}")
         return None
 
 modelo_ia = cargar_recursos()
 
 # --- INTERFAZ STREAMLIT ---
-st.title("🏥 Sistema Integral ColonAI")
+st.title("Sistema Integral ColonAI")
 
-tab1, tab2 = st.tabs(["📊 Análisis de Datos", "🔍 Visión por Computadora"])
+tab1, tab2 = st.tabs(["Análisis de Datos", "Visión por Computadora"])
 
 with tab1:
     col_sidebar, col_main = st.columns([1, 2])
@@ -44,8 +44,8 @@ with tab1:
         pacientes = nombres_p(CSV_PATH)
         selector = st.selectbox("Buscar Paciente", options=pacientes)
         
-        btn_cargar = st.button("📂 Cargar Datos", use_container_width=True)
-        btn_nuevo = st.button("🆕 Nuevo Paciente", use_container_width=True)
+        btn_cargar = st.button("Cargar Datos", use_container_width=True)
+        btn_nuevo = st.button("Nuevo Paciente", use_container_width=True)
 
     # Inicializar valores en session_state para que sean mutables por los botones
     if 'form_data' not in st.session_state:
@@ -93,11 +93,11 @@ with tab1:
     st.divider()
     
     c_btn1, c_btn2 = st.columns(2)
-    if c_btn1.button("💉 CALCULAR RIESGO", type="primary", use_container_width=True):
+    if c_btn1.button("CALCULAR RIESGO", type="primary", use_container_width=True):
         res_html = predecir(modelo_ia, selector, in_edad, in_genero, in_estadio, in_tumor, in_sangre, in_cea, in_fuma, in_alc, in_diab, in_fam, in_ibd, in_peso, in_altura)
         st.markdown(res_html, unsafe_allow_html=True)
 
-    if c_btn2.button("💾 GUARDAR REGISTRO", use_container_width=True):
+    if c_btn2.button("UARDAR REGISTRO", use_container_width=True):
         res_save = save_r(directorio_actual, selector, in_edad, in_genero, in_estadio, in_tumor, in_fam, in_fuma, in_alc, in_diab, in_ibd, in_sangre, in_cea, in_altura, in_peso)
         st.markdown(res_save, unsafe_allow_html=True)
 
@@ -116,7 +116,7 @@ with tab2:
         image = Image.open(img_input)
         img_array = np.array(image)
         
-        if st.button("🖼️ ANALIZAR IMAGEN", type="primary"):
+        if st.button("ANALIZAR IMAGEN", type="primary"):
             txt_resultado, img_output = colonos(img_array)
             
             with img_col2:

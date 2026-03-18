@@ -6,7 +6,7 @@ import os
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
 # ==========================================
-# 🔥 PARCHE DE EMERGENCIA Y CARGA (CACHÉ)
+# PARCHE DE EMERGENCIA Y CARGA (CACHÉ)
 # ==========================================
 @st.cache_resource
 def inicializar_entorno_y_modelo():
@@ -23,22 +23,22 @@ def inicializar_entorno_y_modelo():
     # 2. Localizar y cargar modelo
     # Ajustamos la ruta para que funcione desde la carpeta raíz o subcarpetas
     directorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    MODEL_CNN_PATH = os.path.join(directorio_raiz, 'modelos', 'dl', 'modelo_pro_agresivo.keras')
+    MODEL_CNN_PATH = os.path.join(directorio_raiz,'src', 'networks', 'dl', 'modelo_pro_agresivo.keras')
     
     if not os.path.exists(MODEL_CNN_PATH):
-        st.error(f"❌ ARCHIVO NO ENCONTRADO EN: {MODEL_CNN_PATH}")
+        st.error(f"ARCHIVO NO ENCONTRADO EN: {MODEL_CNN_PATH}")
         return None
 
     try:
         modelo = tf.keras.models.load_model(MODEL_CNN_PATH, compile=False)
-        print("✅ Modelo CNN cargado exitosamente en Streamlit.")
+        print("Modelo CNN cargado exitosamente en Streamlit.")
         return modelo
     except Exception as e:
         # Intento de compatibilidad extrema
         try:
             return tf.keras.models.load_model(MODEL_CNN_PATH, compile=False, safe_mode=False)
         except:
-            st.error(f"⚠️ Error fatal en carga de modelo: {e}")
+            st.error(f"Error fatal en carga de modelo: {e}")
             return None
 
 # --- AÑADE ESTA LÍNEA AQUÍ ---
@@ -59,12 +59,12 @@ def predecir(modelo, selector, edad, genero, estadio, tumor, sangre, cea, fuma, 
             return valor in [True, 1, "1", "Sí", "si", "SÍ", "Si", "Yes", "yes"]
 
         factores = []
-        if es_positivo(fuma): factores.append("🚬 Tabaquismo activo")
-        if alc_v > 7: factores.append(f"🍷 Consumo de alcohol ({alc_v} u/semana)")
-        if es_positivo(sangre): factores.append("⚠️ Sangre detectable en heces (FOBT+)")
-        if es_positivo(fam): factores.append("🧬 Antecedentes familiares")
-        if es_positivo(ibd): factores.append("🩺 Enfermedad Inflamatoria Intestinal")
-        if cea_v > 5: factores.append(f"🧪 Marcador CEA elevado ({cea_v} ng/mL)")
+        if es_positivo(fuma): factores.append("Tabaquismo activo")
+        if alc_v > 7: factores.append(f"Consumo de alcohol ({alc_v} u/semana)")
+        if es_positivo(sangre): factores.append("Sangre detectable en heces (FOBT+)")
+        if es_positivo(fam): factores.append("Antecedentes familiares")
+        if es_positivo(ibd): factores.append("Enfermedad Inflamatoria Intestinal")
+        if cea_v > 5: factores.append(f"Marcador CEA elevado ({cea_v} ng/mL)")
 
         gen_n = 1 if genero in ["Masculino", 1, "1"] else 0
         # Mantenemos las 12 variables que espera tu modelo ML
@@ -112,7 +112,7 @@ def colonos(imagen):
         modelo_instancia = obtener_modelo_cnn() 
         
         if modelo_instancia is None:
-            return "<div style='color:orange;'>⚠️ El modelo no se pudo cargar.</div>", imagen
+            return "<div style='color:orange;'> El modelo no se pudo cargar.</div>", imagen
 
         # 1. Redimensionar
         img_res = cv2.resize(imagen, (150, 150))
