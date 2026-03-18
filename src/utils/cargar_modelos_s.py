@@ -23,7 +23,7 @@ def inicializar_entorno_y_modelo():
     # 2. Localizar y cargar modelo
     # Ajustamos la ruta para que funcione desde la carpeta raíz o subcarpetas
     directorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    MODEL_CNN_PATH = os.path.join(directorio_raiz,'src', 'networks', 'dl', 'modelo_pro_agresivo.keras')
+    MODEL_CNN_PATH = os.path.join(directorio_raiz, 'networks', 'dl', 'modelo_pro_agresivo.keras')
     
     if not os.path.exists(MODEL_CNN_PATH):
         st.error(f"ARCHIVO NO ENCONTRADO EN: {MODEL_CNN_PATH}")

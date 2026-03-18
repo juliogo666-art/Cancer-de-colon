@@ -15,7 +15,7 @@ sys.path.append(directorio_actual)
 from src.utils.cargar_modelos_s import predecir, colonos, obtener_modelo_cnn
 from src.utils.data_load_s import datos_p, nombres_p, save_r
 
-CSV_PATH = os.path.join(directorio_actual, 'src', 'historial_pacientes', 'datos_finales_Kaggle.csv')
+CSV_PATH = os.path.join(directorio_actual, 'src','data', 'raw', 'historial_pacientes', 'datos_finales_Kaggle.csv')
 MODEL_ML_PATH = os.path.join(directorio_actual, 'src', 'models', 'ml', 'best_rf_model.pkl')
 
 # Carga de modelos con caché para evitar recargas constantes
