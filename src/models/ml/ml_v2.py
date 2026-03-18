@@ -17,13 +17,16 @@ from lightgbm import LGBMClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, fbeta_score
 
 # --- 1. CONFIGURACIÓN DE RUTAS ---
-file_path = 'C:/Users/Ana-L/Desktop/cosas de Juan/Programacion/cancer de colon/prueba'
-file_modelos = file_path + '/modelos/ml'
+directorio_actual = os.path.dirname(os.path.abspath(__file__))
+# src/models/ml -> src/data/raw/historial_pacientes
+directorio_src = os.path.dirname(os.path.dirname(directorio_actual))
+file_path_data = os.path.join(directorio_src, 'data', 'raw', 'historial_pacientes')
+file_modelos = directorio_actual
 os.makedirs(file_modelos, exist_ok=True)
 
 # --- 2. CARGA Y SELECCIÓN DE VARIABLES ---
 print("⏳ Cargando datos...")
-df = pd.read_csv(file_path + '/datos_finales_Kaggle.csv')
+df = pd.read_csv(os.path.join(file_path_data, 'datos_finales_Kaggle.csv'))
 
 # He incluido Cancer_Stage y Tumor_Size porque son las que dan capacidad predictiva real
 features = [
@@ -118,8 +121,8 @@ evaluar_modelo_sensible(xgb_model, X_test, y_test, "XGBoost GPU", umbral=0.70)
 evaluar_modelo_sensible(lgbm_model, X_test, y_test, "LightGBM GPU")
 
 # Guardar modelos
-joblib.dump(rf_model, file_modelos + '/rf_sensible.pkl')
-joblib.dump(xgb_model, file_modelos + '/xgb_sensible.pkl')
-joblib.dump(lgbm_model, file_modelos + '/lgbm_sensible.pkl')
+joblib.dump(rf_model, os.path.join(file_modelos, 'best_rf_model.pkl'))
+joblib.dump(xgb_model, os.path.join(file_modelos, 'xgb_sensible.pkl'))
+joblib.dump(lgbm_model, os.path.join(file_modelos, 'lgbm_sensible.pkl'))
 
 print("\n✅ Proceso completado. Modelos guardados en:", file_modelos)

@@ -21,9 +21,11 @@ else:
     print("⚠️ GPU no detectada, se usará la CPU.")
 
 # --- 1. RUTAS Y PARÁMETROS ---
-RUTA_BASE = r'cancer de colon\prueba\dataset_colon_completo\dataset_colon_completo'
+directorio_actual = os.path.dirname(os.path.abspath(__file__))
+directorio_src = os.path.dirname(os.path.dirname(directorio_actual))
+RUTA_BASE = os.path.join(directorio_src, 'data', 'raw', 'dataset_colon_completo')
 RUTA_DATASET = os.path.join(RUTA_BASE, 'dataset_limpio')
-SAVE_DIR = r'cancer de colon\prueba\modelos\dl'
+SAVE_DIR = directorio_actual
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 IMG_SIZE = (150, 150)

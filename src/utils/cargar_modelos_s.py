@@ -55,6 +55,20 @@ def predecir(modelo, selector, edad, genero, estadio, tumor, sangre, cea, fuma, 
         alc_v = float(alc) if (alc and alc != "") else 0
         cea_v = float(cea) if (cea and cea != "") else 0
         
+        tumor_v = float(tumor) if (tumor and tumor != "") else 0
+        altura_v = float(altura) if (altura and altura != "") else 1.0
+        peso_v = float(peso) if (peso and peso != "") else 0
+        
+        # Calcular BMI
+        altura_m = altura_v / 100.0 if altura_v > 0 else 1.0
+        bmi_val = peso_v / (altura_m ** 2)
+        if bmi_val >= 30:
+            obesity_bmi = 2
+        elif bmi_val >= 25:
+            obesity_bmi = 1
+        else:
+            obesity_bmi = 0
+
         def es_positivo(valor):
             return valor in [True, 1, "1", "Sí", "si", "SÍ", "Si", "Yes", "yes"]
 
@@ -66,12 +80,23 @@ def predecir(modelo, selector, edad, genero, estadio, tumor, sangre, cea, fuma, 
         if es_positivo(ibd): factores.append("Enfermedad Inflamatoria Intestinal")
         if cea_v > 5: factores.append(f"Marcador CEA elevado ({cea_v} ng/mL)")
 
-        gen_n = 1 if genero in ["Masculino", 1, "1"] else 0
-        # Mantenemos las 12 variables que espera tu modelo ML
+        gen_n = 0 if genero in ["Masculino", 0, "0", "M", "m"] else 1
+        
+        # 13 variables que espera el modelo ML RandomForest entrenado en ml_v2.py
         features = np.array([[
-            edad_v, gen_n, 1 if es_positivo(fam) else 0, 1 if es_positivo(fuma) else 0, 
-            alc_v, 0, 0, 1 if es_positivo(diab) else 0, 1 if es_positivo(ibd) else 0, 
-            1 if es_positivo(sangre) else 0, cea_v, int(float(estadio)) if estadio else 1
+            edad_v, 
+            gen_n, 
+            int(float(estadio)) if estadio else 1, 
+            tumor_v, 
+            1 if es_positivo(fam) else 0, 
+            1 if es_positivo(fuma) else 0, 
+            alc_v, 
+            obesity_bmi, 
+            1 if es_positivo(ibd) else 0, 
+            1 if es_positivo(sangre) else 0, 
+            cea_v, 
+            altura_v, 
+            peso_v
         ]])
 
         if modelo is not None:
