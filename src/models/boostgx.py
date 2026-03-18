@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 
 # cargar datos
-data = pd.read_csv("src/data/raw/historial_pacientes/datos_combinados_completos.csv")
+data = pd.read_csv("src/data/raw/historial_pacientes/datos_combinados_global_extendido_3.csv")
 # separar variables
 
 data["cancer"] = data["Cancer_Stage"] != "Stage 0"
