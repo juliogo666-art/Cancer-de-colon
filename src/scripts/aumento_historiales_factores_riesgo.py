@@ -80,21 +80,27 @@ for i in range(n_synthetic):
 
     # 3. Recalcular el Riesgo basado en literatura médica
     # Incorporamos los factores médicos agregados para que los sintéticos sigan a los reales
+    # Ver archivo factores_de_riesgo.md
+
     score = (
-        (base_row["Age"] / 100) * 0.2
-        + (base_row["Smoking"] / 10) * 0.1
-        + (base_row["Alcohol_Use"] / 10) * 0.1
-        + (base_row["Diet_Red_Meat"] / 10) * 0.1
-        + (base_row["Diet_Salted_Processed"] / 10) * 0.1
-        + (base_row["Obesity"] / 10) * 0.1
-        + (base_row["Family_History"]) * 0.15
-        - (base_row["Fruit_Veg_Intake"] / 10) * 0.1
-        - (base_row["Physical_Activity"] / 10) * 0.1
+        (base_row["Age"] / 100) * 0.20  # NCI: Factor principal (>50 años)
+        + (base_row["Smoking"] / 10) * 0.15  # Surgeon General: Mutágenos directos
+        + (base_row["Alcohol_Use"] / 10) * 0.10  # IARC/OMS: Factor carcinógeno
+        + (base_row["Diet_Red_Meat"] / 10)
+        * 0.17  # OMS (Monografía 114): +17% de riesgo
+        + (base_row["Diet_Salted_Processed"] / 10)
+        * 0.18  # OMS (Monografía 114): +18% de riesgo
+        + (base_row["Obesity"] / 10) * 0.10  # WCRF: Inflamación metabólica
+        + (base_row["Family_History"]) * 0.15  # ACG: Genética (Multiplica el riesgo)
+        - (base_row["Fruit_Veg_Intake"] / 10)
+        * 0.15  # EPIC: Efecto protector fuerte de la fibra
+        - (base_row["Physical_Activity"] / 10)
+        * 0.10  # WCRF: Motilidad intestinal acelerada
     )
 
-    base_row["Overall_Risk_Score"] = max(
-        0.0, min(1.0, score + 0.2)
-    )  # Normalizar entre 0 y 1
+    # Normalizamos para asegurarnos de que el score final NUNCA se pase de 1.0 ni baje de 0.0
+    # Añadimos un 0.1 de "riesgo base poblacional"
+    base_row["Overall_Risk_Score"] = max(0.0, min(1.0, score + 0.1))
 
     # 4. Asignar la etiqueta objetivo (Target) para tu modelo
     if base_row["Overall_Risk_Score"] > 0.65:
