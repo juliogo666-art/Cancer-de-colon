@@ -241,3 +241,36 @@ def limpiar_datos_kaggle_finales(df_global, output_dir):
     df_global = df_global.copy()
     df_global = sintetizar_datos_kaggle(df_global, output_dir)
     return df_global
+
+def limpiar_datos_riesgo_def(df, file_path_sin_d):
+    """
+    Limpia el dataset de factores de riesgo y asigna Patient_ID único.
+    """
+    df = df.copy()
+
+    # 1. Limpieza inicial
+    df = df.dropna()
+    df = df.drop_duplicates()
+
+    # 2. Asignación de Patient_ID (Si no existe)
+    # Generamos IDs únicos desde 30000 en adelante
+    if "Patient_ID" not in df.columns:
+        df.insert(0, 'Patient_ID', range(00000, 00000 + len(df)))
+
+    # 3. Mapeo de niveles de riesgo
+    risk_map = {"Low": 0, "Medium": 1, "High": 2}
+    if "Risk_Level" in df.columns:
+        # Creamos la versión numérica sin borrar la original para el EDA
+        df["Risk_Level_n"] = df["Risk_Level"].map(risk_map)
+
+    # 4. Convertir columnas a numérico de forma segura
+    # Solo aplicamos to_numeric a las columnas que no son 'Risk_Level' (texto)
+    cols_a_convertir = df.columns.drop(['Risk_Level']) if 'Risk_Level' in df.columns else df.columns
+    for col in cols_a_convertir:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+    # 5. Guardado
+    directorio_destino = os.path.dirname(file_path_sin_d)
+    guardar_csv(df, directorio_destino, "cancer_risk_clean.csv")
+    
+    return df

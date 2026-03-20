@@ -8,14 +8,15 @@ from src.scripts.data_cleaning import (
     limpiar_datos_sinteticos,
     combinar_datos_s_g,
     limpiar_datos_kaggle,
-    
+    limpiar_datos_riesgo_def,
 )
 from src.utils.eda_visualization import (
     eda_datos_globales,
     eda_datos_sinteticos,
     eda_datos_combinados,
     eda_datos_kaggle,
-    eda_datos_Kaggle_f
+    eda_datos_Kaggle_f,
+    eda_datos_riesgo,
 )
 
 # Configuración principal de la página de Streamlit
@@ -45,6 +46,9 @@ def eda(base_path):
 
     file_path_kaggle_f = os.path.join(ruta_historial, "datos_finales_Kaggle.csv")
 
+    file_path_riesgo = os.path.join(ruta_historial, "historiales_factor_riesgo", "cancer_risk_clean.csv")
+    file_path_risego_clean = os.path.join(ruta_historial, "historiales_factor_riesgo", "cancer_risk_factors_augmented.csv")
+
     # Menú lateral para navegación
     menu = st.sidebar.radio(
         "Navegación",
@@ -54,6 +58,7 @@ def eda(base_path):
             "3. Datos combinados",
             "4. Datos Kaggle", 
             "5. Datos finales",
+            "6. Datos nuevos finales"
         ],
     )
 
@@ -164,6 +169,33 @@ def eda(base_path):
                 with st.container():
                     st.write("Generando gráficos...")
                     eda_datos_Kaggle_f(df)
+            else:
+                st.error(
+                    "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
+                )
+    elif menu == "6. Datos nuevos finales":
+        st.header("Análisis de nuevos Datos Finales")
+
+        if os.path.exists(file_path_riesgo):
+            df_combinados = pd.read_csv(file_path_riesgo)
+            mostrar_vista_previa(df_combinados)
+
+            with st.container():
+                st.write("Generando gráficos...")
+                eda_datos_riesgo(df_combinados)
+
+        else:
+            if os.path.exists(file_path_risego_clean):
+                # Cargar y limpiar ambos datasets
+                df = pd.read_csv(file_path_risego_clean, sep=',')
+
+                df = limpiar_datos_riesgo_def(df, file_path_riesgo)
+
+                mostrar_vista_previa(df)
+
+                with st.container():
+                    st.write("Generando gráficos...")
+                    eda_datos_riesgo(df)
             else:
                 st.error(
                     "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
