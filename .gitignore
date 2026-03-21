@@ -220,3 +220,6 @@ src/data/raw/colonoscopic_processed
 
 # No compartir passwords, key y tokens
 .env
+
+# No subir carpeta info
+info/
