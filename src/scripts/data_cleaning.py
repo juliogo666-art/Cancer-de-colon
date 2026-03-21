@@ -252,6 +252,8 @@ def limpiar_datos_riesgo_def(df, file_path_sin_d):
     df = df.dropna()
     df = df.drop_duplicates()
 
+    df = df.drop(columns=['Age', 'Gender'], errors='ignore')
+
     # 2. Asignación de Patient_ID (Si no existe)
     # Generamos IDs únicos desde 30000 en adelante
     if "Patient_ID" not in df.columns:
