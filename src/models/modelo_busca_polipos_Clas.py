@@ -2,18 +2,22 @@
 
 # Modelo de clasificación de pólipos Clasificador
 
-# fuente con 680 imágenes válidas y balanceadas
+# El dataset original cuenta con un aproximado de 11.000 imágenes, de las cuales 
+# 3.912 contienen pólipos. Para garantizar el correcto aprendizaje de la red y 
+# evitar el desbalanceo de clases, se toma de forma aleatoria una muestra de 
+# 3.912 imágenes sin pólipos, obteniendo así un dataset balanceado de 7.824 imágenes.
 
 # Compilamos una red neuronal profunda ResNet18 precargada con pesos de ImageNet.
 # Ajustamos la capa final fc para resolver un problema de Clasificación Binaria
 # (BCEWithLogitsLoss).
 # Le inyectamos técnicas de Data Augmentation en tiempo real
 # (RandomHorizontalFlip, RandomRotation, ColorJitter) para garantizar que el modelo
-# no se memorizara las 680 imágenes sino que aprendiera las texturas de los pólipos
+# no se memorizara las 7.824 imágenes sino que aprendiera las texturas de los pólipos
 # desde diferentes ángulos y condiciones de luz.
 
 #####################################################################################################
 
+import os
 import random
 
 import torch
@@ -309,13 +313,15 @@ def train_model():
         # Guardar el mejor modelo según val loss (early stopping simple)
         if val_metrics["loss"] < best_val_loss:
             best_val_loss = val_metrics["loss"]
-            torch.save(model.state_dict(), "polyp_resnet18_best.pth")
+            model_path_best = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polyp_resnet18_best.pth")
+            torch.save(model.state_dict(), model_path_best)
             print(f"  → Mejor modelo guardado (Val Loss: {best_val_loss:.4f})")
 
     # ---- Evaluación final sobre Test ----
     print("\n--- Evaluación Final en Test ---")
     # Cargar el mejor modelo
-    model.load_state_dict(torch.load("polyp_resnet18_best.pth", weights_only=True))
+    model_path_best = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polyp_resnet18_best.pth")
+    model.load_state_dict(torch.load(model_path_best, weights_only=True))
     test_metrics = evaluate_model(model, test_loader, criterion, device)
 
     print(f"Test Loss:      {test_metrics['loss']:.4f}")
@@ -325,8 +331,9 @@ def train_model():
     print(f"Test F1-Score:  {test_metrics['f1']:.4f}")
 
     # Guardar modelo final
-    torch.save(model.state_dict(), "polyp_resnet18.pth")
-    print("\nModelo final guardado como polyp_resnet18.pth")
+    model_path_final = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polyp_resnet18.pth")
+    torch.save(model.state_dict(), model_path_final)
+    print("\nModelo final guardado en la misma carpeta que el script (polyp_resnet18.pth)")
 
 
 #####################################################################################################
