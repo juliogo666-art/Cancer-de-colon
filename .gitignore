@@ -210,3 +210,13 @@ __marimo__/
 # No se pueden subir base de datos massivos
 src/data/raw/colon_image_sets/colon_aca/*.jpeg
 src/data/raw/colon_image_sets/colon_n/*.jpeg
+
+# No subir datasets masivos
+src/data/raw/colonoscopic_processed/
+
+# No subir archivos de información
+info/
+
+# No subir archvios de entreno pesados
+*.pth
+*.pkl
