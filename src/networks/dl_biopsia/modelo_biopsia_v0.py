@@ -211,7 +211,11 @@ def train_biopsy_model():
 
     # Preparamos rutas relativas para el guardado
     model_dir = os.path.dirname(os.path.abspath(__file__))
+    # Mejor modelo, es decir menor perdida con datos de validación,
+    # pero no necesariamente el que tenga mayor precision o recall
+    # evitamos overfitting
     best_model_path = os.path.join(model_dir, "biopsia_resnet18_best.pth")
+    # Ultimo modelo entrenado, en la 10 epoca, por si fuera mejorable
     final_model_path = os.path.join(model_dir, "biopsia_resnet18_final.pth")
 
     print("\n-------------------- Empezando Entrenamiento --------------------")
