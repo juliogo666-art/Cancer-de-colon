@@ -8,6 +8,7 @@ import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+from src.utils.gradcam_utils import generate_gradcam
 
 
 # ==========================================
@@ -299,19 +300,7 @@ def biopsias(imagen):
                 imagen,
             )
 
-        # 1. Transformaciones idénticas a las de validación del entrenamiento
-        IMAGENET_MEAN = [0.485, 0.456, 0.406]
-        IMAGENET_STD = [0.229, 0.224, 0.225]
-
-        transform = transforms.Compose(
-            [
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-            ]
-        )
-
-        # 2. Convertir a PIL si es array (Streamlit suele pasar numpy o PIL)
+        # 1. Convertir a PIL si es array (Streamlit suele pasar numpy o PIL)
         if isinstance(imagen, np.ndarray):
             img_pil = Image.fromarray(imagen)
         else:
@@ -320,39 +309,32 @@ def biopsias(imagen):
         if img_pil.mode != "RGB":
             img_pil = img_pil.convert("RGB")
 
-        # 3. Pre-procesamiento
-        img_tensor = transform(img_pil).unsqueeze(
-            0
-        )  # Añadir dimensión Batch [1, 3, 224, 224]
-
-        # 4. Inferencia
-        with torch.no_grad():
-            outputs = modelo_instancia(img_tensor)
-            # Aplicamos Sigmoide para obtener probabilidad
-            prob = torch.sigmoid(outputs).item()
+        # 3. Pre-procesamiento (PIL)
+        # 4. Grad-CAM Inferencia
+        # Obtenemos la capa objetivo de ResNet18 (Normalmente la última capa conv antes del pooling: layer4[-1])
+        target_layer = modelo_instancia.model.layer4[-1]
+        
+        # heatmap_img ya viene como array OpenCV / RGB y listo
+        heatmap_img, prob = generate_gradcam(modelo_instancia, img_pil, target_layer)
 
         # 5. Lógica de resultados
-        # Según datasets.ImageFolder: colon_aca -> 0 (Maligno), colon_n -> 1 (Benigno)
-        # Si prob < 0.5 -> Clase 0 (Maligno)
-        # Si prob >= 0.5 -> Clase 1 (Benigno)
-
         es_benigno = prob >= 0.5
         resultado = "BENIGNO (NORMAL)" if es_benigno else "🚨 MALIGNO (ADENOCARCINOMA)"
-
+        
         # Confianza
         confianza = prob if es_benigno else (1.0 - prob)
         color = "#28a745" if es_benigno else "#ff4b4b"
         subtitulo = (
             "Tejido dentro de los parámetros normales."
             if es_benigno
-            else "Sospecha de malignidad. Requiere confirmación oncológica."
+            else "Sospecha de malignidad. El mapa de calor indica zonas de interés."
         )
 
-        # Redimensionado solo para visualización en el recuadro de Streamlit
-        img_visual = cv2.resize(np.array(img_pil), (224, 224))
+        # Redimensionado de la original para que queden igualitas al lado
+        img_original_224 = cv2.resize(np.array(img_pil), (224, 224))
 
         html_vision = f"""
-        <div style='background-color: #000; border: 3px solid {color}; padding: 25px; border-radius: 15px; text-align: center; color: white; font-family: sans-serif;'>
+        <div style='background-color: #000; border: 3px solid {color}; padding: 25px; border-radius: 15px; text-align: center; color: white; font-family: sans-serif; margin-top: 15px;'>
             <h2 style='margin: 10px 0; color: {color}; font-size: 24px; font-weight: 900;'>{resultado}</h2>
             <div style='margin: 15px 0;'>
                 <span style='font-size: 40px; font-weight: bold;'>{confianza * 100:.1f}%</span>
@@ -363,10 +345,10 @@ def biopsias(imagen):
             </div>
         </div>
         """
-        return html_vision, img_visual
+        # Devolvemos TRES cosas: el html_info, la imagen Grad-CAM y la Imagen Original
+        return html_vision, heatmap_img, img_original_224
 
     except Exception as e:
-        return (
-            f"<div style='color:red;'>Error en inferencia de Biopsia: {str(e)}</div>",
-            imagen,
-        )
+        # En caso de error, devolvemos un array vacío como imagen o la original para que no rompa la triple asignación
+        img_error = cv2.resize(np.array(img_pil), (224, 224)) if 'img_pil' in locals() else imagen
+        return f"<div style='color:red;'>Error en inferencia de Biopsia: {str(e)}</div>", img_error, img_error

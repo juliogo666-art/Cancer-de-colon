@@ -244,14 +244,17 @@ with tab2:
             if "Colonoscopia" in tipo_analisis:
                 with st.spinner("Analizando pólipos con TensorFlow..."):
                     txt_resultado, img_output = colonos(img_array)
+                with img_col2:
+                    st.image(img_output, caption="Imagen Analizada", use_container_width=True)
+                    st.markdown(txt_resultado, unsafe_allow_html=True)
             else:
-                with st.spinner("Analizando malignidad con PyTorch..."):
-                    txt_resultado, img_output = biopsias(img_array)
-
-            with img_col2:
-                # Si es biopsia, ya viene redimensionada a 224x224
-                # Si es colonoscopia, viene a 150x150
-                st.image(
-                    img_output, caption="Imagen Analizada", use_container_width=True
-                )
-                st.markdown(txt_resultado, unsafe_allow_html=True)
+                with st.spinner("Analizando malignidad con PyTorch + Grad-CAM..."):
+                    txt_resultado, img_heatmap, img_original = biopsias(img_array)
+                
+                with img_col2:
+                    sub_col1, sub_col2 = st.columns(2)
+                    with sub_col1:
+                        st.image(img_original, caption="Biopsia Original", use_container_width=True)
+                    with sub_col2:
+                        st.image(img_heatmap, caption="Mapa de Calor (Grad-CAM)", use_container_width=True)
+                    st.markdown(txt_resultado, unsafe_allow_html=True)
