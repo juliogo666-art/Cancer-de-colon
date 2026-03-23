@@ -48,8 +48,8 @@ def inicializar_entorno_y_modelo():
             return tf.keras.models.load_model(
                 MODEL_CNN_PATH, compile=False, safe_mode=False
             )
-        except:
-            st.error(f"Error fatal en carga de modelo Keras: {e}")
+        except Exception as e2:
+            st.error(f"Error fatal en carga de modelo Keras: {e} | {e2}")
             return None
 
 

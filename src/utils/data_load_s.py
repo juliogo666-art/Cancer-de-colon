@@ -10,20 +10,21 @@ def nombres_p(path):
         if not os.path.exists(path):
             return []
         # Leemos solo las columnas necesarias para ahorrar memoria
-        df = pd.read_csv(path, usecols=['nombre', 'apellido1', 'Patient_ID'], nrows=100)
+        df = pd.read_csv(path, usecols=['nombre', 'apellido1', 'Patient_ID'])
         df['display_name'] = df['nombre'] + " " + df['apellido1'] + " (ID: " + df['Patient_ID'].astype(str) + ")"
         return df['display_name'].tolist()
     except Exception as e:
         print(f"Error cargando nombres: {e}")
         return []
 
+@st.cache_data
 def datos_p(nombre_completo, path):
     """Busca un paciente y devuelve sus datos formateados para los inputs de Streamlit."""
     if not nombre_completo or "ID: " not in nombre_completo:
         return [None] * 13
         
     try:
-        df = pd.read_csv(path, nrows=100)
+        df = pd.read_csv(path)
         # Extraemos el ID del string del selector
         pid = int(nombre_completo.split("ID: ")[1].replace(")", ""))
         p = df[df['Patient_ID'] == pid].iloc[0]

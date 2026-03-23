@@ -52,7 +52,7 @@ def generate_gradcam(model, img_pil, target_layer):
 
     # Enganchamos los hooks a la capa objetivo
     h1 = target_layer.register_forward_hook(forward_hook)
-    h2 = target_layer.register_backward_hook(backward_hook)
+    h2 = target_layer.register_full_backward_hook(backward_hook)
 
     # 2. Forward pass
     output = model(input_tensor)

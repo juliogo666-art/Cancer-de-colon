@@ -19,10 +19,6 @@ from src.utils.eda_visualization import (
     eda_datos_riesgo,
 )
 
-# Configuración principal de la página de Streamlit
-st.set_page_config(page_title="Cancer Colon ML", layout="wide")
-
-
 def mostrar_vista_previa(df):
     """Muestra una vista previa y descripción estadística del DataFrame."""
     st.write("Vista previa de los datos")
@@ -38,7 +34,7 @@ def eda(base_path):
 
     file_path_globales = os.path.join(ruta_historial,"pacientes_con_cancer_tratado","global_cancer_patients_2015_2024.csv",)
     file_path_sinteticos = os.path.join(ruta_historial, "historiales_sinteticos", "pacientes_simulador_colon.csv")
-    file_path_combinados = ruta_historial
+    dir_combinados = ruta_historial
 
     file_path_final = os.path.join(ruta_historial, "datos_combinados_global_extendido_3.csv")
 
@@ -114,7 +110,7 @@ def eda(base_path):
                 df_g = limpiar_datos_globales(df_g, file_path_globales)
 
                 # Combinar los datos limpios
-                df = combinar_datos_s_g(df_g, file_path_combinados)
+                df = combinar_datos_s_g(df_g, dir_combinados)
 
                 mostrar_vista_previa(df)
 
@@ -162,7 +158,7 @@ def eda(base_path):
                 df_g = limpiar_datos_kaggle(df_g, file_path_kaggle)
 
                 # Combinar los datos limpios
-                df = limpiar_datos_kaggle_finales(df_g, file_path_combinados)
+                df = limpiar_datos_kaggle_finales(df_g, dir_combinados)
 
                 mostrar_vista_previa(df)
 
