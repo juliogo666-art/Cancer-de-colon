@@ -57,7 +57,9 @@ with tab1:
         st.session_state.form_data = {
             "edad": 0, "genero": "Masculino", "estadio": 1, "tumor": 0.0,
             "sangre": "No", "cea": 0.0, "fuma": "No", "alc": 0.0,
-            "diab": "No", "fam": False, "ibd": False, "peso": 0.0, "altura": 0.0
+            "diab": "No", "fam": False, "ibd": False, "peso": 0.0, "altura": 0.0,
+            "genetic_risk": 0.0, "air_pollution": 0.0, "obesity_level": 0.0,
+            "dieta_grasas": False, "sedentarismo": False, "componente_hereditario": False
         }
     if 'patient_info' not in st.session_state:
         st.session_state.patient_info = None
@@ -144,6 +146,12 @@ with tab1:
             cea = float(paciente.get("CEA_Level_ng_mL..Marcador.Tumoral.", 0) or 0)
             altura = float(paciente.get("altura_cm", 0) or 0)
             peso = float(paciente.get("peso_kg", 0) or 0)
+            genetic_risk = float(paciente.get("Genetic_Risk", 0) or 0)
+            air_pollution = float(paciente.get("Air_Pollution", 0) or 0)
+            obesity_level = float(paciente.get("Obesity_Level", 0) or 0)
+            dieta_grasas = bool(paciente.get("Dieta_rica_en_grasas_animales", 0))
+            sedentarismo = bool(paciente.get("Sedentarismo", 0))
+            componente_hereditario = bool(paciente.get("Componente_Hereditario", 0))
 
             st.session_state.form_data.update({
                 "edad": edad,
@@ -159,6 +167,12 @@ with tab1:
                 "cea": cea,
                 "altura": altura,
                 "peso": peso,
+                "genetic_risk": genetic_risk,
+                "air_pollution": air_pollution,
+                "obesity_level": obesity_level,
+                "dieta_grasas": dieta_grasas,
+                "sedentarismo": sedentarismo,
+                "componente_hereditario": componente_hereditario,
             })
 
             nombre = str(paciente.get("nombre", "")).strip()
@@ -200,6 +214,7 @@ with tab1:
 
     st.divider()
 
+    st.markdown("**Clínicos**")
     r1_c1, r1_c2, r1_c3 = st.columns(3)
     in_edad = r1_c1.number_input("Edad", value=int(st.session_state.form_data["edad"]))
     in_genero = r1_c2.selectbox("Género", ["Masculino", "Femenino"], index=0 if st.session_state.form_data["genero"]=="Masculino" else 1)
@@ -207,19 +222,33 @@ with tab1:
 
     r2_c1, r2_c2, r2_c3 = st.columns(3)
     in_tumor = r2_c1.number_input("Tamaño Tumor (mm)", value=float(st.session_state.form_data["tumor"]))
-    in_sangre = r2_c2.radio("Sangre en Heces", ["No", "Sí"], index=0 if st.session_state.form_data["sangre"]=="No" else 1, horizontal=True)
-    in_cea = r2_c3.number_input("Nivel CEA", value=float(st.session_state.form_data["cea"]))
+    in_cea = r2_c2.number_input("Nivel CEA", value=float(st.session_state.form_data["cea"]))
+    in_sangre = r2_c3.radio("Sangre en Heces", ["No", "Sí"], index=0 if st.session_state.form_data["sangre"]=="No" else 1, horizontal=True)
 
+    st.markdown("**Hábitos y comorbilidades**")
     r3_c1, r3_c2, r3_c3 = st.columns(3)
     in_fuma = r3_c1.radio("Fumador", ["No", "Sí"], index=0 if st.session_state.form_data["fuma"]=="No" else 1, horizontal=True)
     in_alc = r3_c2.number_input("Alcohol semanal", value=float(st.session_state.form_data["alc"]))
     in_diab = r3_c3.radio("Diabetes", ["No", "Sí"], index=0 if st.session_state.form_data["diab"]=="No" else 1, horizontal=True)
 
-    r4_c1, r4_c2, r4_c3, r4_c4 = st.columns(4)
+    r4_c1, r4_c2, r4_c3 = st.columns(3)
     in_fam = r4_c1.checkbox("Antecedentes Familiares", value=st.session_state.form_data["fam"])
-    in_ibd = r4_c2.checkbox("Enfermedad Inflamatoria", value=st.session_state.form_data["ibd"])
-    in_peso = r4_c3.number_input("Peso (kg)", value=float(st.session_state.form_data["peso"]))
-    in_altura = r4_c4.number_input("Altura (cm)", value=float(st.session_state.form_data["altura"]))
+    in_componente_hereditario = r4_c2.checkbox("Componente hereditario", value=st.session_state.form_data["componente_hereditario"])
+    in_ibd = r4_c3.checkbox("Enfermedad Inflamatoria", value=st.session_state.form_data["ibd"])
+
+    r5_c1, r5_c2 = st.columns(2)
+    in_dieta_grasas = r5_c1.checkbox("Dieta rica en grasas animales", value=st.session_state.form_data["dieta_grasas"])
+    in_sedentarismo = r5_c2.checkbox("Sedentarismo", value=st.session_state.form_data["sedentarismo"])
+
+    st.markdown("**Antropometría y entorno**")
+    r6_c1, r6_c2, r6_c3 = st.columns(3)
+    in_peso = r6_c1.number_input("Peso (kg)", value=float(st.session_state.form_data["peso"]))
+    in_altura = r6_c2.number_input("Altura (cm)", value=float(st.session_state.form_data["altura"]))
+    in_obesity_level = r6_c3.number_input("Obesity_Level", value=float(st.session_state.form_data["obesity_level"]))
+
+    r7_c1, r7_c2 = st.columns(2)
+    in_genetic_risk = r7_c1.number_input("Genetic_Risk", value=float(st.session_state.form_data["genetic_risk"]))
+    in_air_pollution = r7_c2.number_input("Air_Pollution", value=float(st.session_state.form_data["air_pollution"]))
 
     if btn_actualizar:
         if not texto_buscar:
@@ -261,6 +290,12 @@ with tab1:
                 _set_col("Enfermedad_Inflamatoria_Intestinal", 1 if in_ibd else 0)
                 _set_col("altura_cm", float(in_altura))
                 _set_col("peso_kg", float(in_peso))
+                _set_col("Genetic_Risk", float(in_genetic_risk))
+                _set_col("Air_Pollution", float(in_air_pollution))
+                _set_col("Obesity_Level", float(in_obesity_level))
+                _set_col("Dieta_rica_en_grasas_animales", 1 if in_dieta_grasas else 0)
+                _set_col("Sedentarismo", 1 if in_sedentarismo else 0)
+                _set_col("Componente_Hereditario", 1 if in_componente_hereditario else 0)
 
                 df_update.to_csv(CSV_PATH, index=False)
                 df = df_update
