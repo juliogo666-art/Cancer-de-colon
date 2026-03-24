@@ -3,12 +3,15 @@ import numpy as np
 import cv2
 import tensorflow as tf
 import os
+import pandas as pd     # Necesario para SHAP
+import shap              # Necesario para SHAP
+import matplotlib.pyplot as plt # Necesario para SHAP
 import torch
 import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from src.utils.gradcam_utils import generate_gradcam
+from src.utils.gradcam_utils import generate_gradcam, generate_gradcam_colon, generar_explicacion_shap
 
 
 # ==========================================
@@ -31,7 +34,7 @@ def inicializar_entorno_y_modelo():
     # Ajustamos la ruta para que funcione desde la carpeta raíz o subcarpetas
     directorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     MODEL_CNN_PATH = os.path.join(
-        directorio_raiz, "networks", "dl", "modelo_pro_agresivo.keras"
+        directorio_raiz, "networks", "dl", "rf_clinico.keras"
     )
 
     if not os.path.exists(MODEL_CNN_PATH):
@@ -102,128 +105,98 @@ def cargar_modelo_biopsia():
 # --- AÑADE ESTA LÍNEA AQUÍ ---
 # Creamos un alias para que app.py encuentre la función con el nombre antiguo
 obtener_modelo_cnn = inicializar_entorno_y_modelo
-
-# Instanciamos el modelo globalmente dentro del contexto de Streamlit
-# modelo_vision_global = inicializar_entorno_y_modelo()
-
-
-def predecir(
-    modelo,
-    selector,
-    edad,
-    genero,
-    estadio,
-    tumor,
-    sangre,
-    cea,
-    fuma,
-    alc,
-    diab,
-    fam,
-    ibd,
-    peso,
-    altura,
-):
-    """Lógica de predicción clínica (Idéntica a la original)"""
+def predecir(modelo, selector, fuma, alc, fam, diet_red, diet_salt, diet_veg, phys, bmi, sangre, cea):
     try:
-        edad_v = float(edad) if (edad and edad != "") else 0
-        alc_v = float(alc) if (alc and alc != "") else 0
-        cea_v = float(cea) if (cea and cea != "") else 0
+        # --- 1. PREPARACIÓN ---
+        fuma_n = 10 if fuma == "Sí" else 0
+        fam_n = 1 if fam else 0
+        sangre_n = 1 if (sangre == "Positivo" or sangre == "Sí") else 0
+        obesidad_n = 1 if float(bmi) >= 30 else 0
+        
+        features_input = np.array([[
+            float(fuma_n), float(alc), float(obesidad_n), float(fam_n),
+            float(diet_red), float(diet_salt), float(diet_veg),
+            float(phys), float(bmi), float(sangre_n), float(cea)
+        ]])
 
-        tumor_v = float(tumor) if (tumor and tumor != "") else 0
-        altura_v = float(altura) if (altura and altura != "") else 1.0
-        peso_v = float(peso) if (peso and peso != "") else 0
-
-        # Calcular BMI
-        altura_m = altura_v / 100.0 if altura_v > 0 else 1.0
-        bmi_val = peso_v / (altura_m**2)
-        if bmi_val >= 30:
-            obesity_bmi = 2
-        elif bmi_val >= 25:
-            obesity_bmi = 1
+        # --- 2. PREDICCIÓN ---
+        probabilidades = modelo.predict_proba(features_input)[0]
+        if len(probabilidades) == 3:
+            p_bajo, p_medio, p_alto = probabilidades
+            riesgo_calculado = 0.005 + (p_medio * 0.45) + (p_alto * 1.0)
+            clase_predicha = np.argmax(probabilidades)
         else:
-            obesity_bmi = 0
+            riesgo_calculado = 0.005 + probabilidades[1]
+            clase_predicha = 1
 
-        def es_positivo(valor):
-            return valor in [True, 1, "1", "Sí", "si", "SÍ", "Si", "Yes", "yes"]
+        riesgo_calculado = min(riesgo_calculado, 1.0)
 
-        factores = []
-        if es_positivo(fuma):
-            factores.append("Tabaquismo activo")
-        if alc_v > 7:
-            factores.append(f"Consumo de alcohol ({alc_v} u/semana)")
-        if es_positivo(sangre):
-            factores.append("Sangre detectable en heces (FOBT+)")
-        if es_positivo(fam):
-            factores.append("Antecedentes familiares")
-        if es_positivo(ibd):
-            factores.append("Enfermedad Inflamatoria Intestinal")
-        if cea_v > 5:
-            factores.append(f"Marcador CEA elevado ({cea_v} ng/mL)")
+        # --- 3. SHAP ---
+        fig_shap, tabla_importancia = generar_explicacion_shap(modelo, features_input, clase_predicha)
 
-        gen_n = 0 if genero in ["Masculino", 0, "0", "M", "m"] else 1
+        # --- 4. RENDERIZADO VISUAL ---
+        col_res, col_shap = st.columns([1, 1.2])
+        
+        color = "#28a745" if riesgo_calculado < 0.25 else "#ffa500" if riesgo_calculado < 0.60 else "#ff4b4b"
 
-        # 13 variables que espera el modelo ML RandomForest entrenado en ml_v2.py
-        features = np.array(
-            [
-                [
-                    edad_v,
-                    gen_n,
-                    int(float(estadio)) if estadio else 1,
-                    tumor_v,
-                    1 if es_positivo(fam) else 0,
-                    1 if es_positivo(fuma) else 0,
-                    alc_v,
-                    obesity_bmi,
-                    1 if es_positivo(ibd) else 0,
-                    1 if es_positivo(sangre) else 0,
-                    cea_v,
-                    altura_v,
-                    peso_v,
-                ]
-            ]
-        )
+        with col_res:
+            # Encabezado del Informe
+            st.markdown(f"""
+                <div style='background-color: #111; padding: 20px; border-radius: 15px; border: 1px solid {color};'>
+                    <h2 style='color: white; text-align: center; margin: 0;'>INFORME MÉDICO</h2>
+                    <p style='text-align: center; color: #666; font-size: 0.8em;'>ID Paciente: {selector}</p>
+                    <div style='text-align: center; padding: 20px 0;'>
+                        <span style='font-size: 55px; font-weight: bold; color: {color};'>{riesgo_calculado * 100:.1f}%</span>
+                        <br><span style='color: #888; letter-spacing: 2px;'>RIESGO ESTIMADO</span>
+                    </div>
+                </div>
+                <div style='margin-top: 15px;'>
+                    <p style='color: white; font-weight: bold; margin-bottom: 10px;'>ANÁLISIS DE FACTORES:</p>
+                </div>
+            """, unsafe_allow_html=True)
 
-        if modelo is not None:
-            prob = modelo.predict_proba(features)[0][1]
-        else:
-            prob = min((edad_v / 110) * 0.4 + (0.2 if es_positivo(sangre) else 0), 0.95)
+            # Rejilla de Factores de Riesgo Estilizada
+            # Creamos las columnas para que los "bloques" se vean ordenados
+            c1, c2 = st.columns(2)
+            
+            # Definimos un estilo común para las mini-tarjetas
+            def card_style(label, value, is_alert):
+                bg = "#4d1111" if is_alert else "#1a1a1a"
+                border = "#ff4b4b" if is_alert else "#333"
+                txt = "#ff4b4b" if is_alert else "#aaa"
+                return f"""<div style='background:{bg}; border: 1px solid {border}; padding: 10px; border-radius: 8px; margin-bottom: 10px;'>
+                            <p style='margin:0; font-size: 0.7em; color: {txt}; font-weight: bold;'>{label}</p>
+                            <p style='margin:0; font-size: 0.9em; color: white;'>{value}</p>
+                          </div>"""
 
-        # Determinar color y recomendación
-        necesita_colonoscopia = prob > 0.4 or es_positivo(sangre)
-        rec_html = (
-            """<div style='background-color: #330000; border: 2px solid #ff0000; padding: 15px; border-radius: 10px; margin-top: 15px;'><h3 style='color: #ff4b4b; margin: 0; font-size: 18px;'>🚨 RECOMENDACIÓN URGENTE</h3><p style='color: white; margin: 5px 0; font-weight: bold;'>SE REQUIERE COLONOSCOPIA DE DIAGNÓSTICO</p></div>"""
-            if necesita_colonoscopia
-            else """<div style='background-color: #002200; border: 1px solid #28a745; padding: 10px; border-radius: 10px; margin-top: 15px;'><p style='color: #28a745; margin: 0; font-size: 13px;'>✅ Seguimiento rutinario recomendado.</p></div>"""
-        )
+            with c1:
+                st.markdown(card_style("SANGRE (FOBT)", "DETECTADA 🚨" if sangre_n else "NEGATIVO ✅", sangre_n), unsafe_allow_html=True)
+                st.markdown(card_style("NIVEL CEA", f"{cea} ng/mL {'⚠️' if cea > 3 else 'OK'}", cea > 3), unsafe_allow_html=True)
+                st.markdown(card_style("TABAQUISMO", "FUMADOR 🚬" if fuma == "Sí" else "NO FUMA 🚭", fuma == "Sí"), unsafe_allow_html=True)
+            
+            with c2:
+                st.markdown(card_style("ESTADO IMC", f"{bmi} ({'OBESIDAD' if bmi >= 30 else 'NORMAL'})", bmi >= 30), unsafe_allow_html=True)
+                st.markdown(card_style("DIETA ROJA", f"Nivel {diet_red}/10 {'⚠️' if diet_red > 7 else 'OK'}", diet_red > 7), unsafe_allow_html=True)
+                st.markdown(card_style("HISTORIAL", "FAMILIAR 👪" if fam else "SIN ANTECED.", fam), unsafe_allow_html=True)
 
-        color_borde = (
-            "#ff4b4b" if prob > 0.6 else "#ffa500" if prob > 0.3 else "#28a745"
-        )
-        factores_html = "".join(
-            [f"<li style='margin-bottom: 5px;'>{f}</li>" for f in factores]
-        )
-        explicacion_html = (
-            f"<ul style='text-align: left; display: inline-block; color: white; font-size: 14px; margin: 0;'>{factores_html}</ul>"
-            if factores
-            else "<p style='color: #666;'>Sin factores externos detectados.</p>"
-        )
+        with col_shap:
+            if fig_shap:
+                st.pyplot(fig_shap)
+                st.markdown("### 📊 Desglose de Influencia")
+                # Usamos dataframe en lugar de table para que se vea más moderno y permita scroll
+                st.dataframe(
+                    tabla_importancia, 
+                    use_container_width=True, 
+                    hide_index=True,
+                    column_config={
+                        "Impacto": st.column_config.TextColumn("Influencia (%)"),
+                        "Sentido": st.column_config.TextColumn("Efecto en Riesgo")
+                    }
+                )
 
-        return f"""
-        <div style='background-color: #000000; padding: 30px; border-radius: 15px; border: 3px solid {color_borde}; text-align: center; color: white; font-family: sans-serif;'>
-            <h2 style='color: white; margin: 0; letter-spacing: 2px;'>INFORME MÉDICO ColonAI</h2>
-            <hr style='border: 0; border-top: 1px solid #222; width: 100%; margin: 15px 0;'>
-            <p style='font-size: 12px; color: #aaa; text-transform: uppercase;'>Probabilidad de Hallazgos Patológicos</p>
-            <div style='font-size: 64px; font-weight: 900; color: {color_borde}; margin: 10px 0;'>{prob * 100:.1f}%</div>
-            <div style='background-color: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #1a1a1a;'>{explicacion_html}</div>
-            {rec_html}
-            <p style='font-size: 10px; color: #444; margin-top: 20px;'>ID: {selector} | Reporte generado automáticamente.</p>
-        </div>
-        """
     except Exception as e:
-        return f"<div style='color:red;'>Error en predicción: {str(e)}</div>"
-
-
+        st.error(f"Error en visualización: {e}")
+    
 def colonos(imagen):
     """Procesamiento de imagen adaptado a Streamlit"""
     if imagen is None:
@@ -250,8 +223,11 @@ def colonos(imagen):
         # 3. Predicción usando la instancia real del modelo
         pred = modelo_instancia.predict(img_preprocessed, verbose=0)[0][0]
 
-        # 4. Lógica de resultados
-        es_polipo = pred < 0.5
+        # heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen, "post_relu")
+        heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen, "out_relu")
+    
+        # Ajustamos la lógica de pólipo/sano según tu entrenamiento
+        es_polipo = pred_val < 0.5
         resultado = "PÓLIPO DETECTADO" if es_polipo else "TEJIDO SANO"
         confianza = (1.0 - pred) if es_polipo else pred
         color = "#ff4b4b" if es_polipo else "#28a745"
@@ -274,7 +250,7 @@ def colonos(imagen):
         </div>
         """
         # IMPORTANTE: Devolvemos img_res (que es un array de numpy válido para st.image)
-        return html_vision, img_res
+        return html_vision, heatmap_img
 
     except Exception as e:
         # Si hay un error, devolvemos un mensaje y la imagen original para evitar el 'NoneType'

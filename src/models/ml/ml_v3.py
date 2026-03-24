@@ -14,8 +14,8 @@ from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, clas
 warnings.filterwarnings('ignore')
 
 # --- 1. CONFIGURACIÓN ---
-RUTA_DATA = r'\cancer de colon\prueba\dataset_colon_completo\cancer_risk_final.csv'
-SAVE_DIR = r'\cancer de colon\prueba\modelos\ml'
+RUTA_DATA = r'src\data\raw\historial_pacientes\cancer_risk_final.csv'
+SAVE_DIR = r'src\models\ml'
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # --- 2. CARGA Y SELECCIÓN (ACTUALIZADO) ---
@@ -104,7 +104,11 @@ evaluar_sistema(y_test, y_pred_ensamble, "Ensamble Final (Máxima Seguridad)")
 joblib.dump(rf_model, os.path.join(SAVE_DIR, 'rf_clinico.pkl'))
 joblib.dump(xgb_model, os.path.join(SAVE_DIR, 'xgb_clinico.pkl'))
 joblib.dump(lgbm_model, os.path.join(SAVE_DIR, 'lgbm_clinico.pkl'))
-joblib.dump(y_pred_ensamble, os.path.join(SAVE_DIR, 'modelo_ensemble.pkl'))
+
+# EN LUGAR DE GUARDAR LAS PREDICCIONES, GUARDA UNA LISTA CON LOS 3 MODELOS
+modelos_lista = [rf_model, xgb_model, lgbm_model]
+joblib.dump(modelos_lista, os.path.join(SAVE_DIR, 'modelo_ensemble.pkl'))
+
 joblib.dump(features, os.path.join(SAVE_DIR, 'features_list.pkl'))
 
 print(f"\n✅ Proceso finalizado. Modelos con variables clínicas guardados.")

@@ -14,6 +14,12 @@ import numpy as np
 import cv2
 from PIL import Image
 from torchvision import transforms
+import tensorflow as tf
+
+import shap
+import matplotlib.pyplot as plt
+import pandas as pd
+import streamlit as st
 
 
 def generate_gradcam(model, img_pil, target_layer):
@@ -107,3 +113,102 @@ def generate_gradcam(model, img_pil, target_layer):
     h2.remove()
 
     return superimposed_img_rgb, prob
+
+def generate_gradcam_colon(model, img_array, last_conv_layer_name="out_relu"):
+    """
+    Genera Grad-CAM para modelos Keras, replicando la estética de PyTorch.
+    """
+    # 1. Preprocesamiento consistente con tu entrenamiento (150x150)
+    img_res = cv2.resize(img_array, (150, 150))
+    img_batch = np.expand_dims(img_res, axis=0).astype(np.float32)
+    img_pre = tf.keras.applications.mobilenet_v2.preprocess_input(img_batch)
+
+    # 2. Construir el modelo de gradientes
+    # Buscamos la capa convolucional y la salida
+    grad_model = tf.keras.models.Model(
+        [model.inputs], 
+        [model.get_layer(last_conv_layer_name).output, model.output]
+    )
+
+    # 3. Gravar operaciones para calcular gradientes
+    with tf.GradientTape() as tape:
+        last_conv_layer_output, preds = grad_model(img_pre)
+        # Seleccionamos la probabilidad de la clase (pólipo)
+        class_channel = preds[:, 0]
+
+    # 4. Derivada de la neurona de salida respecto al mapa de activación
+    grads = tape.gradient(class_channel, last_conv_layer_output)
+    
+    # Global Average Pooling de los gradientes (Pesos de importancia)
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+
+    # 5. Multiplicar cada canal por su "importancia"
+    last_conv_layer_output = last_conv_layer_output[0]
+    heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
+    heatmap = tf.squeeze(heatmap)
+
+    # 6. Post-procesamiento igual al de PyTorch (ReLU + Normalización)
+    heatmap = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + 1e-8)
+    heatmap = heatmap.numpy()
+
+    # 7. Superposición visual (OpenCV)
+    # Redimensionamos la original a 150x150 para que encaje con el mapa
+    img_cv = cv2.resize(img_array, (150, 150))
+    if img_cv.max() > 1.0: # Asegurar formato uint8
+        img_cv = img_cv.astype(np.uint8)
+    
+    heatmap_resized = cv2.resize(heatmap, (150, 150))
+    heatmap_color = cv2.applyColorMap(np.uint8(255 * heatmap_resized), cv2.COLORMAP_JET)
+    
+    superimposed = cv2.addWeighted(img_cv, 0.6, heatmap_color, 0.4, 0)
+    superimposed_rgb = cv2.cvtColor(superimposed, cv2.COLOR_BGR2RGB)
+
+    return superimposed_rgb, float(preds[0][0])
+    
+def generar_explicacion_shap(modelo, features_array, target_class):
+    try:
+        nombres_columnas = [
+            'Smoking', 'Alcohol_Use', 'Obesity', 'Family_History', 
+            'Diet_Red_Meat', 'Diet_Salted_Processed', 'Fruit_Veg_Intake', 
+            'Physical_Activity', 'BMI', 'FOBT_Resultado_n', 'CEA_Level_ng_mL'
+        ]
+        X_df = pd.DataFrame(features_array, columns=nombres_columnas)
+
+        explainer = shap.TreeExplainer(modelo)
+        shap_values = explainer.shap_values(X_df)
+
+        # 1. Extraer valores SHAP para la clase objetivo
+        if isinstance(shap_values, list):
+            raw_shap = shap_values[target_class][0]
+        else:
+            raw_shap = shap_values[0, :, target_class] if len(shap_values.shape) == 3 else shap_values[0]
+
+        # 2. Calcular porcentaje de influencia
+        # Usamos el valor absoluto para entender cuánto "pesa" cada variable
+        abs_shap = np.abs(raw_shap)
+        total_impact = np.sum(abs_shap)
+        
+        influencia = []
+        for i in range(len(nombres_columnas)):
+            porcentaje = (abs_shap[i] / total_impact * 100) if total_impact > 0 else 0
+            influencia.append({
+                "Variable": nombres_columnas[i],
+                "Impacto": f"{porcentaje:.1f}%",
+                "Sentido": "Sube riesgo" if raw_shap[i] > 0 else "Baja riesgo"
+            })
+        
+        df_importancia = pd.DataFrame(influencia).sort_values(by="Impacto", ascending=False)
+
+        # 3. Crear Gráfico
+        fig, ax = plt.subplots(figsize=(10, 5))
+        plt.gcf().set_facecolor("#ffffff")
+        ax.set_facecolor("#ffffff")
+        
+        shap.bar_plot(raw_shap, feature_names=nombres_columnas, max_display=11, show=False)
+        plt.title("Factores que definen tu perfil de riesgo", color="white")
+        
+        return fig, df_importancia
+        
+    except Exception as e:
+        print(f"Error SHAP: {e}")
+        return None, None

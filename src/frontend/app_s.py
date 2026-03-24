@@ -2,6 +2,8 @@ import streamlit as st
 import joblib
 import os
 import sys
+import numpy as np
+import pandas as pd
 
 # Configuración de página (debe ser lo primero)
 st.set_page_config(page_title="ColonAI - Sistema Integral", layout="wide")
@@ -22,24 +24,28 @@ CSV_PATH = os.path.join(
     "data",
     "raw",
     "historial_pacientes",
-    "datos_finales_Kaggle.csv",
+    "cancer_risk_final.csv",
 )
 MODEL_ML_PATH = os.path.join(
-    directorio_raiz, "src", "models", "ml", "best_rf_model.pkl"
+    directorio_raiz, "src", "models", "ml", "lgbm_clinico.pkl"
 )
 
+CSV_5000_PATH = os.path.join(directorio_raiz, "src", "data", "raw", "historial_pacientes", "nuevos_pacientes_5000.csv")
+CSV_RISK_PATH = os.path.join(directorio_raiz, "src", "data", "raw", "historial_pacientes", "cancer_risk_final.csv")
 
-# Carga de modelos con caché para evitar recargas constantes
 @st.cache_resource
 def cargar_recursos():
+    if not os.path.exists(MODEL_ML_PATH):
+        st.error(f"No se encuentra el archivo del modelo en: {MODEL_ML_PATH}")
+        return None
     try:
         modelo = joblib.load(MODEL_ML_PATH)
-        obtener_modelo_cnn()
+        # ESTO TE DIRÁ LA VERDAD:
+        print(f"DEBUG: El objeto cargado es de tipo: {type(modelo)}") 
         return modelo
     except Exception as e:
-        st.error(f"Error inicial: {e}")
+        st.error(f"Error al cargar modelo ML: {e}")
         return None
-
 
 modelo_ia = cargar_recursos()
 
@@ -47,170 +53,72 @@ modelo_ia = cargar_recursos()
 st.title("Sistema Integral ColonAI")
 
 tab1, tab2 = st.tabs(["Análisis de Datos", "Visión por Computadora"])
-
 with tab1:
     col_sidebar, col_main = st.columns([1, 2])
 
-    with col_sidebar:
-        st.subheader("Búsqueda")
-        pacientes = nombres_p(CSV_PATH)
-        selector = st.selectbox("Buscar Paciente", options=pacientes)
-
-        btn_cargar = st.button("Cargar Datos", use_container_width=True)
-        btn_nuevo = st.button("Nuevo Paciente", use_container_width=True)
-
-    # Inicializar valores en session_state para que sean mutables por los botones
+    # 1. INICIALIZACIÓN
     if "form_data" not in st.session_state:
         st.session_state.form_data = {
-            "edad": 0,
-            "genero": "Masculino",
-            "estadio": 1,
-            "tumor": 0.0,
-            "sangre": "No",
-            "cea": 0.0,
-            "fuma": "No",
-            "alc": 0.0,
-            "diab": "No",
-            "fam": False,
-            "ibd": False,
-            "peso": 0.0,
-            "altura": 0.0,
+            "fuma": "No", "alc": 0.0, "fam": False,
+            "diet_red": 5.0, "diet_salt": 5.0, "diet_veg": 5.0,
+            "phys": 5.0, "bmi": 25.0, "sangre": "Negativo",
+            "cea": 0.0
         }
 
-    # Lógica de botones de carga/limpieza
-    if btn_cargar:
-        # Aquí asumo que datos_p devuelve una lista/tupla con los valores
-        vals = datos_p(selector, CSV_PATH)
-        keys = [
-            "edad",
-            "genero",
-            "estadio",
-            "tumor",
-            "fam",
-            "fuma",
-            "alc",
-            "diab",
-            "ibd",
-            "sangre",
-            "cea",
-            "altura",
-            "peso",
-        ]
-        st.session_state.form_data.update(dict(zip(keys, vals)))
+    with col_sidebar:
+        st.subheader("Búsqueda")
+        # Obtenemos IDs de la tabla 5000
+        ids_pacientes = nombres_p(CSV_5000_PATH)
+        id_seleccionado = st.selectbox("ID Paciente (nuevos_pacientes_5000)", options=ids_pacientes)
 
-    if btn_nuevo:
-        for k in st.session_state.form_data:
-            st.session_state.form_data[k] = (
-                False if isinstance(st.session_state.form_data[k], bool) else 0
-            )
-            if k == "genero":
-                st.session_state.form_data[k] = "Masculino"
-            if k in ["sangre", "fuma", "diab"]:
-                st.session_state.form_data[k] = "No"
+        if st.button("CARGAR DATOS", use_container_width=True):
+            # Buscamos datos en la tabla de Riesgo Final
+            valores = datos_p(id_seleccionado, CSV_RISK_PATH)
+            if valores:
+                st.session_state.form_data.update(valores)
+                st.success(f"Datos de ID {id_seleccionado} cargados.")
+                st.rerun()
+            else:
+                st.error("ID no encontrado en cancer_risk_final.csv")
 
     with col_main:
+        st.subheader("Panel Clínico")
+        d = st.session_state.form_data
+
         r1_c1, r1_c2, r1_c3 = st.columns(3)
-        in_edad = r1_c1.number_input(
-            "Edad", value=int(st.session_state.form_data["edad"])
-        )
-        in_genero = r1_c2.selectbox(
-            "Género",
-            ["Masculino", "Femenino"],
-            index=0 if st.session_state.form_data["genero"] == "Masculino" else 1,
-        )
-        in_estadio = r1_c3.selectbox(
-            "Estadio",
-            [1, 2, 3, 4],
-            index=int(st.session_state.form_data["estadio"]) - 1,
-        )
+        in_fuma = r1_c1.selectbox("Fumador", ["No", "Sí"], index=1 if d["fuma"]=="Sí" else 0)
+        in_alc = r1_c2.slider("Alcohol (0-10)", 0.0, 10.0, d["alc"])
+        in_fam = r1_c3.checkbox("Herencia Familiar", value=d["fam"])
 
         r2_c1, r2_c2, r2_c3 = st.columns(3)
-        in_tumor = r2_c1.number_input(
-            "Tamaño Tumor (mm)", value=float(st.session_state.form_data["tumor"])
-        )
-        in_sangre = r2_c2.radio(
-            "Sangre en Heces",
-            ["No", "Sí"],
-            index=0 if st.session_state.form_data["sangre"] == "No" else 1,
-            horizontal=True,
-        )
-        in_cea = r2_c3.number_input(
-            "Nivel CEA", value=float(st.session_state.form_data["cea"])
-        )
+        in_bmi = r2_c1.number_input("BMI", value=d["bmi"])
+        in_sangre = r2_c2.selectbox("FOBT (Sangre)", ["Negativo", "Positivo"], index=1 if d["sangre"]=="Positivo" else 0)
+        in_cea = r2_c3.number_input("Nivel CEA", value=d["cea"])
 
-        r3_c1, r3_c2, r3_c3 = st.columns(3)
-        in_fuma = r3_c1.radio(
-            "Fumador",
-            ["No", "Sí"],
-            index=0 if st.session_state.form_data["fuma"] == "No" else 1,
-            horizontal=True,
-        )
-        in_alc = r3_c2.number_input(
-            "Alcohol semanal", value=float(st.session_state.form_data["alc"])
-        )
-        in_diab = r3_c3.radio(
-            "Diabetes",
-            ["No", "Sí"],
-            index=0 if st.session_state.form_data["diab"] == "No" else 1,
-            horizontal=True,
-        )
+        with st.expander("Factores de Estilo de Vida"):
+            c1, c2, c3, c4 = st.columns(4)
+            in_red = c1.number_input("Carne Roja", 0, 10, int(d["diet_red"]))
+            in_salt = c2.number_input("Sal/Procesados", 0, 10, int(d["diet_salt"]))
+            in_veg = c3.number_input("Fruta/Verdura", 0, 10, int(d["diet_veg"]))
+            in_phys = c4.number_input("Act. Física", 0, 10, int(d["phys"]))
 
-        r4_c1, r4_c2, r4_c3, r4_c4 = st.columns(4)
-        in_fam = r4_c1.checkbox(
-            "Antecedentes Familiares", value=st.session_state.form_data["fam"]
-        )
-        in_ibd = r4_c2.checkbox(
-            "Enfermedad Inflamatoria", value=st.session_state.form_data["ibd"]
-        )
-        in_peso = r4_c3.number_input(
-            "Peso (kg)", value=float(st.session_state.form_data["peso"])
-        )
-        in_altura = r4_c4.number_input(
-            "Altura (cm)", value=float(st.session_state.form_data["altura"])
-        )
+        st.divider()
 
-    st.divider()
-
-    c_btn1, c_btn2 = st.columns(2)
-    if c_btn1.button("CALCULAR RIESGO", type="primary", use_container_width=True):
-        res_html = predecir(
-            modelo_ia,
-            selector,
-            in_edad,
-            in_genero,
-            in_estadio,
-            in_tumor,
-            in_sangre,
-            in_cea,
-            in_fuma,
-            in_alc,
-            in_diab,
-            in_fam,
-            in_ibd,
-            in_peso,
-            in_altura,
-        )
-        st.markdown(res_html, unsafe_allow_html=True)
-
-    if c_btn2.button("GUARDAR REGISTRO", use_container_width=True):
-        res_save = save_r(
-            directorio_actual,
-            selector,
-            in_edad,
-            in_genero,
-            in_estadio,
-            in_tumor,
-            in_fam,
-            in_fuma,
-            in_alc,
-            in_diab,
-            in_ibd,
-            in_sangre,
-            in_cea,
-            in_altura,
-            in_peso,
-        )
-        st.markdown(res_save, unsafe_allow_html=True)
+        # BOTÓN CALCULAR (Predicción + SHAP)
+        if st.button("CALCULAR RIESGO", type="primary", use_container_width=True):
+            # Aquí llamamos a la función predecir que renderiza el HTML y el SHAP uno al lado del otro
+            # 1. Convertimos los inputs de la interfaz a los valores que entiende la IA (0 y 1)
+            # Importante: Revisa si tu modelo usa 1 para "Sí" o al revés
+            fuma_n = 1 if in_fuma == "Sí" else 0
+            sangre_n = 1 if in_sangre == "Positivo" else 0
+            fam_n = 1 if in_fam else 0 # Checkbox a int
+            predecir(
+                modelo_ia, 
+                id_seleccionado,
+                in_fuma, in_alc, in_fam, 
+                in_red, in_salt, in_veg, in_phys, 
+                in_bmi, in_sangre, in_cea
+            )
 
 with tab2:
     st.subheader("Análisis de Diagnóstico por Imagen")
