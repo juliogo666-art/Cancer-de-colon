@@ -144,6 +144,7 @@ with tab2:
     if img_input:
         import numpy as np
         from PIL import Image
+        import cv2
 
         image = Image.open(img_input)
         img_array = np.array(image)
@@ -151,9 +152,21 @@ with tab2:
         if st.button("ANALIZAR IMAGEN", type="primary"):
             if "Colonoscopia" in tipo_analisis:
                 with st.spinner("Analizando pólipos con TensorFlow..."):
-                    txt_resultado, img_output = colonos(img_array)
+                    # Obtenemos el HTML y la imagen procesada (Grad-CAM)
+                    txt_resultado, img_gradcam = colonos(img_array)
+                    
+                    # Redimensionamos la original para que coincida en tamaño con el Grad-CAM (150x150)
+                    img_original_res = cv2.resize(img_array, (150, 150))
+                
                 with img_col2:
-                    st.image(img_output, caption="Imagen Analizada", use_container_width=True)
+                    # Creamos sub-columnas para mostrar Original y Grad-CAM lado a lado
+                    sub1, sub2 = st.columns(2)
+                    with sub1:
+                        st.image(img_original_res, caption="Captura Original", use_container_width=True)
+                    with sub2:
+                        st.image(img_gradcam, caption="Localización (Grad-CAM)", use_container_width=True)
+                    
+                    # El informe (porcentaje y recomendación) aparece justo debajo de las fotos
                     st.markdown(txt_resultado, unsafe_allow_html=True)
             else:
                 with st.spinner("Analizando malignidad con PyTorch + Grad-CAM..."):

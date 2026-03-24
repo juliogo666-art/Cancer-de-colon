@@ -34,7 +34,7 @@ def inicializar_entorno_y_modelo():
     # Ajustamos la ruta para que funcione desde la carpeta raíz o subcarpetas
     directorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     MODEL_CNN_PATH = os.path.join(
-        directorio_raiz, "networks", "dl", "rf_clinico.keras"
+        directorio_raiz, "networks", "dl", "modelo_pro_agresivo.keras"
     )
 
     if not os.path.exists(MODEL_CNN_PATH):
@@ -224,7 +224,8 @@ def colonos(imagen):
         pred = modelo_instancia.predict(img_preprocessed, verbose=0)[0][0]
 
         # heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen, "post_relu")
-        heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen, "out_relu")
+        # heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen, "out_relu")
+        heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen)
     
         # Ajustamos la lógica de pólipo/sano según tu entrenamiento
         es_polipo = pred_val < 0.5

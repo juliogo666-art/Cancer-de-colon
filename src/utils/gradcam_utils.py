@@ -114,56 +114,86 @@ def generate_gradcam(model, img_pil, target_layer):
 
     return superimposed_img_rgb, prob
 
-def generate_gradcam_colon(model, img_array, last_conv_layer_name="out_relu"):
+def generate_gradcam_colon(model, img_array):
     """
-    Genera Grad-CAM para modelos Keras, replicando la estética de PyTorch.
+    Versión blindada contra errores de 'output_shape' en Keras 3.
     """
-    # 1. Preprocesamiento consistente con tu entrenamiento (150x150)
+    # 1. Preprocesamiento
     img_res = cv2.resize(img_array, (150, 150))
     img_batch = np.expand_dims(img_res, axis=0).astype(np.float32)
     img_pre = tf.keras.applications.mobilenet_v2.preprocess_input(img_batch)
 
-    # 2. Construir el modelo de gradientes
-    # Buscamos la capa convolucional y la salida
+    # 2. Identificar la última capa convolucional (4D) de forma segura
+    last_conv_layer_name = None
+    # Recorremos a la inversa buscando la última capa con 4 dimensiones (Batch, H, W, Channels)
+    for layer in reversed(model.layers):
+        try:
+            # Usamos layer.output.shape que es más fiable que layer.output_shape
+            shape = layer.output.shape
+            if len(shape) == 4:
+                last_conv_layer_name = layer.name
+                break
+        except:
+            continue
+
+    if not last_conv_layer_name:
+        # Si falla la detección automática, intentamos nombres comunes de MobileNetV2
+        for fallback in ["out_relu", "post_relu", "Conv_1"]:
+            try:
+                model.get_layer(fallback)
+                last_conv_layer_name = fallback
+                break
+            except:
+                continue
+
+    if not last_conv_layer_name:
+        return img_res, 0.0
+
+    # 3. Construir el modelo de gradientes
     grad_model = tf.keras.models.Model(
         [model.inputs], 
         [model.get_layer(last_conv_layer_name).output, model.output]
     )
 
-    # 3. Gravar operaciones para calcular gradientes
     with tf.GradientTape() as tape:
         last_conv_layer_output, preds = grad_model(img_pre)
-        # Seleccionamos la probabilidad de la clase (pólipo)
-        class_channel = preds[:, 0]
+        pred_val = preds[0][0]
+        
+        # Clase 0 es Pólipo (según tu lógica < 0.5)
+        # Si es pólipo, queremos ver qué activó esa probabilidad baja
+        if pred_val < 0.5:
+            target_score = 1.0 - preds[:, 0]
+        else:
+            target_score = preds[:, 0]
 
-    # 4. Derivada de la neurona de salida respecto al mapa de activación
-    grads = tape.gradient(class_channel, last_conv_layer_output)
-    
-    # Global Average Pooling de los gradientes (Pesos de importancia)
+    # 4. Cálculo de Gradientes
+    grads = tape.gradient(target_score, last_conv_layer_output)
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
 
-    # 5. Multiplicar cada canal por su "importancia"
+    # 5. Generar Mapa de Calor
     last_conv_layer_output = last_conv_layer_output[0]
     heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
     heatmap = tf.squeeze(heatmap)
 
-    # 6. Post-procesamiento igual al de PyTorch (ReLU + Normalización)
+    # ReLU y Normalización
     heatmap = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + 1e-8)
     heatmap = heatmap.numpy()
 
-    # 7. Superposición visual (OpenCV)
-    # Redimensionamos la original a 150x150 para que encaje con el mapa
-    img_cv = cv2.resize(img_array, (150, 150))
-    if img_cv.max() > 1.0: # Asegurar formato uint8
-        img_cv = img_cv.astype(np.uint8)
-    
+    # 6. Post-procesado visual
     heatmap_resized = cv2.resize(heatmap, (150, 150))
+    # Limpiamos ruido: solo mostramos el 30% superior de intensidad
+    heatmap_resized[heatmap_resized < 0.3] = 0 
+    
     heatmap_color = cv2.applyColorMap(np.uint8(255 * heatmap_resized), cv2.COLORMAP_JET)
+    
+    # Superposición
+    img_cv = img_res.copy()
+    if img_cv.max() <= 1.0: img_cv = (img_cv * 255).astype(np.uint8)
     
     superimposed = cv2.addWeighted(img_cv, 0.6, heatmap_color, 0.4, 0)
     superimposed_rgb = cv2.cvtColor(superimposed, cv2.COLOR_BGR2RGB)
 
-    return superimposed_rgb, float(preds[0][0])
+    return superimposed_rgb, float(pred_val)
     
 def generar_explicacion_shap(modelo, features_array, target_class):
     try:
