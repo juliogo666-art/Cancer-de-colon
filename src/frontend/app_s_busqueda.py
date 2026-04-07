@@ -6,7 +6,7 @@ import pandas as pd
 
 
 # Cargar csv (nuevo dataset de riesgo)
-CSV_PATH = "src/data/raw/historial_pacientes/cancer_risk_final.csv"
+CSV_PATH = "src/data/raw/historial_pacientes/cancer_risk_clean.csv"
 PATIENTS_PATH = "src/data/raw/historial_pacientes/nuevos_pacientes_5000.csv"
 df = pd.read_csv(CSV_PATH)
 patients_df = pd.read_csv(PATIENTS_PATH) if os.path.exists(PATIENTS_PATH) else None
@@ -35,13 +35,15 @@ with tab1:
     col_busqueda, col_info, col_img = st.columns([2, 2, 1])
     with col_busqueda:
         st.subheader("Búsqueda")
-        texto_buscar = st.text_input("Búsqueda por Patient_ID, DNI o NUSS")
+        texto_buscar = st.text_input("Búsqueda por DNI o NUSS")
         btn_cargar = st.button("Cargar Datos", use_container_width=True)
         btn_actualizar = st.button("Actualizar Paciente", use_container_width=True)
 
     # Inicializar valores en session_state para que sean mutables por los botones
     if 'form_data' not in st.session_state:
         st.session_state.form_data = {
+            "age": 0,
+            "gender": "Male",
             "smoking": 0,
             "alcohol_use": 0,
             "obesity": 0,
@@ -53,24 +55,25 @@ with tab1:
             "bmi": 0.0,
             "overall_risk_score": 0.0,
             "risk_level": "Low",
-            "risk_level_n": 0,
-            "fobt_resultado": "Negativo",
-            "fobt_resultado_n": 0,
-            "cea_level": 0.0
+            "risk_level_n": 0
         }
+    # Sincronizar claves de widgets con valores por defecto
+    for k, v in st.session_state.form_data.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
     if 'patient_info' not in st.session_state:
         st.session_state.patient_info = None
 
     # Lógica de botones de carga/actualización (nuevo CSV)
     def _detectar_tipo_busqueda(texto):
         if not texto:
-            return "ID"
+            return None
         t = str(texto).strip().upper().replace(" ", "")
         if len(t) == 9 and t[:-1].isdigit() and t[-1].isalpha():
             return "DNI"
-        if t.isdigit():
-            return "NUSS" if len(t) >= 10 else "ID"
-        return "ID"
+        if t.isdigit() and len(t) >= 10:
+            return "NUSS"
+        return None
 
     def _resolver_patient_id(texto):
         if not texto:
@@ -78,11 +81,8 @@ with tab1:
         tipo = _detectar_tipo_busqueda(texto)
         t = str(texto).strip().upper()
 
-        if tipo == "ID":
-            try:
-                return int(t), None
-            except ValueError:
-                return None, None
+        if tipo is None:
+            return None, None
 
         if patients_df is not None:
             if tipo == "DNI":
@@ -94,25 +94,20 @@ with tab1:
             row = fila.iloc[0]
             return int(row["Patient_ID"]), row
 
-        # Fallback si el CSV principal tuviera DNI/NUSS
-        if tipo == "DNI" and "dni" in df.columns:
-            fila = df[df["dni"].astype(str).str.upper() == t]
-            return (int(fila.iloc[0]["Patient_ID"]), fila.iloc[0]) if not fila.empty else (None, None)
-        if tipo == "NUSS" and "nuss" in df.columns:
-            fila = df[df["nuss"].astype(str) == t]
-            return (int(fila.iloc[0]["Patient_ID"]), fila.iloc[0]) if not fila.empty else (None, None)
-
         return None, None
 
     if btn_cargar:
         pid, info_row = _resolver_patient_id(texto_buscar)
         paciente = df[df["Patient_ID"] == pid] if pid is not None else pd.DataFrame()
         if paciente.empty:
-            st.error("No se encontró ningún paciente con ese Patient_ID, DNI o NUSS.")
+            st.error("No se encontró ningún paciente con ese DNI o NUSS.")
             st.session_state.patient_info = None
         else:
             paciente = paciente.iloc[0]
             # Mapear columnas del nuevo CSV a los campos del formulario
+            age = int(paciente.get("Age", 0))
+            gender_raw = int(paciente.get("Gender", 0))
+            gender = "Male" if gender_raw == 0 else "Female"
             smoking = int(paciente.get("Smoking", 0))
             alcohol_use = int(paciente.get("Alcohol_Use", 0))
             obesity = int(paciente.get("Obesity", 0))
@@ -125,11 +120,10 @@ with tab1:
             overall_risk_score = float(paciente.get("Overall_Risk_Score", 0) or 0)
             risk_level = str(paciente.get("Risk_Level", "Low"))
             risk_level_n = int(paciente.get("Risk_Level_n", 0))
-            fobt_resultado = str(paciente.get("FOBT_Resultado", "Negativo"))
-            fobt_resultado_n = int(paciente.get("FOBT_Resultado_n", 0))
-            cea_level = float(paciente.get("CEA_Level_ng_mL", 0) or 0)
 
             st.session_state.form_data.update({
+                "age": age,
+                "gender": gender,
                 "smoking": smoking,
                 "alcohol_use": alcohol_use,
                 "obesity": obesity,
@@ -142,17 +136,13 @@ with tab1:
                 "overall_risk_score": overall_risk_score,
                 "risk_level": risk_level,
                 "risk_level_n": risk_level_n,
-                "fobt_resultado": fobt_resultado,
-                "fobt_resultado_n": fobt_resultado_n,
-                "cea_level": cea_level,
             })
+            for k, v in st.session_state.form_data.items():
+                st.session_state[k] = v
 
             patient_info = {
-                "id": int(paciente.get("Patient_ID", 0)),
                 "risk_level": risk_level,
                 "overall_risk_score": overall_risk_score,
-                "fobt": fobt_resultado,
-                "cea": cea_level,
             }
             if info_row is not None:
                 patient_info.update({
@@ -169,16 +159,12 @@ with tab1:
         st.markdown("**Datos de la persona**")
         info = st.session_state.patient_info
         if info:
-            st.markdown(f"Patient_ID: `{info['id']}`")
             if info.get("nombre"):
                 st.markdown(f"Nombre: `{info['nombre']}`")
             if info.get("dni") or info.get("nuss"):
                 st.markdown(f"DNI: `{info.get('dni','')}`")
                 st.markdown(f"NUSS: `{info.get('nuss','')}`")
             st.markdown(f"Risk Level: `{info['risk_level']}`")
-            st.markdown(f"Overall Risk Score: `{info['overall_risk_score']}`")
-            st.markdown(f"FOBT Resultado: `{info['fobt']}`")
-            st.markdown(f"CEA Level: `{info['cea']}`")
         else:
             st.markdown("_Sin paciente cargado._")
     with col_img:
@@ -194,38 +180,43 @@ with tab1:
 
     st.divider()
 
+    st.markdown("**Demografía y antropometría**")
+    d1_c1, d1_c2, d1_c3 = st.columns(3)
+    in_age = d1_c1.number_input("Age", min_value=0, max_value=120, step=1, key="age")
+    in_gender = d1_c2.selectbox("Gender", ["Male", "Female"], index=0 if st.session_state.gender=="Male" else 1, key="gender")
+    in_bmi = d1_c3.number_input("BMI", min_value=0.0, max_value=60.0, step=0.1, key="bmi")
+
     st.markdown("**Hábitos y dieta (0-10)**")
     r1_c1, r1_c2, r1_c3 = st.columns(3)
-    in_smoking = r1_c1.number_input("Smoking", min_value=0, max_value=10, step=1, value=int(st.session_state.form_data["smoking"]))
-    in_alcohol_use = r1_c2.number_input("Alcohol_Use", min_value=0, max_value=10, step=1, value=int(st.session_state.form_data["alcohol_use"]))
-    in_obesity = r1_c3.number_input("Obesity", min_value=0, max_value=10, step=1, value=int(st.session_state.form_data["obesity"]))
+    in_smoking = r1_c1.number_input("Smoking", min_value=0, max_value=10, step=1, key="smoking")
+    in_alcohol_use = r1_c2.number_input("Alcohol_Use", min_value=0, max_value=10, step=1, key="alcohol_use")
+    in_obesity = r1_c3.number_input("Obesity", min_value=0, max_value=10, step=1, key="obesity")
 
     r2_c1, r2_c2, r2_c3 = st.columns(3)
-    in_diet_red_meat = r2_c1.number_input("Diet_Red_Meat", min_value=0, max_value=10, step=1, value=int(st.session_state.form_data["diet_red_meat"]))
-    in_diet_salted_processed = r2_c2.number_input("Diet_Salted_Processed", min_value=0, max_value=10, step=1, value=int(st.session_state.form_data["diet_salted_processed"]))
-    in_fruit_veg_intake = r2_c3.number_input("Fruit_Veg_Intake", min_value=0, max_value=10, step=1, value=int(st.session_state.form_data["fruit_veg_intake"]))
+    in_diet_red_meat = r2_c1.number_input("Diet_Red_Meat", min_value=0, max_value=10, step=1, key="diet_red_meat")
+    in_diet_salted_processed = r2_c2.number_input("Diet_Salted_Processed", min_value=0, max_value=10, step=1, key="diet_salted_processed")
+    in_fruit_veg_intake = r2_c3.number_input("Fruit_Veg_Intake", min_value=0, max_value=10, step=1, key="fruit_veg_intake")
 
     r3_c1, r3_c2, r3_c3 = st.columns(3)
-    in_physical_activity = r3_c1.number_input("Physical_Activity", min_value=0, max_value=10, step=1, value=int(st.session_state.form_data["physical_activity"]))
-    in_bmi = r3_c2.number_input("BMI", min_value=0.0, max_value=60.0, step=0.1, value=float(st.session_state.form_data["bmi"]))
-    in_cea_level = r3_c3.number_input("CEA_Level_ng_mL", min_value=0.0, max_value=100.0, step=0.1, value=float(st.session_state.form_data["cea_level"]))
+    in_physical_activity = r3_c1.number_input("Physical_Activity", min_value=0, max_value=10, step=1, key="physical_activity")
+    r3_c2.markdown("")
+    r3_c3.markdown("")
 
     st.markdown("**Factores y resultado**")
     r4_c1, r4_c2, r4_c3 = st.columns(3)
-    in_family_history = r4_c1.checkbox("Family_History", value=st.session_state.form_data["family_history"])
-    in_fobt_resultado = r4_c2.radio("FOBT_Resultado", ["Negativo", "Positivo"], index=0 if st.session_state.form_data["fobt_resultado"]=="Negativo" else 1, horizontal=True)
-    in_risk_level = r4_c3.selectbox("Risk_Level", ["Low", "Medium", "High"], index=["Low","Medium","High"].index(st.session_state.form_data["risk_level"]))
+    in_family_history = r4_c1.checkbox("Family_History", key="family_history")
+    r4_c2.markdown("")
+    in_risk_level = r4_c3.selectbox("Risk_Level", ["Low", "Medium", "High"], index=["Low","Medium","High"].index(st.session_state.risk_level), key="risk_level")
 
     r5_c1, r5_c2, r5_c3 = st.columns(3)
-    in_overall_risk_score = r5_c1.number_input("Overall_Risk_Score", min_value=0.0, max_value=1.0, step=0.01, value=float(st.session_state.form_data["overall_risk_score"]))
+    in_overall_risk_score = r5_c1.number_input("Overall_Risk_Score", min_value=0.0, max_value=1.0, step=0.01, key="overall_risk_score")
     risk_level_n_val = {"Low": 0, "Medium": 1, "High": 2}.get(in_risk_level, 0)
-    fobt_n_val = 1 if in_fobt_resultado == "Positivo" else 0
     r5_c2.metric("Risk_Level_n", risk_level_n_val)
-    r5_c3.metric("FOBT_Resultado_n", fobt_n_val)
+    r5_c3.markdown("")
 
     if btn_actualizar:
         if not texto_buscar:
-            st.error("Introduce un Patient_ID, DNI o NUSS para actualizar.")
+            st.error("Introduce un DNI o NUSS para actualizar.")
         else:
             df_update = pd.read_csv(CSV_PATH)
             pid, _ = _resolver_patient_id(texto_buscar)
@@ -240,6 +231,8 @@ with tab1:
                     if col in df_update.columns:
                         df_update.at[idx, col] = val
 
+                _set_col("Age", int(in_age))
+                _set_col("Gender", 0 if in_gender == "Male" else 1)
                 _set_col("Smoking", int(in_smoking))
                 _set_col("Alcohol_Use", int(in_alcohol_use))
                 _set_col("Obesity", int(in_obesity))
@@ -252,9 +245,6 @@ with tab1:
                 _set_col("Overall_Risk_Score", float(in_overall_risk_score))
                 _set_col("Risk_Level", in_risk_level)
                 _set_col("Risk_Level_n", int(risk_level_n_val))
-                _set_col("FOBT_Resultado", in_fobt_resultado)
-                _set_col("FOBT_Resultado_n", int(fobt_n_val))
-                _set_col("CEA_Level_ng_mL", float(in_cea_level))
 
                 df_update.to_csv(CSV_PATH, index=False)
                 df = df_update
@@ -263,8 +253,6 @@ with tab1:
                     st.session_state.patient_info.update({
                         "risk_level": in_risk_level,
                         "overall_risk_score": float(in_overall_risk_score),
-                        "fobt": in_fobt_resultado,
-                        "cea": float(in_cea_level),
                     })
                 st.success("Paciente actualizado correctamente.")
 
@@ -277,9 +265,6 @@ with tab1:
             <div style="background: #ffffff; border: 1px solid #d7e6f7; padding: 16px; border-radius: 12px;">
                 <h4 style="margin: 0; color: #0b1f35;">Resumen de Riesgo</h4>
                 <p style="margin: 6px 0;">Risk Level: <strong>{in_risk_level}</strong></p>
-                <p style="margin: 6px 0;">Overall Risk Score: <strong>{in_overall_risk_score:.3f}</strong></p>
-                <p style="margin: 6px 0;">FOBT: <strong>{in_fobt_resultado}</strong></p>
-                <p style="margin: 6px 0;">CEA: <strong>{in_cea_level:.2f}</strong></p>
             </div>
             """,
             unsafe_allow_html=True
@@ -287,11 +272,11 @@ with tab1:
 
     if c_btn2.button("GUARDAR REGISTRO", use_container_width=True):
         if not texto_buscar:
-            st.error("Introduce un Patient_ID, DNI o NUSS para guardar.")
+            st.error("Introduce un DNI o NUSS para guardar.")
         else:
             pid, _ = _resolver_patient_id(texto_buscar)
             if pid is None:
-                st.error("No se pudo resolver el Patient_ID.")
+                st.error("No se pudo resolver el Patient_ID desde ese DNI/NUSS.")
             else:
                 df_save = pd.read_csv(CSV_PATH)
                 if (df_save["Patient_ID"] == pid).any():
@@ -299,6 +284,8 @@ with tab1:
                 else:
                     new_row = {
                         "Patient_ID": int(pid),
+                        "Age": int(in_age),
+                        "Gender": 0 if in_gender == "Male" else 1,
                         "Smoking": int(in_smoking),
                         "Alcohol_Use": int(in_alcohol_use),
                         "Obesity": int(in_obesity),
@@ -311,9 +298,6 @@ with tab1:
                         "Overall_Risk_Score": float(in_overall_risk_score),
                         "Risk_Level": in_risk_level,
                         "Risk_Level_n": int(risk_level_n_val),
-                        "FOBT_Resultado": in_fobt_resultado,
-                        "FOBT_Resultado_n": int(fobt_n_val),
-                        "CEA_Level_ng_mL": float(in_cea_level),
                     }
                     df_save = pd.concat([df_save, pd.DataFrame([new_row])], ignore_index=True)
                     df_save.to_csv(CSV_PATH, index=False)
@@ -322,8 +306,6 @@ with tab1:
                         "id": int(pid),
                         "risk_level": in_risk_level,
                         "overall_risk_score": float(in_overall_risk_score),
-                        "fobt": in_fobt_resultado,
-                        "cea": float(in_cea_level),
                     }
                     st.success("Registro guardado correctamente.")
 
