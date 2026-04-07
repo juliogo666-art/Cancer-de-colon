@@ -218,6 +218,7 @@ src/data/raw/colonoscopic_processed
 *.pkl
 *.joblib
 
+
 # No compartir passwords, key y tokens
 .env
 
