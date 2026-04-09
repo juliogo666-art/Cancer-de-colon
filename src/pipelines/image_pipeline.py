@@ -52,12 +52,12 @@ class ImageAnalysisPipeline:
         self._modelo_cnn = None
         self._modelo_biopsia = None
 
-    # ─────────────────────────────────────────────────────────────────────
-    # CARGA LAZY DE MODELOS
-    # ─────────────────────────────────────────────────────────────────────
+    ######################################################################
+    # Carga de modelos
+    ######################################################################
 
     def _get_cnn_model(self):
-        """Carga el modelo CNN de colonoscopia (lazy)."""
+        """Carga el modelo CNN de colonoscopia."""
         if self._modelo_cnn is not None:
             return self._modelo_cnn
 
@@ -67,7 +67,7 @@ class ImageAnalysisPipeline:
         return self._modelo_cnn
 
     def _get_biopsy_model(self):
-        """Carga el modelo de biopsias (lazy)."""
+        """Carga el modelo de biopsias."""
         if self._modelo_biopsia is not None:
             return self._modelo_biopsia
 
@@ -76,9 +76,9 @@ class ImageAnalysisPipeline:
         self._modelo_biopsia = load_biopsy_model()
         return self._modelo_biopsia
 
-    # ─────────────────────────────────────────────────────────────────────
-    # ANÁLISIS DE COLONOSCOPIA
-    # ─────────────────────────────────────────────────────────────────────
+    ######################################################################
+    # Análisis de colonoscopia
+    ######################################################################
 
     def analyze_colonoscopy(
         self,
@@ -145,9 +145,9 @@ class ImageAnalysisPipeline:
             heatmap=heatmap,
         )
 
-    # ─────────────────────────────────────────────────────────────────────
-    # ANÁLISIS DE BIOPSIAS
-    # ─────────────────────────────────────────────────────────────────────
+    ######################################################################
+    # Análisis de biopsias
+    ######################################################################
 
     def analyze_biopsy(
         self,

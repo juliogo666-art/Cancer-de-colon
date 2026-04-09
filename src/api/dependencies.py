@@ -20,35 +20,58 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# RUTAS POR DEFECTO (relativas a la raíz del proyecto)
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+# Rutas relativas a la raíz del proyecto
+###############################################################################
 
 # Calculamos la raíz del proyecto (3 niveles arriba desde src/api/)
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 
 MODEL_ML_PATH = os.path.join(_PROJECT_ROOT, "src", "models", "ml", "lgbm_clinico.pkl")
-MODEL_CNN_PATH = os.path.join(_PROJECT_ROOT, "src", "networks", "dl", "modelo_pro_agresivo.keras")
-MODEL_BIOPSY_PATH = os.path.join(_PROJECT_ROOT, "src", "networks", "dl_biopsia", "biopsia_resnet18_best.pth")
+MODEL_CNN_PATH = os.path.join(
+    _PROJECT_ROOT, "src", "networks", "dl", "modelo_pro_agresivo.keras"
+)
+MODEL_BIOPSY_PATH = os.path.join(
+    _PROJECT_ROOT, "src", "networks", "dl_biopsia", "biopsia_resnet18_best.pth"
+)
 
 # Datos de pacientes
-CSV_RISK_PATH = os.path.join(_PROJECT_ROOT, "src", "data", "raw", "historial_pacientes", "cancer_risk_final.csv")
-CSV_PATIENTS_PATH = os.path.join(_PROJECT_ROOT, "src", "data", "raw", "historial_pacientes", "nuevos_pacientes_5000.csv")
+CSV_RISK_PATH = os.path.join(
+    _PROJECT_ROOT, "src", "data", "clean", "cancer_risk_final.csv"
+)
+CSV_PATIENTS_PATH = os.path.join(
+    _PROJECT_ROOT,
+    "src",
+    "data",
+    "clean",
+    "nuevos_pacientes_5000.csv",
+)
 
 # Features que espera el modelo ML (orden exacto)
 ML_FEATURE_NAMES = [
-    "Smoking", "Alcohol_Use", "Obesity", "Family_History",
-    "Diet_Red_Meat", "Diet_Salted_Processed", "Fruit_Veg_Intake",
-    "Physical_Activity", "BMI", "FOBT_Resultado_n", "CEA_Level_ng_mL",
+    "Smoking",
+    "Alcohol_Use",
+    "Obesity",
+    "Family_History",
+    "Diet_Red_Meat",
+    "Diet_Salted_Processed",
+    "Fruit_Veg_Intake",
+    "Physical_Activity",
+    "BMI",
+    "FOBT_Resultado_n",
+    "CEA_Level_ng_mL",
 ]
 
 # Mapeo de clases para el modelo ML
 RISK_LEVEL_MAP = {0: "Low", 1: "Medium", 2: "High"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ARQUITECTURA DEL MODELO DE BIOPSIAS (PyTorch)
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+# Arquitectura del modelo de biopsias (PyTorch)
+###############################################################################
+
 
 class BiopsyClassifier(nn.Module):
     """
@@ -67,9 +90,10 @@ class BiopsyClassifier(nn.Module):
         return self.model(x)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# FUNCIONES DE CARGA INDIVIDUAL
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+# Funciones de carga individual
+###############################################################################
+
 
 def load_ml_model(path: str = MODEL_ML_PATH):
     """Carga el modelo LightGBM clínico desde disco."""
@@ -123,7 +147,9 @@ def load_biopsy_model(path: str = MODEL_BIOPSY_PATH):
 
     try:
         model = BiopsyClassifier()
-        state_dict = torch.load(path, map_location=torch.device("cpu"), weights_only=True)
+        state_dict = torch.load(
+            path, map_location=torch.device("cpu"), weights_only=True
+        )
         model.load_state_dict(state_dict)
         model.eval()
         print(f"[OK] Modelo de biopsias cargado desde {path}")
@@ -133,9 +159,10 @@ def load_biopsy_model(path: str = MODEL_BIOPSY_PATH):
         return None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
 # LIFESPAN — Carga y descarga de modelos al arrancar/parar la API
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -151,11 +178,13 @@ async def lifespan(app: FastAPI):
     app.state.modelo_cnn = load_cnn_model()
     app.state.modelo_biopsia = load_biopsy_model()
 
-    modelos_ok = sum([
-        app.state.modelo_ml is not None,
-        app.state.modelo_cnn is not None,
-        app.state.modelo_biopsia is not None,
-    ])
+    modelos_ok = sum(
+        [
+            app.state.modelo_ml is not None,
+            app.state.modelo_cnn is not None,
+            app.state.modelo_biopsia is not None,
+        ]
+    )
     print(f"\n[RESUMEN] {modelos_ok}/3 modelos cargados correctamente.")
     print("=" * 60)
 

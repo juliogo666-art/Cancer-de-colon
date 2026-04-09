@@ -1,11 +1,16 @@
 """
-main.py — Punto de entrada principal del proyecto de Cáncer de Colón.
+Orquestador del proyecto.
+Desde aquí puedes lanzar cualquier parte del sistema usando comandos por terminal.
 
-Uso:
-    streamlit run main.py                    # Lanzar la app EDA (por defecto)
-    python main.py train-polyps              # Entrenar modelo de detección de pólipos
-    python main.py train-rf                  # Entrenar Random Forest con datos sintéticos
-    python main.py generate-data             # Generar datos sintéticos de pacientes
+COMANDOS DISPONIBLES:
+    streamlit run src/frontend/app.py         # Lanzar el frontend (lo más común)
+    python main.py api                        # Arrancar la API FastAPI
+    python main.py frontend                   # Arrancar Streamlit (la app principal)
+    python main.py eda                        # Lanzar la app de análisis exploratorio
+    python main.py train-ml                   # Entrenar el modelo ML de riesgo
+    python main.py test                       # Ejecutar todos los tests
+    python main.py generate-data              # Generar datos sintéticos
+=============================================================================
 """
 
 import argparse
@@ -13,73 +18,127 @@ import os
 import sys
 
 
-def run_eda():
-    """Lanza la aplicación Streamlit de EDA."""
+def ejecutar_api():
+    """
+    Arranca el servidor de la API FastAPI en el puerto 8000.
+    La API expone los modelos de IA como endpoints HTTP.
+    Acceder a la documentación en: http://localhost:8000/docs
+    """
+    import uvicorn
+
+    print("=" * 60)
+    print("  Arrancando ColonAI API en http://localhost:8000")
+    print("  Documentación en: http://localhost:8000/docs")
+    print("=" * 60)
+    uvicorn.run("src.api.main_api:app", host="0.0.0.0", port=8000, reload=True)
+
+
+def ejecutar_frontend():
+    """
+    Arranca la aplicación Streamlit unificada (el frontend visual).
+    Se abrirá automáticamente en el navegador.
+    """
+    os.system("streamlit run src/frontend/app.py")
+
+
+def ejecutar_eda():
+    """Lanza la aplicación de análisis exploratorio de datos (EDA)."""
     from src.scripts.eda import eda
-    base_path = os.path.dirname(__file__)
-    eda(base_path)
+
+    directorio_base = os.path.dirname(__file__)
+    eda(directorio_base)
 
 
-def run_train_polyps():
-    """Entrena el modelo ResNet18 de detección de pólipos."""
-    from src.models.modelo_busca_polipos_Clas import train_model
-    train_model()
+def ejecutar_entrenamiento_ml():
+    """
+    Entrena el modelo ML de riesgo clínico usando el TrainingPipeline.
+    Carga el CSV, divide en train/test, entrena y guarda el modelo + métricas.
+    """
+    from lightgbm import LGBMClassifier
+    from src.pipelines.training_pipeline import TrainingPipeline
+    from src.config.settings import settings
 
+    print("=" * 60)
+    print("  Entrenando modelo ML con TrainingPipeline...")
+    print("=" * 60)
 
-def run_train_rf():
-    """Entrena el modelo Random Forest con datos sintéticos."""
-    import pandas as pd
-    from test.test_ml_v0 import entrenar_random_forest
+    # Crear el pipeline con la ruta centralizada
+    pipeline = TrainingPipeline(csv_path=settings.CSV_RISK_PATH)
+    pipeline.load_and_prepare()
 
-    base_path = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(
-        base_path, 'src', 'data', 'raw', 'historial_pacientes',
-        'historiales_sinteticos', 'pacientes_simulador_colon.csv'
+    # Configurar el modelo LightGBM con los hiperparámetros de ml_v3.py
+    modelo = LGBMClassifier(
+        n_estimators=300,
+        learning_rate=0.02,
+        max_depth=5,
+        random_state=42,
+        verbose=-1,  # Sin mensajes de entrenamiento de LightGBM
     )
 
-    if os.path.exists(csv_path):
-        print(f"Cargando datos desde: {csv_path}")
-        df = pd.read_csv(csv_path)
-        entrenar_random_forest(df)
-    else:
-        print(f"No se encontró: {csv_path}")
-        print("Genera primero los datos con: python main.py generate-data")
+    # Entrenar y evaluar
+    resultados = pipeline.train_and_evaluate(modelo, "LightGBM")
+
+    # Guardar el modelo
+    pipeline.save_model(modelo, "lgbm_clinico")
+
+    print("\n Modelo entrenado y guardado correctamente.")
 
 
-def run_generate_data():
+def ejecutar_tests():
+    """Ejecuta todos los tests del proyecto con pytest."""
+    os.system("pytest src/test/ -v --tb=short")
+
+
+def ejecutar_generacion_datos():
     """Genera los datos sintéticos de pacientes."""
     from src.scripts.sintetiza_historiales import generar_datos_sinteticos
+
     generar_datos_sinteticos()
 
 
 def main():
+    """
+    Función principal que analiza qué comando has escrito en la terminal
+    y ejecuta la función correspondiente.
+    """
     parser = argparse.ArgumentParser(
-        description="Proyecto de análisis y predicción de Cáncer de Colón"
+        description="ColonAI — Sistema de apoyo al diagnóstico de cáncer de colon"
     )
+
+    # Definimos los comandos disponibles
     subparsers = parser.add_subparsers(dest="command", help="Comandos disponibles")
 
-    subparsers.add_parser("eda", help="Lanzar la aplicación de EDA con Streamlit")
-    subparsers.add_parser("train-polyps", help="Entrenar modelo de detección de pólipos (ResNet18)")
-    subparsers.add_parser("train-rf", help="Entrenar Random Forest con datos de pacientes")
+    subparsers.add_parser("api", help="Arrancar la API FastAPI (puerto 8000)")
+    subparsers.add_parser("frontend", help="Arrancar el frontend Streamlit")
+    subparsers.add_parser("eda", help="Lanzar el análisis exploratorio de datos")
+    subparsers.add_parser("train-ml", help="Entrenar el modelo ML de riesgo clínico")
+    subparsers.add_parser("test", help="Ejecutar todos los tests con pytest")
     subparsers.add_parser("generate-data", help="Generar datos sintéticos de pacientes")
 
-    args = parser.parse_args()
+    argumentos = parser.parse_args()
 
-    commands = {
-        "eda": run_eda,
-        "train-polyps": run_train_polyps,
-        "train-rf": run_train_rf,
-        "generate-data": run_generate_data,
+    # Mapa de comandos → funciones
+    comandos_disponibles = {
+        "api": ejecutar_api,
+        "frontend": ejecutar_frontend,
+        "eda": ejecutar_eda,
+        "train-ml": ejecutar_entrenamiento_ml,
+        "test": ejecutar_tests,
+        "generate-data": ejecutar_generacion_datos,
     }
 
-    if args.command is None:
-        # Sin argumento: Si Streamlit está ejecutando, lanza EDA; si no, muestra help
+    if argumentos.command is None:
+        # Si no se especifica comando, mostramos la ayuda
         if "streamlit" in sys.modules:
-            run_eda()
+            ejecutar_eda()
         else:
             parser.print_help()
-    elif args.command in commands:
-        commands[args.command]()
+            print("\n Comandos mas usados:")
+            print("   python main.py api         -> Arrancar la API")
+            print("   python main.py frontend    -> Arrancar Streamlit")
+            print("   python main.py test        -> Ejecutar tests")
+    elif argumentos.command in comandos_disponibles:
+        comandos_disponibles[argumentos.command]()
     else:
         parser.print_help()
 

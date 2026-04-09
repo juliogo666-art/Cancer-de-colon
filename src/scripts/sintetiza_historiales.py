@@ -1,5 +1,5 @@
 ########################################################################################
-# sintetiza_historiales.py — Generación de historiales ficticios de pacientes
+# Generación de historiales ficticios de pacientes
 #
 # IMPORTANTE: Todo el código de generación de datos está envuelto en funciones.
 # Nada se ejecuta al importar este módulo. Para generar datos, ejecutar directamente:

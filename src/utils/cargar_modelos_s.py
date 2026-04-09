@@ -3,20 +3,24 @@ import numpy as np
 import cv2
 import tensorflow as tf
 import os
-import pandas as pd     # Necesario para SHAP
-import shap              # Necesario para SHAP
-import matplotlib.pyplot as plt # Necesario para SHAP
+import pandas as pd  # Necesario para SHAP
+import shap  # Necesario para SHAP
+import matplotlib.pyplot as plt  # Necesario para SHAP
 import torch
 import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from src.utils.gradcam_utils import generate_gradcam, generate_gradcam_colon, generar_explicacion_shap
+from src.utils.gradcam_utils import (
+    generate_gradcam,
+    generate_gradcam_colon,
+    generar_explicacion_shap,
+)
 
 
-# ==========================================
-# PARCHE DE EMERGENCIA Y CARGA (CACHÉ)
-# ==========================================
+#######################################################
+# Parche de emergencia y carga (caché)
+#######################################################
 @st.cache_resource
 def inicializar_entorno_y_modelo():
     """Ejecuta el parche de Keras y carga el modelo una sola vez"""
@@ -56,9 +60,9 @@ def inicializar_entorno_y_modelo():
             return None
 
 
-# ==========================================
-# MODELO BIOPSIAS (PYTORCH)
-# ==========================================
+#######################################################
+# Modelo de Biopsias
+#######################################################
 
 
 class BiopsyClassifier(nn.Module):
@@ -105,19 +109,46 @@ def cargar_modelo_biopsia():
 # --- AÑADE ESTA LÍNEA AQUÍ ---
 # Creamos un alias para que app.py encuentre la función con el nombre antiguo
 obtener_modelo_cnn = inicializar_entorno_y_modelo
-def predecir(modelo, selector, fuma, alc, fam, diet_red, diet_salt, diet_veg, phys, bmi, sangre, cea):
+
+
+def predecir(
+    modelo,
+    selector,
+    fuma,
+    alc,
+    fam,
+    diet_red,
+    diet_salt,
+    diet_veg,
+    phys,
+    bmi,
+    sangre,
+    cea,
+):
     try:
         # --- 1. PREPARACIÓN ---
         fuma_n = 10 if fuma == "Sí" else 0
         fam_n = 1 if fam else 0
         sangre_n = 1 if (sangre == "Positivo" or sangre == "Sí") else 0
         obesidad_n = 1 if float(bmi) >= 30 else 0
-        
-        features_input = np.array([[
-            float(fuma_n), float(alc), float(obesidad_n), float(fam_n),
-            float(diet_red), float(diet_salt), float(diet_veg),
-            float(phys), float(bmi), float(sangre_n), float(cea)
-        ]])
+
+        features_input = np.array(
+            [
+                [
+                    float(fuma_n),
+                    float(alc),
+                    float(obesidad_n),
+                    float(fam_n),
+                    float(diet_red),
+                    float(diet_salt),
+                    float(diet_veg),
+                    float(phys),
+                    float(bmi),
+                    float(sangre_n),
+                    float(cea),
+                ]
+            ]
+        )
 
         # --- 2. PREDICCIÓN ---
         probabilidades = modelo.predict_proba(features_input)[0]
@@ -132,52 +163,102 @@ def predecir(modelo, selector, fuma, alc, fam, diet_red, diet_salt, diet_veg, ph
         riesgo_calculado = min(riesgo_calculado, 1.0)
 
         # --- 3. SHAP ---
-        fig_shap, tabla_importancia = generar_explicacion_shap(modelo, features_input, clase_predicha)
+        fig_shap, tabla_importancia = generar_explicacion_shap(
+            modelo, features_input, clase_predicha
+        )
 
         # --- 4. RENDERIZADO VISUAL ---
         col_res, col_shap = st.columns([1, 1.2])
-        
-        color = "#28a745" if riesgo_calculado < 0.25 else "#ffa500" if riesgo_calculado < 0.60 else "#ff4b4b"
+
+        color = (
+            "#28a745"
+            if riesgo_calculado < 0.25
+            else "#ffa500"
+            if riesgo_calculado < 0.60
+            else "#ff4b4b"
+        )
 
         with col_res:
-            # Encabezado del Informe
-            st.markdown(f"""
-                <div style='background-color: #111; padding: 20px; border-radius: 15px; border: 1px solid {color};'>
-                    <h2 style='color: white; text-align: center; margin: 0;'>INFORME MÉDICO</h2>
-                    <p style='text-align: center; color: #666; font-size: 0.8em;'>ID Paciente: {selector}</p>
-                    <div style='text-align: center; padding: 20px 0;'>
-                        <span style='font-size: 55px; font-weight: bold; color: {color};'>{riesgo_calculado * 100:.1f}%</span>
-                        <br><span style='color: #888; letter-spacing: 2px;'>RIESGO ESTIMADO</span>
+            # Encabezado del Informe (TEMA CLARO CLINICO)
+            st.markdown(
+                f"""
+                <div style='background-color: #ffffff; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);'>
+                    <h2 style='color: #0f172a; text-align: center; margin: 0; font-family: sans-serif;'>INFORME MÉDICO</h2>
+                    <p style='text-align: center; color: #64748b; font-size: 0.85em; margin-top: 5px;'>ID Paciente: {selector}</p>
+                    <div style='text-align: center; padding: 25px 0;'>
+                        <div style='font-size: 60px; font-weight: 800; color: {color}; line-height: 1;'>{riesgo_calculado * 100:.1f}%</div>
+                        <div style='color: #94a3b8; letter-spacing: 2px; font-size: 0.75em; font-weight: bold; margin-top: 8px;'>RIESGO ESTIMADO</div>
                     </div>
                 </div>
-                <div style='margin-top: 15px;'>
-                    <p style='color: white; font-weight: bold; margin-bottom: 10px;'>ANÁLISIS DE FACTORES:</p>
+                <div style='margin-top: 20px;'>
+                    <p style='color: #1e293b; font-weight: bold; margin-bottom: 15px; font-size: 0.9em;'>ANÁLISIS DE FACTORES:</p>
                 </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             # Rejilla de Factores de Riesgo Estilizada
             # Creamos las columnas para que los "bloques" se vean ordenados
             c1, c2 = st.columns(2)
-            
+
             # Definimos un estilo común para las mini-tarjetas
             def card_style(label, value, is_alert):
-                bg = "#4d1111" if is_alert else "#1a1a1a"
-                border = "#ff4b4b" if is_alert else "#333"
-                txt = "#ff4b4b" if is_alert else "#aaa"
-                return f"""<div style='background:{bg}; border: 1px solid {border}; padding: 10px; border-radius: 8px; margin-bottom: 10px;'>
-                            <p style='margin:0; font-size: 0.7em; color: {txt}; font-weight: bold;'>{label}</p>
-                            <p style='margin:0; font-size: 0.9em; color: white;'>{value}</p>
+                bg = "#fff1f2" if is_alert else "#f8fafc"
+                border = "#fecdd3" if is_alert else "#e2e8f0"
+                txt_label = "#e11d48" if is_alert else "#64748b"
+                txt_val = "#9f1239" if is_alert else "#334155"
+                return f"""<div style='background:{bg}; border: 1px solid {border}; padding: 12px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);'>
+                            <p style='margin:0; font-size: 0.7em; color: {txt_label}; font-weight: bold; text-transform: uppercase;'>{label}</p>
+                            <p style='margin:0; font-size: 0.95em; color: {txt_val}; font-weight: 600;'>{value}</p>
                           </div>"""
 
             with c1:
-                st.markdown(card_style("SANGRE (FOBT)", "DETECTADA 🚨" if sangre_n else "NEGATIVO ✅", sangre_n), unsafe_allow_html=True)
-                st.markdown(card_style("NIVEL CEA", f"{cea} ng/mL {'⚠️' if cea > 3 else 'OK'}", cea > 3), unsafe_allow_html=True)
-                st.markdown(card_style("TABAQUISMO", "FUMADOR 🚬" if fuma == "Sí" else "NO FUMA 🚭", fuma == "Sí"), unsafe_allow_html=True)
-            
+                st.markdown(
+                    card_style(
+                        "SANGRE (FOBT)",
+                        "DETECTADA 🚨" if sangre_n else "NEGATIVO ✅",
+                        sangre_n,
+                    ),
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    card_style(
+                        "NIVEL CEA", f"{cea} ng/mL {'⚠️' if cea > 3 else 'OK'}", cea > 3
+                    ),
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    card_style(
+                        "TABAQUISMO",
+                        "FUMADOR 🚬" if fuma == "Sí" else "NO FUMA 🚭",
+                        fuma == "Sí",
+                    ),
+                    unsafe_allow_html=True,
+                )
+
             with c2:
-                st.markdown(card_style("ESTADO IMC", f"{bmi} ({'OBESIDAD' if bmi >= 30 else 'NORMAL'})", bmi >= 30), unsafe_allow_html=True)
-                st.markdown(card_style("DIETA ROJA", f"Nivel {diet_red}/10 {'⚠️' if diet_red > 7 else 'OK'}", diet_red > 7), unsafe_allow_html=True)
-                st.markdown(card_style("HISTORIAL", "FAMILIAR 👪" if fam else "SIN ANTECED.", fam), unsafe_allow_html=True)
+                st.markdown(
+                    card_style(
+                        "ESTADO IMC",
+                        f"{bmi} ({'OBESIDAD' if bmi >= 30 else 'NORMAL'})",
+                        bmi >= 30,
+                    ),
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    card_style(
+                        "DIETA ROJA",
+                        f"Nivel {diet_red}/10 {'⚠️' if diet_red > 7 else 'OK'}",
+                        diet_red > 7,
+                    ),
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    card_style(
+                        "HISTORIAL", "FAMILIAR 👪" if fam else "SIN ANTECED.", fam
+                    ),
+                    unsafe_allow_html=True,
+                )
 
         with col_shap:
             if fig_shap:
@@ -185,18 +266,19 @@ def predecir(modelo, selector, fuma, alc, fam, diet_red, diet_salt, diet_veg, ph
                 st.markdown("### 📊 Desglose de Influencia")
                 # Usamos dataframe en lugar de table para que se vea más moderno y permita scroll
                 st.dataframe(
-                    tabla_importancia, 
-                    use_container_width=True, 
+                    tabla_importancia,
+                    use_container_width=True,
                     hide_index=True,
                     column_config={
                         "Impacto": st.column_config.TextColumn("Influencia (%)"),
-                        "Sentido": st.column_config.TextColumn("Efecto en Riesgo")
-                    }
+                        "Sentido": st.column_config.TextColumn("Efecto en Riesgo"),
+                    },
                 )
 
     except Exception as e:
         st.error(f"Error en visualización: {e}")
-    
+
+
 def colonos(imagen):
     """Procesamiento de imagen adaptado a Streamlit"""
     if imagen is None:
@@ -226,7 +308,7 @@ def colonos(imagen):
         # heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen, "post_relu")
         # heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen, "out_relu")
         heatmap_img, pred_val = generate_gradcam_colon(modelo_instancia, imagen)
-    
+
         # Ajustamos la lógica de pólipo/sano según tu entrenamiento
         es_polipo = pred_val < 0.5
         resultado = "PÓLIPO DETECTADO" if es_polipo else "TEJIDO SANO"
@@ -239,14 +321,14 @@ def colonos(imagen):
         )
 
         html_vision = f"""
-        <div style='background-color: #000; border: 3px solid {color}; padding: 25px; border-radius: 15px; text-align: center; color: white; font-family: sans-serif;'>
-            <h2 style='margin: 10px 0; color: {color}; font-size: 28px; font-weight: 900;'>{resultado}</h2>
-            <div style='margin: 15px 0;'>
-                <span style='font-size: 40px; font-weight: bold;'>{confianza * 100:.1f}%</span>
-                <span style='font-size: 18px; color: #888;'> de confianza</span>
+        <div style='background-color: #ffffff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 15px; text-align: center; color: #1e293b; font-family: sans-serif; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
+            <h2 style='margin: 0; color: {color}; font-size: 26px; font-weight: 800;'>{resultado}</h2>
+            <div style='margin: 20px 0;'>
+                <div style='font-size: 45px; font-weight: 900; color: #0f172a;'>{confianza * 100:.1f}%</div>
+                <div style='font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Nivel de Confianza</div>
             </div>
-            <div style='background-color: {color}22; border: 1px solid {color}; padding: 10px; border-radius: 8px;'>
-                <p style='margin: 0; color: white; font-size: 14px;'>{subtitulo}</p>
+            <div style='background-color: {color}11; border: 1px solid {color}33; padding: 15px; border-radius: 10px;'>
+                <p style='margin: 0; color: #334155; font-size: 14px; font-weight: 500;'>{subtitulo}</p>
             </div>
         </div>
         """
@@ -290,14 +372,14 @@ def biopsias(imagen):
         # 4. Grad-CAM Inferencia
         # Obtenemos la capa objetivo de ResNet18 (Normalmente la última capa conv antes del pooling: layer4[-1])
         target_layer = modelo_instancia.model.layer4[-1]
-        
+
         # heatmap_img ya viene como array OpenCV / RGB y listo
         heatmap_img, prob = generate_gradcam(modelo_instancia, img_pil, target_layer)
 
         # 5. Lógica de resultados
         es_benigno = prob >= 0.5
-        resultado = "BENIGNO (NORMAL)" if es_benigno else "🚨 MALIGNO (ADENOCARCINOMA)"
-        
+        resultado = "BENIGNO (NORMAL)" if es_benigno else "MALIGNO (ADENOCARCINOMA)"
+
         # Confianza
         confianza = prob if es_benigno else (1.0 - prob)
         color = "#28a745" if es_benigno else "#ff4b4b"
@@ -311,14 +393,14 @@ def biopsias(imagen):
         img_original_224 = cv2.resize(np.array(img_pil), (224, 224))
 
         html_vision = f"""
-        <div style='background-color: #000; border: 3px solid {color}; padding: 25px; border-radius: 15px; text-align: center; color: white; font-family: sans-serif; margin-top: 15px;'>
-            <h2 style='margin: 10px 0; color: {color}; font-size: 24px; font-weight: 900;'>{resultado}</h2>
-            <div style='margin: 15px 0;'>
-                <span style='font-size: 40px; font-weight: bold;'>{confianza * 100:.1f}%</span>
-                <span style='font-size: 18px; color: #888;'> de confianza</span>
+        <div style='background-color: #ffffff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 15px; text-align: center; color: #1e293b; font-family: sans-serif; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-top: 15px;'>
+            <h2 style='margin: 0; color: {color}; font-size: 24px; font-weight: 800;'>{resultado}</h2>
+            <div style='margin: 20px 0;'>
+                <div style='font-size: 45px; font-weight: 900; color: #0f172a;'>{confianza * 100:.1f}%</div>
+                <div style='font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>Nivel de Confianza</div>
             </div>
-            <div style='background-color: {color}22; border: 1px solid {color}; padding: 10px; border-radius: 8px;'>
-                <p style='margin: 0; color: white; font-size: 14px;'>{subtitulo}</p>
+            <div style='background-color: {color}11; border: 1px solid {color}33; padding: 15px; border-radius: 10px;'>
+                <p style='margin: 0; color: #334155; font-size: 14px; font-weight: 500;'>{subtitulo}</p>
             </div>
         </div>
         """
@@ -327,5 +409,13 @@ def biopsias(imagen):
 
     except Exception as e:
         # En caso de error, devolvemos un array vacío como imagen o la original para que no rompa la triple asignación
-        img_error = cv2.resize(np.array(img_pil), (224, 224)) if 'img_pil' in locals() else imagen
-        return f"<div style='color:red;'>Error en inferencia de Biopsia: {str(e)}</div>", img_error, img_error
+        img_error = (
+            cv2.resize(np.array(img_pil), (224, 224))
+            if "img_pil" in locals()
+            else imagen
+        )
+        return (
+            f"<div style='color:red;'>Error en inferencia de Biopsia: {str(e)}</div>",
+            img_error,
+            img_error,
+        )

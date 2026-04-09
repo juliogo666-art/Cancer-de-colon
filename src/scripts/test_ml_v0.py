@@ -1,5 +1,5 @@
 """
-testeos.py — Modelo de clasificación Random Forest para predicción de cáncer de colon.
+Modelo de clasificación Random Forest para predicción de cáncer de colon.
 
 Recibe un DataFrame con datos de pacientes y entrena un Random Forest con
 GridSearchCV para predecir el diagnóstico.
@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 
 
-def entrenar_random_forest(df, target_col='Diagnostico', output_dir=None):
+def entrenar_random_forest(df, target_col="Diagnostico", output_dir=None):
     """
     Entrena un modelo Random Forest con búsqueda de hiperparámetros para
     clasificación binaria de cáncer de colon.
@@ -37,14 +37,14 @@ def entrenar_random_forest(df, target_col='Diagnostico', output_dir=None):
     df_model = df.copy()
 
     # Eliminar columnas de ID si existen
-    cols_to_drop = ['Paciente_ID', 'Patient_ID']
+    cols_to_drop = ["Paciente_ID", "Patient_ID"]
     for col in cols_to_drop:
         if col in df_model.columns:
             df_model = df_model.drop(columns=[col])
 
     # Codificar columnas categóricas que sigan siendo texto
     le = LabelEncoder()
-    for col in df_model.select_dtypes(include=['object']).columns:
+    for col in df_model.select_dtypes(include=["object"]).columns:
         if col != target_col:
             df_model[col] = le.fit_transform(df_model[col].astype(str))
 
@@ -61,15 +61,14 @@ def entrenar_random_forest(df, target_col='Diagnostico', output_dir=None):
     rf = RandomForestClassifier(random_state=42)
 
     param_grid = {
-        'n_estimators': [50, 100, 200],
-        'max_depth': [None, 10, 20],
-        'min_samples_split': [2, 5]
+        "n_estimators": [50, 100, 200],
+        "max_depth": [None, 10, 20],
+        "min_samples_split": [2, 5],
     }
 
     print("Ejecutando GridSearchCV (esto puede tardar unos minutos)...")
     grid_search = GridSearchCV(
-        estimator=rf, param_grid=param_grid,
-        cv=5, scoring='accuracy', n_jobs=-1
+        estimator=rf, param_grid=param_grid, cv=5, scoring="accuracy", n_jobs=-1
     )
     grid_search.fit(X_train, y_train)
 
@@ -98,17 +97,17 @@ def entrenar_random_forest(df, target_col='Diagnostico', output_dir=None):
         output_dir = base_dir
 
     os.makedirs(output_dir, exist_ok=True)
-    model_path = os.path.join(output_dir, 'random_forest_colon.joblib')
+    model_path = os.path.join(output_dir, "random_forest_colon.joblib")
     joblib.dump(best_rf, model_path)
     print(f"\nModelo guardado en: {model_path}")
 
     return {
-        'model': best_rf,
-        'best_params': grid_search.best_params_,
-        'cv_scores': cv_scores,
-        'classification_report': report,
-        'confusion_matrix': cm,
-        'feature_names': list(X.columns),
+        "model": best_rf,
+        "best_params": grid_search.best_params_,
+        "cv_scores": cv_scores,
+        "classification_report": report,
+        "confusion_matrix": cm,
+        "feature_names": list(X.columns),
     }
 
 
@@ -116,8 +115,13 @@ if __name__ == "__main__":
     # Ejemplo: cargar el CSV de pacientes sintéticos y entrenar
     base_dir = os.path.dirname(os.path.abspath(__file__))
     csv_path = os.path.join(
-        base_dir, '..', 'data', 'raw', 'historial_pacientes',
-        'historiales_sinteticos', 'pacientes_simulador_colon.csv'
+        base_dir,
+        "..",
+        "data",
+        "raw",
+        "historial_pacientes",
+        "historiales_sinteticos",
+        "pacientes_simulador_colon.csv",
     )
 
     if os.path.exists(csv_path):
@@ -126,4 +130,6 @@ if __name__ == "__main__":
         resultado = entrenar_random_forest(df)
     else:
         print(f"No se encontró el archivo: {csv_path}")
-        print("Genera primero los datos con: python -m src.scripts.sintetiza_historiales")
+        print(
+            "Genera primero los datos con: python -m src.scripts.sintetiza_historiales"
+        )

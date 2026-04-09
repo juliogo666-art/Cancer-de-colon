@@ -3,8 +3,8 @@ F-Score — Media harmónica ponderada entre Precision y Recall.
 
     - F1: Equilibrio 50/50 entre Precision y Recall.
     - F2: Da el DOBLE de importancia al Recall → ideal para diagnóstico médico
-           porque preferimos detectar un enfermo sano (FP) a NO detectar uno
-           enfermo (FN).
+           porque preferimos detectar un enfermo ya que este sano (FP) a NO detectar uno
+           enfermo de verdad (FN).
 """
 
 from typing import Optional
@@ -40,5 +40,7 @@ class FBetaMetric:
         y_proba: Optional[np.ndarray] = None,
     ) -> float:
         return float(
-            fbeta_score(y_true, y_pred, beta=self.beta, average=self.average, zero_division=0)
+            fbeta_score(
+                y_true, y_pred, beta=self.beta, average=self.average, zero_division=0
+            )
         )

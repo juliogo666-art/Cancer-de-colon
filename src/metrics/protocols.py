@@ -2,7 +2,7 @@
 =============================================================================
 ARCHIVO: protocols.py (Interfaces / Contratos de OOP)
 =============================================================================
-Define el contrato (Protocol) para las métricas de clasificación clínica.
+Define el Protocol para las métricas de clasificación clínica.
 
 Aquí evaluamos modelos de clasificación médica
 que predicen el riesgo de cáncer de colon (Low / Medium / High).

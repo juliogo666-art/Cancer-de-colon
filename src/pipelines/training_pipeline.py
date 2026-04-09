@@ -19,7 +19,7 @@ Uso:
     from src.pipelines.training_pipeline import TrainingPipeline
 
     pipeline = TrainingPipeline(
-        csv_path="src/data/raw/historial_pacientes/cancer_risk_final.csv",
+        csv_path="src/data/clean/cancer_risk_final.csv",
         target_col="Risk_Level_n",
     )
     pipeline.load_and_prepare()

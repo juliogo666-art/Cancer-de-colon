@@ -33,9 +33,9 @@ from src.api.dependencies import (
     lifespan,
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# INICIALIZACIÓN DE LA APP
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+# Inicialización
+###############################################################################
 
 app = FastAPI(
     title="ColonAI API",
@@ -54,9 +54,10 @@ app.add_middleware(
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# UTILIDADES INTERNAS
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+# Utilidades internas
+###############################################################################
+
 
 def _image_to_base64(img_array: np.ndarray) -> str:
     """Convierte un array numpy (imagen RGB) a string base64 para JSON."""
@@ -74,9 +75,10 @@ def _read_upload_as_array(file_bytes: bytes) -> np.ndarray:
     return np.array(img)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# HEALTH CHECK
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+# Verificación de estado
+###############################################################################
+
 
 @app.get("/", tags=["Health"])
 async def health_check(request: Request):
@@ -91,23 +93,38 @@ async def health_check(request: Request):
     }
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# GRUPO 1: PREDICCIÓN DE RIESGO CLÍNICO (ML)
-# ═════════════════════════════════════════════════════════════════════════════
+###############################################################################
+# Predicción de riesgo clínico (ML)
+###############################################################################
+
 
 @app.post("/api/v1/predict/risk", tags=["Predicción ML"])
 async def predict_risk(
     request: Request,
     smoking: float = Query(..., ge=0, le=10, description="Nivel de tabaquismo (0-10)"),
-    alcohol_use: float = Query(..., ge=0, le=10, description="Consumo de alcohol (0-10)"),
+    alcohol_use: float = Query(
+        ..., ge=0, le=10, description="Consumo de alcohol (0-10)"
+    ),
     obesity: float = Query(..., ge=0, le=10, description="Nivel de obesidad (0-10)"),
-    family_history: int = Query(..., ge=0, le=1, description="Historial familiar (0=No, 1=Sí)"),
-    diet_red_meat: float = Query(..., ge=0, le=10, description="Consumo de carne roja (0-10)"),
-    diet_salted_processed: float = Query(..., ge=0, le=10, description="Consumo de sal/procesados (0-10)"),
-    fruit_veg_intake: float = Query(..., ge=0, le=10, description="Consumo de fruta/verdura (0-10)"),
-    physical_activity: float = Query(..., ge=0, le=10, description="Actividad física (0-10)"),
+    family_history: int = Query(
+        ..., ge=0, le=1, description="Historial familiar (0=No, 1=Sí)"
+    ),
+    diet_red_meat: float = Query(
+        ..., ge=0, le=10, description="Consumo de carne roja (0-10)"
+    ),
+    diet_salted_processed: float = Query(
+        ..., ge=0, le=10, description="Consumo de sal/procesados (0-10)"
+    ),
+    fruit_veg_intake: float = Query(
+        ..., ge=0, le=10, description="Consumo de fruta/verdura (0-10)"
+    ),
+    physical_activity: float = Query(
+        ..., ge=0, le=10, description="Actividad física (0-10)"
+    ),
     bmi: float = Query(..., ge=10, le=60, description="Índice de masa corporal"),
-    fobt_resultado: int = Query(..., ge=0, le=1, description="FOBT sangre oculta (0=Neg, 1=Pos)"),
+    fobt_resultado: int = Query(
+        ..., ge=0, le=1, description="FOBT sangre oculta (0=Neg, 1=Pos)"
+    ),
     cea_level: float = Query(..., ge=0, description="Nivel CEA en ng/mL"),
 ):
     """
@@ -120,11 +137,23 @@ async def predict_risk(
         raise HTTPException(status_code=503, detail="Modelo ML no disponible.")
 
     # Construir el vector de features en el orden exacto que espera el modelo
-    features = np.array([[
-        smoking, alcohol_use, obesity, family_history,
-        diet_red_meat, diet_salted_processed, fruit_veg_intake,
-        physical_activity, bmi, fobt_resultado, cea_level,
-    ]])
+    features = np.array(
+        [
+            [
+                smoking,
+                alcohol_use,
+                obesity,
+                family_history,
+                diet_red_meat,
+                diet_salted_processed,
+                fruit_veg_intake,
+                physical_activity,
+                bmi,
+                fobt_resultado,
+                cea_level,
+            ]
+        ]
+    )
 
     try:
         probabilidades = modelo.predict_proba(features)[0]
@@ -132,7 +161,9 @@ async def predict_risk(
 
         # Calcular un score de riesgo ponderado (0.0 a 1.0)
         if len(probabilidades) == 3:
-            riesgo_score = 0.005 + (probabilidades[1] * 0.45) + (probabilidades[2] * 1.0)
+            riesgo_score = (
+                0.005 + (probabilidades[1] * 0.45) + (probabilidades[2] * 1.0)
+            )
         else:
             riesgo_score = float(probabilidades[1]) if len(probabilidades) == 2 else 0.0
         riesgo_score = min(riesgo_score, 1.0)
@@ -142,8 +173,12 @@ async def predict_risk(
             "risk_score": round(riesgo_score, 4),
             "probabilities": {
                 "Low": round(float(probabilidades[0]), 4),
-                "Medium": round(float(probabilidades[1]), 4) if len(probabilidades) > 1 else 0.0,
-                "High": round(float(probabilidades[2]), 4) if len(probabilidades) > 2 else 0.0,
+                "Medium": round(float(probabilidades[1]), 4)
+                if len(probabilidades) > 1
+                else 0.0,
+                "High": round(float(probabilidades[2]), 4)
+                if len(probabilidades) > 2
+                else 0.0,
             },
             "features_used": dict(zip(ML_FEATURE_NAMES, features[0].tolist())),
         }
@@ -151,9 +186,10 @@ async def predict_risk(
         raise HTTPException(status_code=500, detail=f"Error en predicción: {str(e)}")
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# GRUPO 2: ANÁLISIS DE IMAGEN (DL)
-# ═════════════════════════════════════════════════════════════════════════════
+###############################################################################
+# Análisis de imagen (DL)
+###############################################################################
+
 
 @app.post("/api/v1/analyze/colonoscopy", tags=["Análisis de Imagen"])
 async def analyze_colonoscopy(request: Request, file: UploadFile = File(...)):
@@ -165,7 +201,9 @@ async def analyze_colonoscopy(request: Request, file: UploadFile = File(...)):
     """
     modelo = request.app.state.modelo_cnn
     if modelo is None:
-        raise HTTPException(status_code=503, detail="Modelo CNN de colonoscopia no disponible.")
+        raise HTTPException(
+            status_code=503, detail="Modelo CNN de colonoscopia no disponible."
+        )
 
     try:
         import tensorflow as tf
@@ -189,6 +227,7 @@ async def analyze_colonoscopy(request: Request, file: UploadFile = File(...)):
         heatmap_b64 = None
         try:
             from src.utils.gradcam_utils import generate_gradcam_colon
+
             heatmap_img, _ = generate_gradcam_colon(modelo, img_array)
             heatmap_b64 = _image_to_base64(heatmap_img)
         except Exception:
@@ -209,7 +248,9 @@ async def analyze_colonoscopy(request: Request, file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analizando colonoscopia: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error analizando colonoscopia: {str(e)}"
+        )
 
 
 @app.post("/api/v1/analyze/biopsy", tags=["Análisis de Imagen"])
@@ -231,11 +272,15 @@ async def analyze_biopsy(request: Request, file: UploadFile = File(...)):
         img_pil = Image.fromarray(img_array)
 
         # 2. Preprocesar para PyTorch (224x224, normalización ImageNet)
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        transform = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
         input_tensor = transform(img_pil).unsqueeze(0)
 
         # 3. Inferencia
@@ -250,6 +295,7 @@ async def analyze_biopsy(request: Request, file: UploadFile = File(...)):
         heatmap_b64 = None
         try:
             from src.utils.gradcam_utils import generate_gradcam
+
             target_layer = modelo.model.layer4[-1]
             heatmap_img, _ = generate_gradcam(modelo, img_pil, target_layer)
             heatmap_b64 = _image_to_base64(heatmap_img)
@@ -257,7 +303,9 @@ async def analyze_biopsy(request: Request, file: UploadFile = File(...)):
             pass
 
         return {
-            "diagnosis": "BENIGNO (NORMAL)" if es_benigno else "MALIGNO (ADENOCARCINOMA)",
+            "diagnosis": "BENIGNO (NORMAL)"
+            if es_benigno
+            else "MALIGNO (ADENOCARCINOMA)",
             "is_benign": es_benigno,
             "confidence": round(confianza, 4),
             "raw_probability": round(prob, 4),
@@ -271,12 +319,15 @@ async def analyze_biopsy(request: Request, file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analizando biopsia: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error analizando biopsia: {str(e)}"
+        )
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# GRUPO 3: GESTIÓN DE PACIENTES (CRUD SOBRE CSV)
-# ═════════════════════════════════════════════════════════════════════════════
+###############################################################################
+# Gestión de pacientes (CRUD sobre CSV)
+###############################################################################
+
 
 @app.get("/api/v1/patients", tags=["Pacientes"])
 async def list_patients(
@@ -285,7 +336,9 @@ async def list_patients(
 ):
     """Lista los pacientes del dataset con paginación."""
     if not os.path.exists(CSV_RISK_PATH):
-        raise HTTPException(status_code=404, detail="Archivo de pacientes no encontrado.")
+        raise HTTPException(
+            status_code=404, detail="Archivo de pacientes no encontrado."
+        )
 
     try:
         df = pd.read_csv(CSV_RISK_PATH)
@@ -298,27 +351,35 @@ async def list_patients(
             "patients": page.to_dict(orient="records"),
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error leyendo pacientes: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error leyendo pacientes: {str(e)}"
+        )
 
 
 @app.get("/api/v1/patients/{patient_id}", tags=["Pacientes"])
 async def get_patient(patient_id: int):
     """Obtiene los datos de un paciente específico por su ID."""
     if not os.path.exists(CSV_RISK_PATH):
-        raise HTTPException(status_code=404, detail="Archivo de pacientes no encontrado.")
+        raise HTTPException(
+            status_code=404, detail="Archivo de pacientes no encontrado."
+        )
 
     try:
         df = pd.read_csv(CSV_RISK_PATH)
         patient = df[df["Patient_ID"] == patient_id]
 
         if patient.empty:
-            raise HTTPException(status_code=404, detail=f"Paciente {patient_id} no encontrado.")
+            raise HTTPException(
+                status_code=404, detail=f"Paciente {patient_id} no encontrado."
+            )
 
         return patient.iloc[0].to_dict()
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error buscando paciente: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error buscando paciente: {str(e)}"
+        )
 
 
 @app.post("/api/v1/patients", tags=["Pacientes"])
@@ -338,13 +399,17 @@ async def create_patient(
 ):
     """Crea un nuevo registro de paciente en el CSV."""
     if not os.path.exists(CSV_RISK_PATH):
-        raise HTTPException(status_code=404, detail="Archivo de pacientes no encontrado.")
+        raise HTTPException(
+            status_code=404, detail="Archivo de pacientes no encontrado."
+        )
 
     try:
         df = pd.read_csv(CSV_RISK_PATH)
 
         if (df["Patient_ID"] == patient_id).any():
-            raise HTTPException(status_code=409, detail=f"El paciente {patient_id} ya existe.")
+            raise HTTPException(
+                status_code=409, detail=f"El paciente {patient_id} ya existe."
+            )
 
         risk_level_n = {"Low": 0, "Medium": 1, "High": 2}.get(risk_level, 0)
 
@@ -367,7 +432,10 @@ async def create_patient(
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         df.to_csv(CSV_RISK_PATH, index=False)
 
-        return {"message": f"Paciente {patient_id} creado correctamente.", "patient": new_row}
+        return {
+            "message": f"Paciente {patient_id} creado correctamente.",
+            "patient": new_row,
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -391,14 +459,18 @@ async def update_patient(
 ):
     """Actualiza los datos de un paciente existente."""
     if not os.path.exists(CSV_RISK_PATH):
-        raise HTTPException(status_code=404, detail="Archivo de pacientes no encontrado.")
+        raise HTTPException(
+            status_code=404, detail="Archivo de pacientes no encontrado."
+        )
 
     try:
         df = pd.read_csv(CSV_RISK_PATH)
         mask = df["Patient_ID"] == patient_id
 
         if not mask.any():
-            raise HTTPException(status_code=404, detail=f"Paciente {patient_id} no encontrado.")
+            raise HTTPException(
+                status_code=404, detail=f"Paciente {patient_id} no encontrado."
+            )
 
         idx = df[mask].index[0]
 
@@ -423,7 +495,9 @@ async def update_patient(
 
         # Recalcular Risk_Level_n si se cambió Risk_Level
         if risk_level is not None and "Risk_Level_n" in df.columns:
-            df.at[idx, "Risk_Level_n"] = {"Low": 0, "Medium": 1, "High": 2}.get(risk_level, 0)
+            df.at[idx, "Risk_Level_n"] = {"Low": 0, "Medium": 1, "High": 2}.get(
+                risk_level, 0
+            )
 
         df.to_csv(CSV_RISK_PATH, index=False)
 
@@ -434,13 +508,16 @@ async def update_patient(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error actualizando paciente: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error actualizando paciente: {str(e)}"
+        )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PUNTO DE ENTRADA DIRECTO
-# ─────────────────────────────────────────────────────────────────────────────
+###############################################################################
+# Punto de entrada directo
+###############################################################################
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("src.api.main_api:app", host="0.0.0.0", port=8000, reload=True)
