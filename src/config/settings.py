@@ -116,7 +116,7 @@ class Settings:
         )
 
         # Carpeta con imágenes decorativas del frontend
-        self.CARPETA_IMAGENES_UI = os.path.join(RAIZ_DEL_PROYECTO, "src", "image")
+        self.CARPETA_IMAGENES_UI = os.path.join(RAIZ_DEL_PROYECTO, "static")
 
         ##########################################################################
         # Rutas de tracking (registros de experimentos y predicciones)

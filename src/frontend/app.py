@@ -321,7 +321,7 @@ def buscar_patient_id_por_dni_o_nuss(texto_introducido):
 col1, col2, col3 = st.columns([1, 1, 0.7])
 with col1:
     st.image(
-        os.path.join(directorio_raiz_del_proyecto, "src", "image", "galeno.png"),
+        os.path.join(directorio_raiz_del_proyecto, "static", "galeno.png"),
         use_container_width=True,
     )
 

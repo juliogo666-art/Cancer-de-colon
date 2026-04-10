@@ -1,0 +1,1 @@
+# Puntos intermedios del entrenamiento
