@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import os  # Importamos esto para manejar rutas
 
-RUTA_DATA = r'cancer de colon\prueba\dataset_colon_completo\cancer_risk_clean.csv'
-SAVE_DIR = r'cancer de colon\prueba\dataset_colon_completo'
+RUTA_DATA = r'C:\Users\juanp\OneDrive\Documentos\stucom\2 Trimestre\proyecto2\Cancer-de-colon\src\data\clean\cancer_risk_clean.csv'
+SAVE_DIR = r'C:\Users\juanp\OneDrive\Documentos\stucom\2 Trimestre\proyecto2\Cancer-de-colon\src\data\clean'
 
 # 1. Cargar el dataset
 df = pd.read_csv(RUTA_DATA)
