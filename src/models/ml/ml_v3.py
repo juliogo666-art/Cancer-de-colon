@@ -134,10 +134,6 @@ y_pred_ensamble = obtener_preds_ensamble([rf_model, xgb_model, lgbm_model], X_te
 evaluar_sistema(y_test, y_pred_ensamble, "Ensamble Final (Máxima Seguridad)")
 
 # --- 7. GUARDADO ---
-joblib.dump(rf_model, os.path.join(SAVE_DIR, "rf_clinico.pkl"))
-joblib.dump(xgb_model, os.path.join(SAVE_DIR, "xgb_clinico.pkl"))
-joblib.dump(lgbm_model, os.path.join(SAVE_DIR, "lgbm_clinico.pkl"))
-
 # EN LUGAR DE GUARDAR LAS PREDICCIONES, GUARDA UNA LISTA CON LOS 3 MODELOS
 modelos_lista = [rf_model, xgb_model, lgbm_model]
 joblib.dump(modelos_lista, os.path.join(SAVE_DIR, "modelo_ensemble.pkl"))

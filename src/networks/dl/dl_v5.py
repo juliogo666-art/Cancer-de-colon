@@ -6,7 +6,6 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import os
-import numpy as np
 
 # --- 0. CONFIGURACIÓN INICIAL ---
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # Silenciar warnings innecesarios
@@ -113,6 +112,6 @@ history = ensemble_model.fit(
 )
 
 # --- 6. GUARDADO FINAL ---
-path_final = os.path.join(SAVE_DIR, 'modelo_pro_agresivo.keras')
+path_final = os.path.join(SAVE_DIR, 'modelo_pro_agresivo.onnx')
 ensemble_model.save(path_final)
 print(f"\n✅ Proceso terminado. Modelo guardado en: {path_final}")
