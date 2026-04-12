@@ -82,22 +82,21 @@ class Settings:
         # Modelo de Machine Learning (LightGBM) para predecir riesgo clínico
         # Entrada: 11 factores de riesgo → Salida: Low / Medium / High
         self.MODEL_ML_PATH = os.path.join(
-            RAIZ_DEL_PROYECTO, "src", "models", "ml", "lgbm_clinico.pkl"
+            RAIZ_DEL_PROYECTO, "artifacts", "weights", "lgbm_clinico.pkl"
         )
 
         # Modelo de Deep Learning (CNN TensorFlow) para detectar pólipos en colonoscopia
         # Entrada: Imagen 150x150 → Salida: Pólipo / Sano
         self.MODEL_CNN_PATH = os.path.join(
-            RAIZ_DEL_PROYECTO, "src", "networks", "dl", "modelo_pro_agresivo.keras"
+            RAIZ_DEL_PROYECTO, "artifacts", "weights", "modelo_pro_agresivo.keras"
         )
 
         # Modelo de Deep Learning (ResNet18 PyTorch) para clasificar biopsias
         # Entrada: Imagen 224x224 → Salida: Benigno / Maligno
         self.MODEL_BIOPSY_PATH = os.path.join(
             RAIZ_DEL_PROYECTO,
-            "src",
-            "networks",
-            "dl_biopsia",
+            "artifacts",
+            "checkpoints",
             "biopsia_resnet18_best.pth",
         )
 

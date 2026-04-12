@@ -3,9 +3,9 @@ Orquestador del proyecto.
 Desde aquí puedes lanzar cualquier parte del sistema usando comandos por terminal.
 
 COMANDOS DISPONIBLES:
-    streamlit run src/frontend/app.py         # Lanzar el frontend (lo más común)
-    python main.py api                        # Arrancar la API FastAPI
-    python main.py frontend                   # Arrancar Streamlit (la app principal)
+    python main.py start                      # Modo facil: Arranca API y Frontend a la vez
+    python main.py api                        # Arranca solo la API FastAPI
+    python main.py frontend                   # Arranca solo Streamlit (la app visual)
     python main.py eda                        # Lanzar la app de análisis exploratorio
     python main.py train-ml                   # Entrenar el modelo ML de riesgo
     python main.py test                       # Ejecutar todos los tests
@@ -39,6 +39,35 @@ def ejecutar_frontend():
     Se abrirá automáticamente en el navegador.
     """
     os.system("streamlit run src/frontend/app.py")
+
+
+def ejecutar_todo():
+    """
+    Arranca la API y el Frontend a la vez en una misma terminal.
+    """
+    import subprocess
+    import time
+
+    print(" Levantando el backend (API) en segundo plano...")
+    # Usamos sys.executable para asegurarnos de usar el mismo intérprete de Python
+    api_proc = subprocess.Popen([sys.executable, "main.py", "api"])
+
+    print(
+        " Esperando 5 segundos para que los modelos de la API aseguren su carga inicial..."
+    )
+    time.sleep(5)
+
+    print(" Levantando el frontend Visual de Galeno...")
+    frontend_proc = subprocess.Popen(["streamlit", "run", "src/frontend/app.py"])
+
+    try:
+        api_proc.wait()
+        frontend_proc.wait()
+    except KeyboardInterrupt:
+        print("\n Deteniendo los servidores (API y Frontend)...")
+        api_proc.terminate()
+        frontend_proc.terminate()
+        print("Adios!")
 
 
 def ejecutar_eda():
@@ -108,6 +137,7 @@ def main():
     # Definimos los comandos disponibles
     subparsers = parser.add_subparsers(dest="command", help="Comandos disponibles")
 
+    subparsers.add_parser("start", help="Levanta la API y el Frontend a la vez")
     subparsers.add_parser("api", help="Arrancar la API FastAPI (puerto 8000)")
     subparsers.add_parser("frontend", help="Arrancar el frontend Streamlit")
     subparsers.add_parser("eda", help="Lanzar el análisis exploratorio de datos")
@@ -119,6 +149,7 @@ def main():
 
     # Mapa de comandos → funciones
     comandos_disponibles = {
+        "start": ejecutar_todo,
         "api": ejecutar_api,
         "frontend": ejecutar_frontend,
         "eda": ejecutar_eda,
@@ -134,8 +165,11 @@ def main():
         else:
             parser.print_help()
             print("\n Comandos mas usados:")
-            print("   python main.py api         -> Arrancar la API")
-            print("   python main.py frontend    -> Arrancar Streamlit")
+            print(
+                "   python main.py start       -> Arrancar todo de una vez (Recomendado)"
+            )
+            print("   python main.py api         -> Arrancar solo la API")
+            print("   python main.py frontend    -> Arrancar solo Streamlit")
             print("   python main.py test        -> Ejecutar tests")
     elif argumentos.command in comandos_disponibles:
         comandos_disponibles[argumentos.command]()

@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 
 # --- 1. CONFIGURACIÓN ---
 RUTA_DATA = r"src\data\clean\cancer_risk_final.csv"
-SAVE_DIR = r"src\models\ml"
+SAVE_DIR = r"artifacts\weights"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # --- 2. CARGA Y SELECCIÓN (ACTUALIZADO) ---
@@ -39,6 +39,8 @@ features = [
     "Fruit_Veg_Intake",
     "Physical_Activity",
     "BMI",
+    "FOBT_Resultado_n",
+    "CEA_Level_ng_mL"
 ]
 target = "Risk_Level_n"
 
@@ -101,7 +103,7 @@ def evaluar_sistema(y_real, y_pred, nombre):
     plt.ylabel("Realidad")
     plt.xlabel("Predicción")
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f"artifacts/confusion_matrix_{nombre.replace(' ', '_')}.png")
 
 
 # --- 5. LÓGICA DE ENSAMBLE CLÍNICO (Súper Sensible) ---
@@ -138,6 +140,10 @@ evaluar_sistema(y_test, y_pred_ensamble, "Ensamble Final (Máxima Seguridad)")
 modelos_lista = [rf_model, xgb_model, lgbm_model]
 joblib.dump(modelos_lista, os.path.join(SAVE_DIR, "modelo_ensemble.pkl"))
 
-joblib.dump(features, os.path.join(SAVE_DIR, "features_list.pkl"))
+# Además guardamos el lgbm_clinico.pkl individualmente para la API
+joblib.dump(lgbm_model, os.path.join(SAVE_DIR, "lgbm_clinico.pkl"))
+
+os.makedirs(r"artifacts\mappings", exist_ok=True)
+joblib.dump(features, os.path.join(r"artifacts\mappings", "features_list.pkl"))
 
 print(f"\nProceso finalizado. Modelos con variables clínicas guardados.")

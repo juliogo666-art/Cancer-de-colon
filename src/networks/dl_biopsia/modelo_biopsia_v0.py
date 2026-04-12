@@ -210,7 +210,9 @@ def train_biopsy_model():
     best_val_loss = float("inf")
 
     # Preparamos rutas relativas para el guardado
-    model_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    model_dir = os.path.join(project_root, "artifacts", "checkpoints")
+    os.makedirs(model_dir, exist_ok=True)
     # Mejor modelo, es decir menor perdida con datos de validación,
     # pero no necesariamente el que tenga mayor precision o recall
     # evitamos overfitting

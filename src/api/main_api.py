@@ -32,6 +32,7 @@ from src.api.dependencies import (
     RISK_LEVEL_MAP,
     lifespan,
 )
+from src.tracking.prediction_logger import PredictionLogger
 
 ###############################################################################
 # Inicialización
@@ -75,6 +76,10 @@ def _read_upload_as_array(file_bytes: bytes) -> np.ndarray:
     return np.array(img)
 
 
+# Instancia central del logger para las predicciones
+logger = PredictionLogger()
+
+
 ###############################################################################
 # Verificación de estado
 ###############################################################################
@@ -101,6 +106,7 @@ async def health_check(request: Request):
 @app.post("/api/v1/predict/risk", tags=["Predicción ML"])
 async def predict_risk(
     request: Request,
+    patient_id: Optional[int] = Query(None, description="ID del paciente (opcional)"),
     smoking: float = Query(..., ge=0, le=10, description="Nivel de tabaquismo (0-10)"),
     alcohol_use: float = Query(
         ..., ge=0, le=10, description="Consumo de alcohol (0-10)"
@@ -168,8 +174,19 @@ async def predict_risk(
             riesgo_score = float(probabilidades[1]) if len(probabilidades) == 2 else 0.0
         riesgo_score = min(riesgo_score, 1.0)
 
+        # Registro de auditoría
+        risk_lvl = RISK_LEVEL_MAP.get(clase_predicha, "Unknown")
+        max_prob = float(np.max(probabilidades))
+        logger.log_risk_prediction(
+            patient_id=patient_id,
+            risk_level=risk_lvl,
+            risk_score=riesgo_score,
+            confidence=max_prob,
+            features=dict(zip(ML_FEATURE_NAMES, features[0].tolist())),
+        )
+
         return {
-            "risk_level": RISK_LEVEL_MAP.get(clase_predicha, "Unknown"),
+            "risk_level": risk_lvl,
             "risk_score": round(riesgo_score, 4),
             "probabilities": {
                 "Low": round(float(probabilidades[0]), 4),
@@ -192,7 +209,11 @@ async def predict_risk(
 
 
 @app.post("/api/v1/analyze/colonoscopy", tags=["Análisis de Imagen"])
-async def analyze_colonoscopy(request: Request, file: UploadFile = File(...)):
+async def analyze_colonoscopy(
+    request: Request, 
+    file: UploadFile = File(...),
+    patient_id: Optional[int] = Query(None, description="ID del paciente (opcional)"),
+):
     """
     Analiza una imagen de colonoscopia para detectar pólipos.
 
@@ -233,8 +254,19 @@ async def analyze_colonoscopy(request: Request, file: UploadFile = File(...)):
         except Exception:
             pass  # Si falla Grad-CAM, devolvemos resultado sin heatmap
 
+        diagnosis_text = "POLIPO DETECTADO" if es_polipo else "TEJIDO SANO"
+        
+        # Registro de auditoría
+        logger.log_image_prediction(
+            analysis_type="colonoscopy",
+            diagnosis=diagnosis_text,
+            confidence=confianza,
+            patient_id=patient_id,
+            image_name=file.filename,
+        )
+
         return {
-            "diagnosis": "POLIPO DETECTADO" if es_polipo else "TEJIDO SANO",
+            "diagnosis": diagnosis_text,
             "is_polyp": es_polipo,
             "confidence": round(confianza, 4),
             "raw_prediction": round(pred_val, 4),
@@ -254,7 +286,11 @@ async def analyze_colonoscopy(request: Request, file: UploadFile = File(...)):
 
 
 @app.post("/api/v1/analyze/biopsy", tags=["Análisis de Imagen"])
-async def analyze_biopsy(request: Request, file: UploadFile = File(...)):
+async def analyze_biopsy(
+    request: Request, 
+    file: UploadFile = File(...),
+    patient_id: Optional[int] = Query(None, description="ID del paciente (opcional)"),
+):
     """
     Analiza una imagen de biopsia para clasificar tejido benigno vs maligno.
 
@@ -302,10 +338,19 @@ async def analyze_biopsy(request: Request, file: UploadFile = File(...)):
         except Exception:
             pass
 
+        diagnosis_text = "BENIGNO (NORMAL)" if es_benigno else "MALIGNO (ADENOCARCINOMA)"
+
+        # Registro de auditoría
+        logger.log_image_prediction(
+            analysis_type="biopsy",
+            diagnosis=diagnosis_text,
+            confidence=confianza,
+            patient_id=patient_id,
+            image_name=file.filename,
+        )
+
         return {
-            "diagnosis": "BENIGNO (NORMAL)"
-            if es_benigno
-            else "MALIGNO (ADENOCARCINOMA)",
+            "diagnosis": diagnosis_text,
             "is_benign": es_benigno,
             "confidence": round(confianza, 4),
             "raw_probability": round(prob, 4),

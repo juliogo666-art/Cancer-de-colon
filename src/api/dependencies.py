@@ -21,51 +21,23 @@ from fastapi import FastAPI
 
 
 ###############################################################################
-# Rutas relativas a la raíz del proyecto
+# Configuraciones y Rutas Globales (Desde settings.py)
 ###############################################################################
+from src.config.settings import settings
 
-# Calculamos la raíz del proyecto (3 niveles arriba desde src/api/)
-_PROJECT_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
-
-MODEL_ML_PATH = os.path.join(_PROJECT_ROOT, "src", "models", "ml", "lgbm_clinico.pkl")
-MODEL_CNN_PATH = os.path.join(
-    _PROJECT_ROOT, "src", "networks", "dl", "modelo_pro_agresivo.keras"
-)
-MODEL_BIOPSY_PATH = os.path.join(
-    _PROJECT_ROOT, "src", "networks", "dl_biopsia", "biopsia_resnet18_best.pth"
-)
+MODEL_ML_PATH = settings.MODEL_ML_PATH
+MODEL_CNN_PATH = settings.MODEL_CNN_PATH
+MODEL_BIOPSY_PATH = settings.MODEL_BIOPSY_PATH
 
 # Datos de pacientes
-CSV_RISK_PATH = os.path.join(
-    _PROJECT_ROOT, "src", "data", "clean", "cancer_risk_final.csv"
-)
-CSV_PATIENTS_PATH = os.path.join(
-    _PROJECT_ROOT,
-    "src",
-    "data",
-    "clean",
-    "nuevos_pacientes_5000.csv",
-)
+CSV_RISK_PATH = settings.CSV_RISK_PATH
+CSV_PATIENTS_PATH = settings.CSV_PACIENTES_5000_PATH
 
 # Features que espera el modelo ML (orden exacto)
-ML_FEATURE_NAMES = [
-    "Smoking",
-    "Alcohol_Use",
-    "Obesity",
-    "Family_History",
-    "Diet_Red_Meat",
-    "Diet_Salted_Processed",
-    "Fruit_Veg_Intake",
-    "Physical_Activity",
-    "BMI",
-    "FOBT_Resultado_n",
-    "CEA_Level_ng_mL",
-]
+ML_FEATURE_NAMES = settings.ML_FEATURE_NAMES
 
 # Mapeo de clases para el modelo ML
-RISK_LEVEL_MAP = {0: "Low", 1: "Medium", 2: "High"}
+RISK_LEVEL_MAP = settings.RISK_LEVEL_MAP
 
 
 ###############################################################################

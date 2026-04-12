@@ -1,1 +1,0 @@
-# Pesos finales (.pt, .pkl, .bin)
