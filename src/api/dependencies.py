@@ -80,6 +80,20 @@ def load_ml_model(path: str = MODEL_ML_PATH):
         print(f"[ERROR] Fallo al cargar modelo ML: {e}")
         return None
 
+def load_triage_model(path: str = "artifacts/weights/lgbm_triage.pkl"):
+    """Carga el modelo LightGBM de triaje desde disco."""
+    if not os.path.exists(path):
+        print(f"[AVISO] Modelo Triaje no encontrado en: {path}")
+        return None
+
+    try:
+        modelo = joblib.load(path)
+        print(f"[OK] Modelo Triaje cargado: {type(modelo).__name__} desde {path}")
+        return modelo
+    except Exception as e:
+        print(f"[ERROR] Fallo al cargar modelo Triaje: {e}")
+        return None
+
 
 def load_cnn_model(path: str = MODEL_CNN_PATH):
     """
@@ -146,17 +160,19 @@ async def lifespan(app: FastAPI):
     print("=" * 60)
 
     app.state.modelo_ml = load_ml_model()
+    app.state.modelo_ml_triage = load_triage_model()
     app.state.modelo_cnn = load_cnn_model()
     app.state.modelo_biopsia = load_biopsy_model()
 
     modelos_ok = sum(
         [
             app.state.modelo_ml is not None,
+            app.state.modelo_ml_triage is not None,
             app.state.modelo_cnn is not None,
             app.state.modelo_biopsia is not None,
         ]
     )
-    print(f"\n[RESUMEN] {modelos_ok}/3 modelos cargados correctamente.")
+    print(f"\n[RESUMEN] {modelos_ok}/4 modelos cargados correctamente.")
     print("=" * 60)
 
     yield  # La API se ejecuta aquí

@@ -130,6 +130,7 @@ if os.path.exists(ruta_fondo):
 # Cargar los datasets en memoria (CSVs en crudo) para permitir las búsquedas
 df_master = pd.read_csv(settings.CSV_MASTER_PATH)
 
+
 def detectar_formato_busqueda(entrada_texto):
     """Detecta si el texto es DNI (9 caracteres) o NUSS (10+ números)."""
     if not entrada_texto:
@@ -152,9 +153,7 @@ def buscar_paciente_por_documento(entrada_texto):
     limpieza = str(entrada_texto).strip().upper()
 
     if tipo == "DNI":
-        coincidencias = df_master[
-            df_master["dni"].astype(str).str.upper() == limpieza
-        ]
+        coincidencias = df_master[df_master["dni"].astype(str).str.upper() == limpieza]
     elif tipo == "NUSS":
         coincidencias = df_master[
             df_master["nuss"].astype(str).str.zfill(12) == limpieza.zfill(12)
@@ -206,12 +205,18 @@ with pestana_datos:
         texto_buscar = st.text_input(textos["search_placeholder"], key="txt_search")
         btn_cargar = st.button(textos["btn_load"], use_container_width=True)
         btn_actualizar = st.button(textos["btn_update"], use_container_width=True)
+        btn_nuevo = st.button("Nuevo Paciente", use_container_width=True)
 
     # Memoria de la aplicación (Session State) para no perder los datos del formulario al recargar
+    if "modo_nuevo_paciente" not in st.session_state:
+        st.session_state.modo_nuevo_paciente = False
+
     if "form_datos_paciente" not in st.session_state:
         st.session_state.form_datos_paciente = {
             "age": 0,
             "gender": "Male",
+            "altura_cm": 170.0,
+            "peso_kg": 70.0,
             "smoking": 0,
             "alcohol_use": 0,
             "obesity": 0,
@@ -221,16 +226,46 @@ with pestana_datos:
             "fruit_veg_intake": 0,
             "physical_activity": 0,
             "bmi": 0.0,
+            "fobt_resultado_n": -1,
+            "cea_level_ng_ml": -1.0,
             "overall_risk_score": 0.0,
             "risk_level": "Low",
             "risk_level_n": 0,
             "patient_id": None,
         }
-    if "info_sesion_paciente" not in st.session_state:
         st.session_state.info_sesion_paciente = None
+
+    if btn_nuevo:
+        st.session_state.modo_nuevo_paciente = True
+        st.session_state.info_sesion_paciente = None
+        # Resetear campos
+        st.session_state.form_datos_paciente.update(
+            {
+                "age": 0,
+                "gender": "Male",
+                "altura_cm": 170.0,
+                "peso_kg": 70.0,
+                "smoking": 0,
+                "alcohol_use": 0,
+                "obesity": 0,
+                "family_history": False,
+                "diet_red_meat": 0,
+                "diet_salted_processed": 0,
+                "fruit_veg_intake": 0,
+                "physical_activity": 0,
+                "bmi": 0.0,
+                "fobt_resultado_n": -1,
+                "cea_level_ng_ml": -1.0,
+                "overall_risk_score": 0.0,
+                "risk_level": "Low",
+                "risk_level_n": 0,
+                "patient_id": None,
+            }
+        )
 
     # Bloque 1: El botón de CARGAR DATOS
     if btn_cargar:
+        st.session_state.modo_nuevo_paciente = False
         id_paciente, info_paciente = buscar_paciente_por_documento(texto_buscar)
 
         if info_paciente is None:
@@ -244,8 +279,9 @@ with pestana_datos:
                     "patient_id": id_paciente,
                     "age": int(fila_paciente.get("Age", 0)),
                     "gender": str(fila_paciente.get("Gender", "Male")),
+                    "altura_cm": float(fila_paciente.get("altura_cm", 170.0)),
+                    "peso_kg": float(fila_paciente.get("peso_kg", 70.0)),
                     "smoking": int(fila_paciente.get("Smoking", 0)),
-
                     "alcohol_use": int(fila_paciente.get("Alcohol_Use", 0)),
                     "obesity": int(fila_paciente.get("Obesity", 0)),
                     "family_history": bool(fila_paciente.get("Family_History", 0)),
@@ -256,6 +292,8 @@ with pestana_datos:
                     "fruit_veg_intake": int(fila_paciente.get("Fruit_Veg_Intake", 0)),
                     "physical_activity": int(fila_paciente.get("Physical_Activity", 0)),
                     "bmi": float(fila_paciente.get("BMI", 0)),
+                    "fobt_resultado_n": int(fila_paciente.get("FOBT_Resultado_n", 0)),
+                    "cea_level_ng_ml": float(fila_paciente.get("CEA_Level_ng_mL", 0.0)),
                     "overall_risk_score": float(
                         fila_paciente.get("Overall_Risk_Score", 0)
                     ),
@@ -284,7 +322,20 @@ with pestana_datos:
     with col_info:
         st.markdown(f"**{textos['info_header']}**")
         datos_paciente = st.session_state.info_sesion_paciente
-        if datos_paciente:
+
+        if st.session_state.modo_nuevo_paciente:
+            st.info("Modo de Inscripción Continua: Rellene los datos de identidad.")
+            st.text_input("Documento (DNI/NIE)", key="form_new_dni")
+            st.text_input("NUSS / Seguridad Social", key="form_new_nuss")
+            st.text_input("Nombre", key="form_new_nombre")
+            ext1, ext2 = st.columns(2)
+            ext1.text_input("Primer Apellido", key="form_new_ape1")
+            ext2.text_input("Segundo Apellido", key="form_new_ape2")
+            loc1, loc2 = st.columns(2)
+            loc1.text_input("Ciudad", key="form_new_city")
+            loc2.text_input("País", key="form_new_country")
+
+        elif datos_paciente:
             # Reporte visual bonito y legible en lugar de texto pequeño
             html_info = '<div style="background-color: #f1f5f9; border-left: 5px solid #22c55e; padding: 15px; border-radius: 10px; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">'
             if "nombre" in datos_paciente:
@@ -322,7 +373,7 @@ with pestana_datos:
 
     # --- ZONA DE FORMULARIO (Datos Médicos Modificables) ---
     st.markdown(f"**{textos['demo_header']}**")
-    c_edad, c_genero, c_bmi = st.columns(3)
+    c_edad, c_genero, c_altura, c_peso = st.columns(4)
     val_edad = c_edad.number_input(
         textos["age"],
         min_value=0,
@@ -335,14 +386,27 @@ with pestana_datos:
         [textos["gender_m"], textos["gender_f"]],
         index=0 if st.session_state.form_datos_paciente["gender"] == "Male" else 1,
     )
-    val_bmi = c_bmi.number_input(
-        textos["bmi"],
-        min_value=0.0,
-        max_value=60.0,
-        step=0.1,
-        value=st.session_state.form_datos_paciente["bmi"],
+    val_altura = c_altura.number_input(
+        "Altura (cm)",
+        min_value=50.0,
+        max_value=250.0,
+        step=1.0,
+        value=float(st.session_state.form_datos_paciente.get("altura_cm", 170.0)),
+    )
+    val_peso = c_peso.number_input(
+        "Peso (kg)",
+        min_value=20.0,
+        max_value=300.0,
+        step=1.0,
+        value=float(st.session_state.form_datos_paciente.get("peso_kg", 70.0)),
     )
 
+    # Calculamos el BMI automáticamente y no permitimos que el usuario lo edite
+    # ya que es redundante y puede dar lugar a errores de cálculo si no coinciden.
+    val_bmi = 0.0
+    if val_altura > 0:
+        val_bmi = round(val_peso / ((val_altura / 100.0) ** 2), 2)
+    
     st.markdown(f"**{textos['habits_header']}**")
     c_hab1, c_hab2, c_hab3 = st.columns(3)
     val_Fumar = c_hab1.number_input(
@@ -397,35 +461,46 @@ with pestana_datos:
     val_familia = c_fac1.checkbox(
         textos["family"], value=st.session_state.form_datos_paciente["family_history"]
     )
-
-    opciones_riesgo = [textos["risk_low"], textos["risk_medium"], textos["risk_high"]]
-    idx_riesgo_defecto = 0
-    if st.session_state.form_datos_paciente["risk_level"] == "Medium":
-        idx_riesgo_defecto = 1
-    elif st.session_state.form_datos_paciente["risk_level"] == "High":
-        idx_riesgo_defecto = 2
-
-    val_nivel_riesgo = c_fac3.selectbox(
-        textos["risk_lbl"], opciones_riesgo, index=idx_riesgo_defecto
+    
+    st.markdown("**Analíticas Confirmadas (Dejar en Blanco si Triaje)**")
+    c_ana1, c_ana2 = st.columns(2)
+    
+    fobt_opts = ["Desconocido (-)", "Negativo", "Positivo"]
+    fobt_opt_idx = 0
+    if st.session_state.form_datos_paciente["fobt_resultado_n"] == 0:
+        fobt_opt_idx = 1
+    elif st.session_state.form_datos_paciente["fobt_resultado_n"] == 1:
+        fobt_opt_idx = 2
+        
+    val_fobt_ui = c_ana1.selectbox(
+        "Prueba sangre oculta heces (FOBT)",
+        fobt_opts,
+        index=fobt_opt_idx
     )
+    # Re-mapeo visual a valor numérico
+    if val_fobt_ui == "Negativo":
+        st.session_state.form_datos_paciente["fobt_resultado_n"] = 0
+    elif val_fobt_ui == "Positivo":
+        st.session_state.form_datos_paciente["fobt_resultado_n"] = 1
+    else:
+        st.session_state.form_datos_paciente["fobt_resultado_n"] = -1
 
-    c_res1, c_res2, c_res3 = st.columns(3)
-    val_riesgo_global = c_res1.number_input(
-        textos["risk_score"],
-        min_value=0.0,
-        max_value=1.0,
-        step=0.01,
-        value=st.session_state.form_datos_paciente["overall_risk_score"],
+    cea_input_str = ""
+    if st.session_state.form_datos_paciente["cea_level_ng_ml"] >= 0:
+        cea_input_str = str(st.session_state.form_datos_paciente["cea_level_ng_ml"])
+        
+    val_cea_ui = c_ana2.text_input(
+        "Marcador tumoral CEA (ng/mL)",
+        value=cea_input_str,
+        placeholder="Ej: 3.42 (Dejar vacío si no hay)"
     )
+    
+    try:
+        val_cea_num = float(val_cea_ui)
+        st.session_state.form_datos_paciente["cea_level_ng_ml"] = val_cea_num
+    except ValueError:
+        st.session_state.form_datos_paciente["cea_level_ng_ml"] = -1.0
 
-    # Calcular numérico interno escondido
-    diccionario_niveles = {
-        textos["risk_low"]: 0,
-        textos["risk_medium"]: 1,
-        textos["risk_high"]: 2,
-    }
-    val_riesgo_numerico = diccionario_niveles.get(val_nivel_riesgo, 0)
-    c_res2.metric("Risk Level n.", val_riesgo_numerico)
 
     st.divider()
 
@@ -460,11 +535,9 @@ with pestana_datos:
                 df_master.at[idx, "Fruit_Veg_Intake"] = val_fruta
                 df_master.at[idx, "Physical_Activity"] = val_actividad
                 df_master.at[idx, "BMI"] = val_bmi
-                df_master.at[idx, "Overall_Risk_Score"] = val_riesgo_global
-                df_master.at[idx, "Risk_Level"] = ["Low", "Medium", "High"][
-                    val_riesgo_numerico
-                ]
-                df_master.at[idx, "Risk_Level_n"] = val_riesgo_numerico
+                df_master.at[idx, "BMI"] = val_bmi
+                # No actualizamos manualmente Overall_Risk_Score ni Risk_Level_n 
+                # porque eso ahora solo se hace a través del botón "Calcular" (IA).
 
                 df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
                 st.success(textos["success_update"])
@@ -490,8 +563,8 @@ with pestana_datos:
             "fruit_veg_intake": val_fruta,
             "physical_activity": val_actividad,
             "bmi": val_bmi,
-            "fobt_resultado": 0,  # Asumimos Default
-            "cea_level": 0.0,  # Asumimos Default
+            "fobt_resultado": st.session_state.form_datos_paciente.get("fobt_resultado_n", 0),
+            "cea_level": st.session_state.form_datos_paciente.get("cea_level_ng_ml", 0.0),
         }
 
         # 2. Hacemos la llamada HTTP a nuestra API de FastAPI que está sirviendo los modelos
@@ -508,7 +581,12 @@ with pestana_datos:
                 nivel_riesgo_devuelto = datos_respuesta.get("risk_level", "Unknown")
                 score_riesgo_devuelto = datos_respuesta.get("risk_score", 0.0)
                 probabilidades = datos_respuesta.get("probabilities", {})
-
+                recomendacion = datos_respuesta.get("recommendation", "")
+                
+                # Actualizar el riesgo en el state de manera oculta
+                st.session_state.form_datos_paciente["risk_level"] = nivel_riesgo_devuelto
+                st.session_state.form_datos_paciente["overall_risk_score"] = score_riesgo_devuelto
+                
                 st.success(
                     f"Análisis completado. Nivel estimado: {nivel_riesgo_devuelto}"
                 )
@@ -518,11 +596,12 @@ with pestana_datos:
                     f"""
                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-top: 15px;">
                     <h3 style="margin-top: 0; color: #1e293b;">{textos["summary_header"]}</h3>
-                    <p><b>{textos["risk_lbl"]}:</b> {nivel_riesgo_devuelto}</p>
-                    <p><b>{textos["risk_score"]}:</b> {score_riesgo_devuelto}</p>
+                    <p style="color: #0f172a; font-size: 1.1em;"><b>{textos["risk_lbl"]}:</b> {nivel_riesgo_devuelto}</p>
+                    <p style="color: #0f172a; font-size: 1.1em;"><b>{textos["risk_score"]}:</b> {score_riesgo_devuelto}</p>
+                    <p style="color: #b91c1c; font-size: 1.1em; background-color: #fef2f2; padding: 10px; border-radius: 5px;">{recomendacion}</p>
                     <hr style="margin: 10px 0; border: none; border-top: 1px solid #e2e8f0;">
-                    <p style="margin: 0; color: #64748b; font-size: 0.9em;">
-                    Probabilidades — Low: {probabilidades.get("Low", 0) * 100:.1f}% | 
+                    <p style="margin: 0; color: #475569; font-size: 1em;">
+                    <b>Probabilidades</b> — Low: {probabilidades.get("Low", 0) * 100:.1f}% | 
                     Medium: {probabilidades.get("Medium", 0) * 100:.1f}% | 
                     High: {probabilidades.get("High", 0) * 100:.1f}%
                     </p>
@@ -541,37 +620,108 @@ with pestana_datos:
 
     # BOTÓN GUARDAR (AÑADIR NUEVO A CSV)
     if col_btn_guardar.button(textos["btn_save"], use_container_width=True):
-        if not texto_buscar:
-            st.error(textos["error_no_dni"])
+        if st.session_state.modo_nuevo_paciente:
+            nuevo_id = (
+                int(df_master["Patient_ID"].max() + 1) if not df_master.empty else 1
+            )
+            dni_val = st.session_state.get("form_new_dni", "00000000A")
+            nuss_val = st.session_state.get("form_new_nuss", "0")
+            nombre_val = st.session_state.get("form_new_nombre", "Desconocido")
+            ape1_val = st.session_state.get("form_new_ape1", "")
+            ape2_val = st.session_state.get("form_new_ape2", "")
+            city_val = st.session_state.get("form_new_city", "Unknown")
+            country_val = st.session_state.get("form_new_country", "Unknown")
+
+            nuevo_registro = {
+                "Patient_ID": nuevo_id,
+                "Gender": "Male" if val_genero == textos["gender_m"] else "Female",
+                "City": city_val,
+                "Country": country_val,
+                "nombre": nombre_val,
+                "apellido1": ape1_val,
+                "apellido2": ape2_val,
+                "Age": val_edad,
+                "altura_cm": val_altura,
+                "peso_kg": val_peso,
+                "dni": dni_val,
+                "nuss": nuss_val,
+                "Smoking": val_Fumar,
+                "Alcohol_Use": val_Alcohol,
+                "Obesity": val_Obesidad,
+                "Family_History": 1 if val_familia else 0,
+                "Diet_Red_Meat": val_carne_roja,
+                "Diet_Salted_Processed": val_salados,
+                "Fruit_Veg_Intake": val_fruta,
+                "Physical_Activity": val_actividad,
+                "BMI": val_bmi,
+                "Overall_Risk_Score": 0.0,
+                "Risk_Level": "Low",
+                "Risk_Level_n": 0,
+                "FOBT_Resultado": {-1: "Desconocido", 0: "Negativo", 1: "Positivo"}.get(
+                    st.session_state.form_datos_paciente["fobt_resultado_n"], "Desconocido"
+                ),
+                "FOBT_Resultado_n": st.session_state.form_datos_paciente["fobt_resultado_n"],
+                "CEA_Level_ng_mL": st.session_state.form_datos_paciente["cea_level_ng_ml"],
+            }
+            df_master = pd.concat(
+                [df_master, pd.DataFrame([nuevo_registro])], ignore_index=True
+            )
+            df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
+            st.success(
+                "¡Paciente creado y guardado permanentemente en la base de datos!"
+            )
+
+            # Quitar modo nuevo y auto-cargar la vista solo lectura
+            st.session_state.modo_nuevo_paciente = False
+            st.session_state.info_sesion_paciente = {
+                "risk_level": nuevo_registro["Risk_Level"],
+                "patient_id": nuevo_id,
+                "nombre": f"{nombre_val} {ape1_val} {ape2_val}",
+                "dni": dni_val,
+                "nuss": "0",
+            }
+            st.session_state.form_datos_paciente["patient_id"] = nuevo_id
+            st.rerun()
+
         else:
-            id_paciente, _ = buscar_paciente_por_documento(texto_buscar)
-            if id_paciente is not None:
-                if (df_master["Patient_ID"] == id_paciente).any():
-                    st.error(textos["error_exists"])
-                else:
-                    nuevo_registro = {
-                        "Patient_ID": id_paciente,
-                        "Age": val_edad,
-                        "Gender": "Male" if val_genero == textos["gender_m"] else "Female",
-                        "Smoking": val_Fumar,
-                        "Alcohol_Use": val_Alcohol,
-                        "Obesity": val_Obesidad,
-                        "Family_History": 1 if val_familia else 0,
-                        "Diet_Red_Meat": val_carne_roja,
-                        "Diet_Salted_Processed": val_salados,
-                        "Fruit_Veg_Intake": val_fruta,
-                        "Physical_Activity": val_actividad,
-                        "BMI": val_bmi,
-                        "Overall_Risk_Score": val_riesgo_global,
-                        "Risk_Level": ["Low", "Medium", "High"][val_riesgo_numerico],
-                        "Risk_Level_n": val_riesgo_numerico,
-                    }
-                    df_master = pd.concat(
-                        [df_master, pd.DataFrame([nuevo_registro])],
-                        ignore_index=True,
-                    )
-                    df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
-                    st.success(textos["success_save"])
+            if not texto_buscar:
+                st.error(textos["error_no_dni"])
+            else:
+                id_paciente, _ = buscar_paciente_por_documento(texto_buscar)
+                if id_paciente is not None:
+                    if (df_master["Patient_ID"] == id_paciente).any():
+                        st.error(textos["error_exists"])
+                    else:
+                        nuevo_registro = {
+                            "Patient_ID": id_paciente,
+                            "Age": val_edad,
+                            "Gender": "Male"
+                            if val_genero == textos["gender_m"]
+                            else "Female",
+                            "Smoking": val_Fumar,
+                            "Alcohol_Use": val_Alcohol,
+                            "Obesity": val_Obesidad,
+                            "Family_History": 1 if val_familia else 0,
+                            "Diet_Red_Meat": val_carne_roja,
+                            "Diet_Salted_Processed": val_salados,
+                            "Fruit_Veg_Intake": val_fruta,
+                            "Physical_Activity": val_actividad,
+                            "BMI": val_bmi,
+                            "Overall_Risk_Score": 0.0,
+                            "Risk_Level": "Low",
+                            "Risk_Level_n": 0,
+                            "FOBT_Resultado": {-1: "Desconocido", 0: "Negativo", 1: "Positivo"}.get(
+                                st.session_state.form_datos_paciente["fobt_resultado_n"], "Desconocido"
+                            ),
+                            "FOBT_Resultado_n": st.session_state.form_datos_paciente["fobt_resultado_n"],
+                            "CEA_Level_ng_mL": st.session_state.form_datos_paciente["cea_level_ng_ml"],
+                        }
+                        df_master = pd.concat(
+                            [df_master, pd.DataFrame([nuevo_registro])],
+                            ignore_index=True,
+                        )
+                        df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
+                        st.success(textos["success_save"])
 
 
 # #############################################################################

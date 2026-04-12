@@ -128,37 +128,43 @@ async def predict_risk(
     ),
     bmi: float = Query(..., ge=10, le=60, description="Índice de masa corporal"),
     fobt_resultado: int = Query(
-        ..., ge=0, le=1, description="FOBT sangre oculta (0=Neg, 1=Pos)"
+        ..., ge=-1, le=1, description="FOBT (-1=Desc, 0=Neg, 1=Pos)"
     ),
-    cea_level: float = Query(..., ge=0, description="Nivel CEA en ng/mL"),
+    cea_level: float = Query(..., ge=-1.0, description="Nivel CEA en ng/mL (-1.0=Desc)"),
 ):
     """
     Predice el nivel de riesgo de cáncer de colon a partir de factores clínicos.
 
     Devuelve la probabilidad de cada clase (Low, Medium, High) y la clase predicha.
     """
-    modelo = request.app.state.modelo_ml
-    if modelo is None:
-        raise HTTPException(status_code=503, detail="Modelo ML no disponible.")
-
-    # Construir el vector de features en el orden exacto que espera el modelo
-    features = np.array(
-        [
+    if fobt_resultado == -1 or cea_level == -1.0:
+        # TRIAGE MODEL (No Analytics)
+        modelo = getattr(request.app.state, "modelo_ml_triage", None)
+        if modelo is None:
+            raise HTTPException(status_code=503, detail="Modelo ML de triaje no disponible.")
+            
+        features = np.array([
             [
-                smoking,
-                alcohol_use,
-                obesity,
-                family_history,
-                diet_red_meat,
-                diet_salted_processed,
-                fruit_veg_intake,
-                physical_activity,
-                bmi,
-                fobt_resultado,
-                cea_level,
+                smoking, alcohol_use, obesity, family_history, diet_red_meat,
+                diet_salted_processed, fruit_veg_intake, physical_activity, bmi
             ]
-        ]
-    )
+        ])
+        features_dict = dict(zip(ML_FEATURE_NAMES[:9], features[0].tolist()))
+        
+    else:
+        # FULL CLINICAL MODEL
+        modelo = getattr(request.app.state, "modelo_ml", None)
+        if modelo is None:
+            raise HTTPException(status_code=503, detail="Modelo ML clínico no disponible.")
+
+        features = np.array([
+            [
+                smoking, alcohol_use, obesity, family_history, diet_red_meat,
+                diet_salted_processed, fruit_veg_intake, physical_activity, bmi,
+                fobt_resultado, cea_level
+            ]
+        ])
+        features_dict = dict(zip(ML_FEATURE_NAMES, features[0].tolist()))
 
     try:
         probabilidades = modelo.predict_proba(features)[0]
@@ -176,17 +182,29 @@ async def predict_risk(
         # Registro de auditoría
         risk_lvl = RISK_LEVEL_MAP.get(clase_predicha, "Unknown")
         max_prob = float(np.max(probabilidades))
+        
+        # Crear recomendación
+        recomendacion = ""
+        if fobt_resultado == -1 or cea_level == -1.0:
+            recomendacion = "⚠️ Es necesario realizar analítica de sangre (CEA) y muestra de heces (FOBT) para confirmar diagnóstico."
+        else:
+            if risk_lvl in ["Medium", "High"]:
+                recomendacion = "🚨 Riesgo elevado confirmado por marcadores analíticos. Se recomienda derivación urgente para COLONOSCOPIA."
+            else:
+                recomendacion = "✅ Riesgo bajo. Mantener controles rutinarios y hábitos saludables."
+
         logger.log_risk_prediction(
             patient_id=patient_id,
             risk_level=risk_lvl,
             risk_score=riesgo_score,
             confidence=max_prob,
-            features=dict(zip(ML_FEATURE_NAMES, features[0].tolist())),
+            features=features_dict,
         )
 
         return {
             "risk_level": risk_lvl,
             "risk_score": round(riesgo_score, 4),
+            "recommendation": recomendacion,
             "probabilities": {
                 "Low": round(float(probabilidades[0]), 4),
                 "Medium": round(float(probabilidades[1]), 4)
@@ -196,7 +214,7 @@ async def predict_risk(
                 if len(probabilidades) > 2
                 else 0.0,
             },
-            "features_used": dict(zip(ML_FEATURE_NAMES, features[0].tolist())),
+            "features_used": features_dict,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en predicción: {str(e)}")
