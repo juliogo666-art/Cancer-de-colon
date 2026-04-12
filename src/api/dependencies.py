@@ -29,9 +29,8 @@ MODEL_ML_PATH = settings.MODEL_ML_PATH
 MODEL_CNN_PATH = settings.MODEL_CNN_PATH
 MODEL_BIOPSY_PATH = settings.MODEL_BIOPSY_PATH
 
-# Datos de pacientes
-CSV_RISK_PATH = settings.CSV_RISK_PATH
-CSV_PATIENTS_PATH = settings.CSV_PACIENTES_5000_PATH
+# Datos de pacientes unificados
+CSV_MASTER_PATH = settings.CSV_MASTER_PATH
 
 # Features que espera el modelo ML (orden exacto)
 ML_FEATURE_NAMES = settings.ML_FEATURE_NAMES

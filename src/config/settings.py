@@ -60,19 +60,9 @@ class Settings:
             RAIZ_DEL_PROYECTO, "src", "data", "clean"
         )
 
-        # CSV con los datos clínicos + nivel de riesgo (el dataset principal)
-        self.CSV_RISK_PATH = os.path.join(
-            self.CARPETA_DATOS_LIMPIOS, "cancer_risk_final.csv"
-        )
-
-        # CSV con los datos clínicos limpios (sin FOBT ni CEA, version intermedia)
-        self.CSV_RISK_CLEAN_PATH = os.path.join(
-            self.CARPETA_DATOS_LIMPIOS, "cancer_risk_clean.csv"
-        )
-
-        # CSV con los 5000 pacientes sintéticos (tienen DNI, NUSS, nombres...)
-        self.CSV_PACIENTES_5000_PATH = os.path.join(
-            self.CARPETA_DATOS_LIMPIOS, "nuevos_pacientes_5000.csv"
+        # CSV Maestro con TODA la información consolidada (pacientes + historial clínico)
+        self.CSV_MASTER_PATH = os.path.join(
+            RAIZ_DEL_PROYECTO, "src", "data", "ready", "pacientes_master.csv"
         )
 
         ##########################################################################

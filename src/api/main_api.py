@@ -26,8 +26,7 @@ from fastapi.responses import JSONResponse
 from torchvision import transforms
 
 from src.api.dependencies import (
-    CSV_PATIENTS_PATH,
-    CSV_RISK_PATH,
+    CSV_MASTER_PATH,
     ML_FEATURE_NAMES,
     RISK_LEVEL_MAP,
     lifespan,
@@ -380,13 +379,13 @@ async def list_patients(
     limit: int = Query(50, ge=1, le=500, description="Máximo de registros"),
 ):
     """Lista los pacientes del dataset con paginación."""
-    if not os.path.exists(CSV_RISK_PATH):
+    if not os.path.exists(CSV_MASTER_PATH):
         raise HTTPException(
             status_code=404, detail="Archivo de pacientes no encontrado."
         )
 
     try:
-        df = pd.read_csv(CSV_RISK_PATH)
+        df = pd.read_csv(CSV_MASTER_PATH)
         total = len(df)
         page = df.iloc[skip : skip + limit]
         return {
@@ -404,13 +403,13 @@ async def list_patients(
 @app.get("/api/v1/patients/{patient_id}", tags=["Pacientes"])
 async def get_patient(patient_id: int):
     """Obtiene los datos de un paciente específico por su ID."""
-    if not os.path.exists(CSV_RISK_PATH):
+    if not os.path.exists(CSV_MASTER_PATH):
         raise HTTPException(
             status_code=404, detail="Archivo de pacientes no encontrado."
         )
 
     try:
-        df = pd.read_csv(CSV_RISK_PATH)
+        df = pd.read_csv(CSV_MASTER_PATH)
         patient = df[df["Patient_ID"] == patient_id]
 
         if patient.empty:
@@ -443,13 +442,13 @@ async def create_patient(
     risk_level: str = Query("Low", description="Low, Medium o High"),
 ):
     """Crea un nuevo registro de paciente en el CSV."""
-    if not os.path.exists(CSV_RISK_PATH):
+    if not os.path.exists(CSV_MASTER_PATH):
         raise HTTPException(
             status_code=404, detail="Archivo de pacientes no encontrado."
         )
 
     try:
-        df = pd.read_csv(CSV_RISK_PATH)
+        df = pd.read_csv(CSV_MASTER_PATH)
 
         if (df["Patient_ID"] == patient_id).any():
             raise HTTPException(
@@ -475,7 +474,7 @@ async def create_patient(
         }
 
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-        df.to_csv(CSV_RISK_PATH, index=False)
+        df.to_csv(CSV_MASTER_PATH, index=False)
 
         return {
             "message": f"Paciente {patient_id} creado correctamente.",
@@ -503,13 +502,13 @@ async def update_patient(
     risk_level: Optional[str] = Query(None, description="Low, Medium o High"),
 ):
     """Actualiza los datos de un paciente existente."""
-    if not os.path.exists(CSV_RISK_PATH):
+    if not os.path.exists(CSV_MASTER_PATH):
         raise HTTPException(
             status_code=404, detail="Archivo de pacientes no encontrado."
         )
 
     try:
-        df = pd.read_csv(CSV_RISK_PATH)
+        df = pd.read_csv(CSV_MASTER_PATH)
         mask = df["Patient_ID"] == patient_id
 
         if not mask.any():
@@ -544,7 +543,7 @@ async def update_patient(
                 risk_level, 0
             )
 
-        df.to_csv(CSV_RISK_PATH, index=False)
+        df.to_csv(CSV_MASTER_PATH, index=False)
 
         return {
             "message": f"Paciente {patient_id} actualizado correctamente.",

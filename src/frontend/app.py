@@ -128,13 +128,7 @@ if os.path.exists(ruta_fondo):
 # =============================================================================
 
 # Cargar los datasets en memoria (CSVs en crudo) para permitir las búsquedas
-df_datos_clinicos = pd.read_csv(settings.CSV_RISK_CLEAN_PATH)
-
-if os.path.exists(settings.CSV_PACIENTES_5000_PATH):
-    df_pacientes_5000 = pd.read_csv(settings.CSV_PACIENTES_5000_PATH)
-else:
-    df_pacientes_5000 = None
-
+df_master = pd.read_csv(settings.CSV_MASTER_PATH)
 
 def detectar_formato_busqueda(entrada_texto):
     """Detecta si el texto es DNI (9 caracteres) o NUSS (10+ números)."""
@@ -150,20 +144,20 @@ def detectar_formato_busqueda(entrada_texto):
 
 
 def buscar_paciente_por_documento(entrada_texto):
-    """Retorna el (Patient_ID, fila_datos) buscando en el CSV de 5000 pacientes."""
-    if not entrada_texto or df_pacientes_5000 is None:
+    """Retorna el (Patient_ID, fila_datos) buscando en el CSV consolidado."""
+    if not entrada_texto:
         return None, None
 
     tipo = detectar_formato_busqueda(entrada_texto)
     limpieza = str(entrada_texto).strip().upper()
 
     if tipo == "DNI":
-        coincidencias = df_pacientes_5000[
-            df_pacientes_5000["dni"].astype(str).str.upper() == limpieza
+        coincidencias = df_master[
+            df_master["dni"].astype(str).str.upper() == limpieza
         ]
     elif tipo == "NUSS":
-        coincidencias = df_pacientes_5000[
-            df_pacientes_5000["nuss"].astype(str).str.zfill(12) == limpieza.zfill(12)
+        coincidencias = df_master[
+            df_master["nuss"].astype(str).str.zfill(12) == limpieza.zfill(12)
         ]
     else:
         return None, None
@@ -237,29 +231,21 @@ with pestana_datos:
 
     # Bloque 1: El botón de CARGAR DATOS
     if btn_cargar:
-        id_paciente, info_csv_5000 = buscar_paciente_por_documento(texto_buscar)
+        id_paciente, info_paciente = buscar_paciente_por_documento(texto_buscar)
 
-        # Filtramos en el DataFrame de scores
-        filas_riesgo = (
-            df_datos_clinicos[df_datos_clinicos["Patient_ID"] == id_paciente]
-            if id_paciente
-            else pd.DataFrame()
-        )
-
-        if filas_riesgo.empty:
+        if info_paciente is None:
             st.error(textos["error_not_found"])
             st.session_state.info_sesion_paciente = None
         else:
-            fila_paciente = filas_riesgo.iloc[0]
+            fila_paciente = info_paciente
             # Mapeo de datos para actualizar el formulario visual
             st.session_state.form_datos_paciente.update(
                 {
                     "patient_id": id_paciente,
                     "age": int(fila_paciente.get("Age", 0)),
-                    "gender": "Male"
-                    if int(fila_paciente.get("Gender", 0)) == 0
-                    else "Female",
+                    "gender": str(fila_paciente.get("Gender", "Male")),
                     "smoking": int(fila_paciente.get("Smoking", 0)),
+
                     "alcohol_use": int(fila_paciente.get("Alcohol_Use", 0)),
                     "obesity": int(fila_paciente.get("Obesity", 0)),
                     "family_history": bool(fila_paciente.get("Family_History", 0)),
@@ -284,13 +270,13 @@ with pestana_datos:
                 "patient_id": id_paciente,
             }
 
-            if info_csv_5000 is not None:
-                nombres = str(info_csv_5000.get("nombre", "")).strip()
-                ape1 = str(info_csv_5000.get("apellido1", "")).strip()
-                ape2 = str(info_csv_5000.get("apellido2", "")).strip()
+            if info_paciente is not None:
+                nombres = str(info_paciente.get("nombre", "")).strip()
+                ape1 = str(info_paciente.get("apellido1", "")).strip()
+                ape2 = str(info_paciente.get("apellido2", "")).strip()
                 info_resumen["nombre"] = f"{nombres} {ape1} {ape2}".strip()
-                info_resumen["dni"] = str(info_csv_5000.get("dni", "")).strip()
-                info_resumen["nuss"] = str(info_csv_5000.get("nuss", "")).strip()
+                info_resumen["dni"] = str(info_paciente.get("dni", "")).strip()
+                info_resumen["nuss"] = str(info_paciente.get("nuss", "")).strip()
 
             st.session_state.info_sesion_paciente = info_resumen
 
@@ -452,35 +438,35 @@ with pestana_datos:
         else:
             id_paciente, _ = buscar_paciente_por_documento(texto_buscar)
             mascara = (
-                df_datos_clinicos["Patient_ID"] == id_paciente
+                df_master["Patient_ID"] == id_paciente
                 if id_paciente
-                else pd.Series([False] * len(df_datos_clinicos))
+                else pd.Series([False] * len(df_master))
             )
 
             if not mascara.any():
                 st.error(textos["error_not_found"])
             else:
-                idx = df_datos_clinicos[mascara].index[0]
-                df_datos_clinicos.at[idx, "Age"] = val_edad
-                df_datos_clinicos.at[idx, "Gender"] = (
-                    0 if val_genero == textos["gender_m"] else 1
+                idx = df_master[mascara].index[0]
+                df_master.at[idx, "Age"] = val_edad
+                df_master.at[idx, "Gender"] = (
+                    "Male" if val_genero == textos["gender_m"] else "Female"
                 )
-                df_datos_clinicos.at[idx, "Smoking"] = val_Fumar
-                df_datos_clinicos.at[idx, "Alcohol_Use"] = val_Alcohol
-                df_datos_clinicos.at[idx, "Obesity"] = val_Obesidad
-                df_datos_clinicos.at[idx, "Family_History"] = 1 if val_familia else 0
-                df_datos_clinicos.at[idx, "Diet_Red_Meat"] = val_carne_roja
-                df_datos_clinicos.at[idx, "Diet_Salted_Processed"] = val_salados
-                df_datos_clinicos.at[idx, "Fruit_Veg_Intake"] = val_fruta
-                df_datos_clinicos.at[idx, "Physical_Activity"] = val_actividad
-                df_datos_clinicos.at[idx, "BMI"] = val_bmi
-                df_datos_clinicos.at[idx, "Overall_Risk_Score"] = val_riesgo_global
-                df_datos_clinicos.at[idx, "Risk_Level"] = ["Low", "Medium", "High"][
+                df_master.at[idx, "Smoking"] = val_Fumar
+                df_master.at[idx, "Alcohol_Use"] = val_Alcohol
+                df_master.at[idx, "Obesity"] = val_Obesidad
+                df_master.at[idx, "Family_History"] = 1 if val_familia else 0
+                df_master.at[idx, "Diet_Red_Meat"] = val_carne_roja
+                df_master.at[idx, "Diet_Salted_Processed"] = val_salados
+                df_master.at[idx, "Fruit_Veg_Intake"] = val_fruta
+                df_master.at[idx, "Physical_Activity"] = val_actividad
+                df_master.at[idx, "BMI"] = val_bmi
+                df_master.at[idx, "Overall_Risk_Score"] = val_riesgo_global
+                df_master.at[idx, "Risk_Level"] = ["Low", "Medium", "High"][
                     val_riesgo_numerico
                 ]
-                df_datos_clinicos.at[idx, "Risk_Level_n"] = val_riesgo_numerico
+                df_master.at[idx, "Risk_Level_n"] = val_riesgo_numerico
 
-                df_datos_clinicos.to_csv(settings.CSV_RISK_CLEAN_PATH, index=False)
+                df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
                 st.success(textos["success_update"])
 
     # =========================================================================
@@ -560,13 +546,13 @@ with pestana_datos:
         else:
             id_paciente, _ = buscar_paciente_por_documento(texto_buscar)
             if id_paciente is not None:
-                if (df_datos_clinicos["Patient_ID"] == id_paciente).any():
+                if (df_master["Patient_ID"] == id_paciente).any():
                     st.error(textos["error_exists"])
                 else:
                     nuevo_registro = {
                         "Patient_ID": id_paciente,
                         "Age": val_edad,
-                        "Gender": 0 if val_genero == textos["gender_m"] else 1,
+                        "Gender": "Male" if val_genero == textos["gender_m"] else "Female",
                         "Smoking": val_Fumar,
                         "Alcohol_Use": val_Alcohol,
                         "Obesity": val_Obesidad,
@@ -580,11 +566,11 @@ with pestana_datos:
                         "Risk_Level": ["Low", "Medium", "High"][val_riesgo_numerico],
                         "Risk_Level_n": val_riesgo_numerico,
                     }
-                    df_datos_clinicos = pd.concat(
-                        [df_datos_clinicos, pd.DataFrame([nuevo_registro])],
+                    df_master = pd.concat(
+                        [df_master, pd.DataFrame([nuevo_registro])],
                         ignore_index=True,
                     )
-                    df_datos_clinicos.to_csv(settings.CSV_RISK_CLEAN_PATH, index=False)
+                    df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
                     st.success(textos["success_save"])
 
 
