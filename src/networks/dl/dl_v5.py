@@ -1,16 +1,24 @@
-# Modelo definitivo
-
 import tensorflow as tf
 from tensorflow.keras import layers, models, Input
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import os
+import numpy as np
+import tf2onnx
+import random
 
-# --- 0. CONFIGURACIÓN INICIAL ---
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # Silenciar warnings innecesarios
+# --- 0. CONFIGURACIÓN DE SEMILLAS (REPRODUCIBILIDAD) ---
+SEED = 42
+os.environ['PYTHONHASHSEED'] = str(SEED)
+random.seed(SEED)
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
-# Verificación de GPU
+# --- CONFIGURACIÓN ENTORNO ---
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
     for gpu in gpus:
@@ -26,11 +34,11 @@ SAVE_DIR = r'cancer de colon\prueba\modelos\dl'
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 IMG_SIZE = (150, 150)
-BATCH_SIZE = 16  # Batch más pequeño ayuda a salir de estancamientos (mínimos locales)
+BATCH_SIZE = 16
 
-# --- 2. GENERADORES (Usando Pre-procesamiento Nativo de MobileNet) ---
+# --- 2. GENERADORES (Con Seed) ---
 datagen = ImageDataGenerator(
-    preprocessing_function=preprocess_input, # Normaliza entre -1 y 1
+    preprocessing_function=preprocess_input,
     validation_split=0.2,
     rotation_range=30,
     width_shift_range=0.1,
@@ -45,7 +53,8 @@ train_gen = datagen.flow_from_directory(
     target_size=IMG_SIZE, 
     batch_size=BATCH_SIZE, 
     class_mode='binary', 
-    subset='training'
+    subset='training',
+    seed=SEED
 )
 
 val_gen = datagen.flow_from_directory(
@@ -53,46 +62,46 @@ val_gen = datagen.flow_from_directory(
     target_size=IMG_SIZE, 
     batch_size=BATCH_SIZE, 
     class_mode='binary', 
-    subset='validation'
+    subset='validation',
+    seed=SEED
 )
 
-# --- 3. CONSTRUCCIÓN DEL MODELO AJUSTADO ---
+# --- 3. CONSTRUCCIÓN DEL MODELO ---
 def crear_modelo_completo():
     input_layer = Input(shape=(150, 150, 3))
 
-    # RAMA A: MobileNetV2 - VOLVEMOS A CONGELAR
+    # RAMA A: MobileNetV2
     base_model = MobileNetV2(weights='imagenet', include_top=False, input_tensor=input_layer)
-    base_model.trainable = False # No lo toques, usa su conocimiento de Google
+    base_model.trainable = False 
         
     x = base_model.output
     x = layers.GlobalAveragePooling2D()(x)
-    x = layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01))(x) # Añadimos L2
-    rama_a = layers.Dropout(0.6)(x) # Subimos dropout
+    x = layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01))(x)
+    rama_a = layers.Dropout(0.6)(x)
 
     # RAMA B: CNN personalizada
     y = layers.Conv2D(32, (3, 3), activation='relu')(input_layer)
-    y = layers.BatchNormalization()(y) # Estabiliza la pérdida
+    y = layers.BatchNormalization()(y)
     y = layers.MaxPooling2D(2, 2)(y)
     y = layers.GlobalAveragePooling2D()(y)
     rama_b = layers.Dense(64, activation='relu')(y)
 
     # UNIÓN
     combined = layers.concatenate([rama_a, rama_b])
-    # Añadimos una capa extra de decisión con L2
     combined = layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01))(combined)
     output_layer = layers.Dense(1, activation='sigmoid')(combined)
 
     return models.Model(inputs=input_layer, outputs=output_layer)
 
-# --- 4. COMPILACIÓN (Subimos un pelín el Learning Rate) ---
+# --- 4. COMPILACIÓN ---
 ensemble_model = crear_modelo_completo()
 ensemble_model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4), # 0.0001
+    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
     loss='binary_crossentropy', 
     metrics=['accuracy']
 )
 
-# --- 5. PESOS MÁS SUAVES ---
+# --- 5. PESOS Y ENTRENAMIENTO ---
 pesos_clase = {0: 2.0, 1: 1.0}
 
 early_stop = tf.keras.callbacks.EarlyStopping(
@@ -112,6 +121,14 @@ history = ensemble_model.fit(
 )
 
 # --- 6. GUARDADO FINAL ---
-path_final = os.path.join(SAVE_DIR, 'modelo_pro_agresivo.onnx')
-ensemble_model.save(path_final)
-print(f"\n✅ Proceso terminado. Modelo guardado en: {path_final}")
+path_keras = os.path.join(SAVE_DIR, 'modelo_pro_agresivo.keras')
+ensemble_model.save(path_keras)
+
+# Convertir a ONNX
+onnx_model, _ = tf2onnx.convert.from_keras(ensemble_model)
+
+path_onnx = os.path.join(SAVE_DIR, 'modelo_pro_agresivo.onnx')
+with open(path_onnx, "wb") as f:
+    f.write(onnx_model.SerializeToString())
+
+print(f"\n✅ Proceso terminado. Modelo guardado en: {path_onnx}")
