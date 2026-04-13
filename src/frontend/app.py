@@ -18,9 +18,22 @@ import yaml
 import requests
 import pandas as pd
 import base64
+
 import matplotlib.pyplot as plt
-from src.utils.gradcam_utils import generar_explicacion_shap
 import pickle
+
+# =============================================================================
+# Configuración Inicial y Carga de Rutas
+# =============================================================================
+
+# Definimos las rutas relativas para poder importar la configuración general
+directorio_actual = os.path.dirname(os.path.abspath(__file__))
+directorio_raiz = os.path.dirname(os.path.dirname(directorio_actual))
+sys.path.append(directorio_raiz)
+
+from src.config.settings import settings
+from src.utils.gradcam_utils import generar_explicacion_shap
+
 # =============================================================================
 # Cargar modelo ensemble para SHAP (solo una vez)
 # =============================================================================
@@ -40,7 +53,6 @@ directorio_actual = os.path.dirname(os.path.abspath(__file__))
 directorio_raiz = os.path.dirname(os.path.dirname(directorio_actual))
 sys.path.append(directorio_raiz)
 
-from src.config.settings import settings
 
 # URL base de nuestra API (FastAPI) a la que le haremos las peticiones HTTP
 API_BASE_URL = "http://localhost:8000/api/v1"
