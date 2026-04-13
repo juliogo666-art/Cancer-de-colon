@@ -5001,3 +5001,4 @@ Patient_ID,Gender,City,Country,nombre,apellido1,apellido2,Age,altura_cm,peso_kg,
 4999,Female,Barcelona,Spain,Teresa,Nuñez,Dominguez,32,163.9,77.3,46617714A,84115564465,7,1,9,0,6,0,9,8,30.0,0.372,Low,0,Negativo,0,0.0
 5000,Male,Barcelona,Spain,Adam,Primero,DelMundo,75,180.0,80.0,00000001A,80000000001,0,0,0,0,2,0,8,7,24.69,0.0,Low,0,Negativo,0,0.0
 5001,Male,Barcelona,Spain,Antonio,Garcia,Lopez,55,185.0,120.0,12345678A,81234567891,2,8,5,0,6,4,1,2,35.06,0.0,Low,0,Negativo,0,3.42
+5002,Male,Barceloma,Spain,Juan,primero,devista,49,175.0,75.0,12345677A,81111111123,2,2,1,0,4,7,1,2,24.49,0.0,Low,0,Desconocido,-1,-1.0
