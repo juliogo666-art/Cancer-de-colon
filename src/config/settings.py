@@ -75,6 +75,10 @@ class Settings:
             RAIZ_DEL_PROYECTO, "artifacts", "weights", "lgbm_clinico.pkl"
         )
 
+        self.MODEL_ML_FINAL_PATH = os.path.join(
+            RAIZ_DEL_PROYECTO, "artifacts", "weights", "modelo_ensemble.pkl"
+        )
+
         # Modelo de Deep Learning (CNN TensorFlow) para detectar pólipos en colonoscopia
         # Entrada: Imagen 150x150 → Salida: Pólipo / Sano
         self.MODEL_CNN_PATH = os.path.join(

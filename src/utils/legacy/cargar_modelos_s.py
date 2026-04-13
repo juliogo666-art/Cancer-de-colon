@@ -11,7 +11,7 @@ import torch.nn as nn
 from torchvision import models, transforms
 from PIL import Image
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from src.utils.gradcam_utils import (
+from utils.gradcam_utils import (
     generate_gradcam,
     generate_gradcam_colon,
     generar_explicacion_shap,

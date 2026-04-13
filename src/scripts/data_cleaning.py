@@ -17,7 +17,6 @@ from src.scripts.sintetiza_historiales import (
     sintetizar_datos_kaggle,
 )
 
-
 def guardar_csv(df, directorio_destino, nombre_archivo):
     """
     Guarda un DataFrame como CSV en el directorio especificado.
@@ -35,7 +34,6 @@ def guardar_csv(df, directorio_destino, nombre_archivo):
         df.to_csv(output_path, index=False)
     except PermissionError:
         st.error(f"Error de permisos: Cierra el archivo {output_path} si está abierto.")
-
 
 def limpiar_datos_globales(df, file_path_sin_d):
     """
@@ -81,7 +79,6 @@ def limpiar_datos_globales(df, file_path_sin_d):
     guardar_csv(df, directorio_destino, "ej_global_cancer_limpio.csv")
 
     return df
-
 
 def limpiar_datos_sinteticos(df, file_path_con_d):
     """
@@ -130,13 +127,11 @@ def limpiar_datos_sinteticos(df, file_path_con_d):
 
     return df
 
-
 def combinar_datos_s_g(df_global, output_dir):
     """Combina datos globales con datos sintéticos generados."""
     df_global = df_global.copy()
     df_global = sintetizar_historiales(df_global, output_dir)
     return df_global
-
 
 def limpiar_datos_kaggle(df, file_path_sin_d):
     """
@@ -236,7 +231,6 @@ def limpiar_datos_kaggle(df, file_path_sin_d):
     guardar_csv(df, directorio_destino, "ej_kaggle_cancer_limpio.csv")
 
     return df
-
 
 def limpiar_datos_kaggle_finales(df_global, output_dir):
     """Combina datos de Kaggle con datos sintéticos generados."""

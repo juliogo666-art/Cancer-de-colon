@@ -18,6 +18,18 @@ import yaml
 import requests
 import pandas as pd
 import base64
+import matplotlib.pyplot as plt
+from src.utils.gradcam_utils import generar_explicacion_shap
+import pickle
+# =============================================================================
+# Cargar modelo ensemble para SHAP (solo una vez)
+# =============================================================================
+try:
+    with open(os.path.join(directorio_raiz, "artifacts", "weights", "modelo_ensemble.pkl"), "rb") as f:
+        modelo_ensemble = pickle.load(f)
+except Exception as e:
+    modelo_ensemble = None
+    print(f"No se pudo cargar el modelo ensemble para SHAP: {e}")
 
 # =============================================================================
 # Configuración Inicial y Carga de Rutas
@@ -567,6 +579,7 @@ with pestana_datos:
             "cea_level": st.session_state.form_datos_paciente.get("cea_level_ng_ml", 0.0),
         }
 
+
         # 2. Hacemos la llamada HTTP a nuestra API de FastAPI que está sirviendo los modelos
         try:
             respuesta_api = requests.post(
@@ -582,11 +595,11 @@ with pestana_datos:
                 score_riesgo_devuelto = datos_respuesta.get("risk_score", 0.0)
                 probabilidades = datos_respuesta.get("probabilities", {})
                 recomendacion = datos_respuesta.get("recommendation", "")
-                
+
                 # Actualizar el riesgo en el state de manera oculta
                 st.session_state.form_datos_paciente["risk_level"] = nivel_riesgo_devuelto
                 st.session_state.form_datos_paciente["overall_risk_score"] = score_riesgo_devuelto
-                
+
                 st.success(
                     f"Análisis completado. Nivel estimado: {nivel_riesgo_devuelto}"
                 )
@@ -609,6 +622,37 @@ with pestana_datos:
                 """,
                     unsafe_allow_html=True,
                 )
+
+                # --- SHAP: Explicación del riesgo ---
+                if modelo_ensemble is not None:
+                    # Construir el array de features en el orden correcto
+                    features_array = [
+                        val_Fumar,
+                        val_Alcohol,
+                        val_Obesidad,
+                        1 if val_familia else 0,
+                        val_carne_roja,
+                        val_salados,
+                        val_fruta,
+                        val_actividad,
+                        val_bmi,
+                        st.session_state.form_datos_paciente.get("fobt_resultado_n", 0),
+                        st.session_state.form_datos_paciente.get("cea_level_ng_ml", 0.0),
+                    ]
+                    # Determinar la clase predicha como índice
+                    clase_map = {"Low": 0, "Medium": 1, "High": 2}
+                    clase_predicha = clase_map.get(nivel_riesgo_devuelto, 0)
+                    fig, df_importancia = generar_explicacion_shap(modelo_ensemble, [features_array], clase_predicha)
+                    if fig is not None and df_importancia is not None:
+                        st.markdown("### 🧬 Explicación del modelo (SHAP)")
+                        st.pyplot(fig)
+                        st.write("Importancia de cada variable en tu predicción:")
+                        st.dataframe(df_importancia)
+                    else:
+                        st.warning("No se pudo generar la explicación SHAP para este caso.")
+                else:
+                    st.info("El modelo ensemble para SHAP no está disponible.")
+
             else:
                 st.error(
                     f"Error HTTP {respuesta_api.status_code}: {respuesta_api.text}"
@@ -842,3 +886,7 @@ with pestana_vision:
 
                 except requests.exceptions.RequestException:
                     st.error(textos["api_error"])
+
+# Cargar modelo ensemble para SHAP
+with open("artifacts/weights/modelo_ensemble.pkl", "rb") as f:
+    modelo_ensemble = pickle.load(f)

@@ -58,7 +58,6 @@ lgbm_triage.fit(X_train_t, y_train_t)
 
 print("Evaluación Triaje: Precisión =", accuracy_score(y_test_t, lgbm_triage.predict(X_test_t)))
 
-
 # --- 4. GUARDADO DE PESOS Y MAPPING ---
 print("\n--- FASE 3: GUARDADO ---")
 joblib.dump(lgbm_clinico, os.path.join(SAVE_DIR, "lgbm_clinico.pkl"))

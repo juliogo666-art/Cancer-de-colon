@@ -26,6 +26,7 @@ from fastapi import FastAPI
 from src.config.settings import settings
 
 MODEL_ML_PATH = settings.MODEL_ML_PATH
+MODEL_ML_FINAL_PATH = settings.MODEL_ML_FINAL_PATH
 MODEL_CNN_PATH = settings.MODEL_CNN_PATH
 MODEL_BIOPSY_PATH = settings.MODEL_BIOPSY_PATH
 
@@ -78,6 +79,20 @@ def load_ml_model(path: str = MODEL_ML_PATH):
         return modelo
     except Exception as e:
         print(f"[ERROR] Fallo al cargar modelo ML: {e}")
+        return None
+    
+def load_ml_final_model(path: str = MODEL_ML_FINAL_PATH):
+    """Carga el modelo LightGBM final desde disco."""
+    if not os.path.exists(path):
+        print(f"[AVISO] Modelo ML final no encontrado en: {path}")
+        return None
+
+    try:
+        modelo = joblib.load(path)
+        print(f"[OK] Modelo ML final cargado: {type(modelo).__name__} desde {path}")
+        return modelo
+    except Exception as e:
+        print(f"[ERROR] Fallo al cargar modelo ML final: {e}")
         return None
 
 def load_triage_model(path: str = "artifacts/weights/lgbm_triage.pkl"):

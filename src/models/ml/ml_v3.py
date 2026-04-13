@@ -74,7 +74,6 @@ lgbm_model = LGBMClassifier(
 )
 lgbm_model.fit(X_train, y_train)
 
-
 # --- 4. FUNCIÓN DE EVALUACIÓN ---
 def evaluar_sistema(y_real, y_pred, nombre):
     acc = accuracy_score(y_real, y_pred)
@@ -104,7 +103,6 @@ def evaluar_sistema(y_real, y_pred, nombre):
     plt.xlabel("Predicción")
     plt.tight_layout()
     plt.savefig(f"artifacts/confusion_matrix_{nombre.replace(' ', '_')}.png")
-
 
 # --- 5. LÓGICA DE ENSAMBLE CLÍNICO (Súper Sensible) ---
 def obtener_preds_ensamble(modelos, X_input, umbral_alto=0.15):

@@ -15,8 +15,8 @@ directorio_actual = os.path.dirname(os.path.abspath(__file__))
 directorio_raiz = os.path.dirname(os.path.dirname(directorio_actual))
 sys.path.append(directorio_raiz)
 
-from src.utils.cargar_modelos_s import predecir, colonos, obtener_modelo_cnn, biopsias
-from src.utils.data_load_s import datos_p, nombres_p, save_r
+from utils.legacy.cargar_modelos_s import predecir, colonos, obtener_modelo_cnn, biopsias
+from utils.data_load_s import datos_p, nombres_p, save_r
 
 CSV_PATH = os.path.join(
     directorio_raiz,
