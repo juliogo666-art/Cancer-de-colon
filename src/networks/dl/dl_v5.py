@@ -34,7 +34,7 @@ SAVE_DIR = r"artifacts\weights"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 IMG_SIZE = (150, 150)
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 
 # --- 2. GENERADORES (Con Seed) ---
 datagen = ImageDataGenerator(
@@ -106,7 +106,7 @@ ensemble_model = crear_modelo_completo()
 ensemble_model.compile(
     optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
     loss="binary_crossentropy",
-    metrics=["accuracy"],
+    metrics=["accuracy", "precision", "recall"],
 )
 
 # --- 5. PESOS Y ENTRENAMIENTO ---

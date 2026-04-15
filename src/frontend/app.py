@@ -21,6 +21,7 @@ import base64
 
 import matplotlib.pyplot as plt
 import pickle
+import joblib
 
 # =============================================================================
 # Configuración Inicial y Carga de Rutas
@@ -36,10 +37,16 @@ from src.utils.gradcam_utils import generar_explicacion_shap
 
 # =============================================================================
 # Cargar modelo ensemble para SHAP (solo una vez)
+# Usamos joblib.load y la ruta centralizada en `settings` para evitar errores
+# al deserializar objetos sklearn/XGBoost/LightGBM.
 # =============================================================================
 try:
-    with open(os.path.join(directorio_raiz, "artifacts", "weights", "modelo_ensemble.pkl"), "rb") as f:
-        modelo_ensemble = pickle.load(f)
+    modelo_path = settings.MODEL_ML_FINAL_PATH
+    if os.path.exists(modelo_path):
+        modelo_ensemble = joblib.load(modelo_path)
+    else:
+        modelo_ensemble = None
+        print(f"No se encontró el fichero del ensemble SHAP en: {modelo_path}")
 except Exception as e:
     modelo_ensemble = None
     print(f"No se pudo cargar el modelo ensemble para SHAP: {e}")
@@ -898,7 +905,3 @@ with pestana_vision:
 
                 except requests.exceptions.RequestException:
                     st.error(textos["api_error"])
-
-# Cargar modelo ensemble para SHAP
-with open("artifacts/weights/modelo_ensemble.pkl", "rb") as f:
-    modelo_ensemble = pickle.load(f)

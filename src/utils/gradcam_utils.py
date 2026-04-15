@@ -204,14 +204,50 @@ def generar_explicacion_shap(modelo, features_array, target_class):
         ]
         X_df = pd.DataFrame(features_array, columns=nombres_columnas)
 
-        explainer = shap.TreeExplainer(modelo)
-        shap_values = explainer.shap_values(X_df)
+        # Si nos han pasado una lista de modelos (ensamble), calculamos SHAP
+        # para cada modelo y promediamos los valores. Esto evita errores
+        # al pasar directamente una lista a TreeExplainer.
+        def _extract_raw_shap(shap_values_obj, target_cls):
+            if isinstance(shap_values_obj, list):
+                try:
+                    return np.array(shap_values_obj[target_cls][0])
+                except Exception:
+                    # Fallback conservador
+                    return np.array(shap_values_obj[0][0])
+            else:
+                sv = np.array(shap_values_obj)
+                if sv.ndim == 3:
+                    return sv[0, :, target_cls]
+                elif sv.ndim == 2:
+                    return sv[0]
+                else:
+                    return sv.flatten()
 
-        # 1. Extraer valores SHAP para la clase objetivo
-        if isinstance(shap_values, list):
-            raw_shap = shap_values[target_class][0]
+        if isinstance(modelo, (list, tuple)):
+            accum = None
+            n_ok = 0
+            for m in modelo:
+                try:
+                    expl = shap.TreeExplainer(m)
+                    sv = expl.shap_values(X_df)
+                    raw = _extract_raw_shap(sv, target_class)
+                    if accum is None:
+                        accum = np.array(raw, dtype=float)
+                    else:
+                        accum += np.array(raw, dtype=float)
+                    n_ok += 1
+                except Exception as e:
+                    print(f"Error SHAP por modelo del ensemble: {e}")
+                    continue
+
+            if n_ok == 0:
+                raise RuntimeError("Ningún modelo del ensemble pudo generar SHAP")
+
+            raw_shap = accum / n_ok
         else:
-            raw_shap = shap_values[0, :, target_class] if len(shap_values.shape) == 3 else shap_values[0]
+            explainer = shap.TreeExplainer(modelo)
+            shap_values = explainer.shap_values(X_df)
+            raw_shap = _extract_raw_shap(shap_values, target_class)
 
         # 2. Calcular porcentaje de influencia
         # Usamos el valor absoluto para entender cuánto "pesa" cada variable
