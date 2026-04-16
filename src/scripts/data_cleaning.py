@@ -17,6 +17,7 @@ from src.scripts.sintetiza_historiales import (
     sintetizar_datos_kaggle,
 )
 
+
 def guardar_csv(df, directorio_destino, nombre_archivo):
     """
     Guarda un DataFrame como CSV en el directorio especificado.
@@ -34,6 +35,7 @@ def guardar_csv(df, directorio_destino, nombre_archivo):
         df.to_csv(output_path, index=False)
     except PermissionError:
         st.error(f"Error de permisos: Cierra el archivo {output_path} si está abierto.")
+
 
 def limpiar_datos_globales(df, file_path_sin_d):
     """
@@ -79,6 +81,7 @@ def limpiar_datos_globales(df, file_path_sin_d):
     guardar_csv(df, directorio_destino, "ej_global_cancer_limpio.csv")
 
     return df
+
 
 def limpiar_datos_sinteticos(df, file_path_con_d):
     """
@@ -127,11 +130,13 @@ def limpiar_datos_sinteticos(df, file_path_con_d):
 
     return df
 
+
 def combinar_datos_s_g(df_global, output_dir):
     """Combina datos globales con datos sintéticos generados."""
     df_global = df_global.copy()
     df_global = sintetizar_historiales(df_global, output_dir)
     return df_global
+
 
 def limpiar_datos_kaggle(df, file_path_sin_d):
     """
@@ -232,14 +237,15 @@ def limpiar_datos_kaggle(df, file_path_sin_d):
 
     return df
 
+
 def limpiar_datos_kaggle_finales(df_global, output_dir):
     """Combina datos de Kaggle con datos sintéticos generados."""
     df_global = df_global.copy()
     df_global = sintetizar_datos_kaggle(df_global, output_dir)
     return df_global
 
-def limpiar_datos_riesgo_def(df, file_path_sin_d):
 
+def limpiar_datos_riesgo_def(df, file_path_sin_d):
     """
     Limpia el dataset de factores de riesgo y asigna Patient_ID único.
     """
@@ -249,12 +255,12 @@ def limpiar_datos_riesgo_def(df, file_path_sin_d):
     df = df.dropna()
     df = df.drop_duplicates()
 
-    df = df.drop(columns=['Age', 'Gender'], errors='ignore')
+    df = df.drop(columns=["Age", "Gender"], errors="ignore")
 
     # 2. Asignación de Patient_ID (Si no existe)
     # Generamos IDs únicos desde 30000 en adelante
     if "Patient_ID" not in df.columns:
-        df.insert(0, 'Patient_ID', range(00000, 00000 + len(df)))
+        df.insert(0, "Patient_ID", range(00000, 00000 + len(df)))
 
     # 3. Mapeo de niveles de riesgo
     risk_map = {"Low": 0, "Medium": 1, "High": 2}
@@ -264,24 +270,27 @@ def limpiar_datos_riesgo_def(df, file_path_sin_d):
 
     # 4. Convertir columnas a numérico de forma segura
     # Solo aplicamos to_numeric a las columnas que no son 'Risk_Level' (texto)
-    cols_a_convertir = df.columns.drop(['Risk_Level']) if 'Risk_Level' in df.columns else df.columns
+    cols_a_convertir = (
+        df.columns.drop(["Risk_Level"]) if "Risk_Level" in df.columns else df.columns
+    )
     for col in cols_a_convertir:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
     # 5. Guardado
     directorio_destino = os.path.dirname(file_path_sin_d)
     guardar_csv(df, directorio_destino, "cancer_risk_clean.csv")
-    
+
     return df
+
 
 def determinar_clase(texto):
     # --- 1. CONFIGURACIÓN DE RUTAS ---
-    file_path = '/cancer de colon/prueba/dataset_colon_completo/dataset_colon_completo' # Asegúrate de que esta ruta es correcta
-    RUTA_CSV_ORIGINAL = file_path + '/metadata.csv' # El CSV original con metadatos
+    file_path = "/cancer de colon/prueba/dataset_colon_completo/dataset_colon_completo"  # Asegúrate de que esta ruta es correcta
+    RUTA_CSV_ORIGINAL = file_path + "/metadata.csv"  # El CSV original con metadatos
     # Ruta donde están tus imágenes descargadas (ajusta según tu PC)
-    RUTA_IMAGENES_ORIGEN = file_path + '/data' 
+    RUTA_IMAGENES_ORIGEN = file_path + "/data"
     # Carpeta nueva donde irá todo lo limpio
-    CARPETA_DESTINO = file_path + './dataset_limpio'
+    CARPETA_DESTINO = file_path + "./dataset_limpio"
 
     # --- 2. LIMPIEZA DEL CSV ---
     print("🧹 Leyendo y limpiando metadatos...")
@@ -296,38 +305,40 @@ def determinar_clase(texto):
         return "polipo"
 
     # Aplicamos la lógica a cada fila
-    df['clase_detectada'] = df['text'].apply(determinar_clase)
+    df["clase_detectada"] = df["text"].apply(determinar_clase)
 
-    # Consolidamos: Una imagen puede tener muchas filas. 
+    # Consolidamos: Una imagen puede tener muchas filas.
     # Si en alguna fila dice 'polipo', la imagen completa se marca como 'polipo'.
-    resumen = df.groupby('file_name')['clase_detectada'].apply(
-        lambda x: 'polipo' if 'polipo' in x.values else 'sano'
-    ).reset_index()
+    resumen = (
+        df.groupby("file_name")["clase_detectada"]
+        .apply(lambda x: "polipo" if "polipo" in x.values else "sano")
+        .reset_index()
+    )
 
     # Guardar el nuevo CSV limpio en la carpeta de destino
     os.makedirs(CARPETA_DESTINO, exist_ok=True)
-    resumen.to_csv(os.path.join(CARPETA_DESTINO, 'metadata_limpio.csv'), index=False)
+    resumen.to_csv(os.path.join(CARPETA_DESTINO, "metadata_limpio.csv"), index=False)
     print(f"✅ CSV limpio guardado. Total imágenes únicas: {len(resumen)}")
 
     # --- 3. COPIA Y ORGANIZACIÓN DE IMÁGENES ---
     print("📂 Iniciando copia y clasificación de imágenes...")
 
     # Creamos las carpetas para la CNN
-    os.makedirs(os.path.join(CARPETA_DESTINO, 'polipo'), exist_ok=True)
-    os.makedirs(os.path.join(CARPETA_DESTINO, 'sano'), exist_ok=True)
+    os.makedirs(os.path.join(CARPETA_DESTINO, "polipo"), exist_ok=True)
+    os.makedirs(os.path.join(CARPETA_DESTINO, "sano"), exist_ok=True)
 
     errores = 0
     copiadas = 0
 
     for _, fila in tqdm(resumen.iterrows(), total=len(resumen)):
         # file_name suele ser 'data/008605.png', sacamos solo el nombre del archivo
-        nombre_archivo = os.path.basename(fila['file_name'])
-        clase = fila['clase_detectada']
-        
+        nombre_archivo = os.path.basename(fila["file_name"])
+        clase = fila["clase_detectada"]
+
         # Construimos rutas de origen y destino
         ruta_origen = os.path.join(RUTA_IMAGENES_ORIGEN, nombre_archivo)
         ruta_final = os.path.join(CARPETA_DESTINO, clase, nombre_archivo)
-        
+
         try:
             # Hacemos una COPIA física del archivo
             if os.path.exists(ruta_origen):

@@ -38,7 +38,7 @@ import os
 import uuid
 from datetime import datetime
 from typing import Any, Optional
-
+import matplotlib.pyplot as plt
 
 # Directorio por defecto para guardar los logs de experimentos
 _PROJECT_ROOT = os.path.dirname(
@@ -103,6 +103,7 @@ class ExperimentTracker:
         test_size: Optional[int] = None,
         duration_seconds: Optional[float] = None,
         notes: Optional[str] = None,
+        training_history: Optional[dict[str, list[float]]] = None,
     ) -> str:
         """
         Registra un nuevo experimento de entrenamiento.
@@ -129,6 +130,8 @@ class ExperimentTracker:
             Duración del entrenamiento en segundos.
         notes : str, optional
             Notas adicionales del experimentador.
+        training_history : dict, optional
+            Historial de entrenamiento por época (ej. train_loss vs val_loss).
 
         Returns
         -------
@@ -155,15 +158,53 @@ class ExperimentTracker:
             "train_size": train_size,
             "test_size": test_size,
             "duration_seconds": duration_seconds,
+            "training_history": training_history,
             "notes": notes,
         }
 
         data = self._load()
         data[experiment_id] = record
         self._save(data)
+        
+        if training_history and "train_loss" in training_history and "val_loss" in training_history:
+            self._plot_training_history(model_name, training_history)
 
         print(f"[TRACKER] Experimento '{experiment_id}' registrado para {model_name}")
         return experiment_id
+
+    def _plot_training_history(self, model_name: str, history: dict):
+        """Genera y guarda gráficos de entrenamiento para detectar overfitting."""
+        import matplotlib.pyplot as plt
+        
+        epochs = range(1, len(history["train_loss"]) + 1)
+        plt.figure(figsize=(10, 4))
+        
+        # Gráfico de Loss
+        plt.subplot(1, 2, 1)
+        plt.plot(epochs, history["train_loss"], 'b-', label='Train Loss')
+        plt.plot(epochs, history["val_loss"], 'r-', label='Val Loss')
+        plt.title(f'{model_name} - Loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.legend()
+        
+        # Gráfico de Métricas (si existen)
+        if "val_accuracy" in history and history["val_accuracy"]:
+            plt.subplot(1, 2, 2)
+            plt.plot(epochs, history["val_accuracy"], 'g-', label='Val Accuracy')
+            if "val_f1" in history and history["val_f1"]:
+                plt.plot(epochs, history["val_f1"], 'm-', label='Val F1')
+            plt.title(f'{model_name} - Metrics')
+            plt.xlabel('Epochs')
+            plt.ylabel('Score')
+            plt.legend()
+            
+        plt.tight_layout()
+        artifacts_dir = os.path.join(_PROJECT_ROOT, "artifacts")
+        os.makedirs(artifacts_dir, exist_ok=True)
+        safe_name = model_name.replace(" ", "_").lower()
+        plt.savefig(os.path.join(artifacts_dir, f"training_history_{safe_name}.png"))
+        plt.close()
 
     def get_experiment(self, experiment_id: str) -> Optional[dict]:
         """Devuelve un experimento por su ID."""

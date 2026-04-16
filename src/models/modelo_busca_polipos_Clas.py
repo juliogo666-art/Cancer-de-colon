@@ -26,6 +26,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import models, transforms
 from datasets import load_dataset
 from sklearn.metrics import precision_score, recall_score, f1_score
+from src.tracking.experiment_tracker import ExperimentTracker
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde el archivo .env local
@@ -274,6 +275,19 @@ def train_model():
     epochs = 5
     best_val_loss = float("inf")
 
+    training_history = {
+        "train_loss": [],
+        "val_loss": [],
+        "val_accuracy": [],
+        "val_f1": []
+    }
+    
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    weights_dir = os.path.join(project_root, "artifacts", "weights")
+    os.makedirs(weights_dir, exist_ok=True)
+    model_path_best = os.path.join(weights_dir, "polyp_resnet18_best.pth")
+    model_path_final = os.path.join(weights_dir, "polyp_resnet18_final.pth")
+
     print("\n--- Iniciando Entrenamiento ---")
     for epoch in range(epochs):
         # ---- Fase de entrenamiento ----
@@ -310,17 +324,20 @@ def train_model():
             f"Val F1: {val_metrics['f1']:.4f}"
         )
 
+        training_history["train_loss"].append(train_loss)
+        training_history["val_loss"].append(val_metrics['loss'])
+        training_history["val_accuracy"].append(val_metrics['accuracy'])
+        training_history["val_f1"].append(val_metrics['f1'])
+
         # Guardar el mejor modelo según val loss (early stopping simple)
         if val_metrics["loss"] < best_val_loss:
             best_val_loss = val_metrics["loss"]
-            model_path_best = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polyp_resnet18_best.pth")
             torch.save(model.state_dict(), model_path_best)
             print(f"  → Mejor modelo guardado (Val Loss: {best_val_loss:.4f})")
 
     # ---- Evaluación final sobre Test ----
     print("\n--- Evaluación Final en Test ---")
     # Cargar el mejor modelo
-    model_path_best = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polyp_resnet18_best.pth")
     model.load_state_dict(torch.load(model_path_best, weights_only=True))
     test_metrics = evaluate_model(model, test_loader, criterion, device)
 
@@ -331,9 +348,21 @@ def train_model():
     print(f"Test F1-Score:  {test_metrics['f1']:.4f}")
 
     # Guardar modelo final
-    model_path_final = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polyp_resnet18.pth")
     torch.save(model.state_dict(), model_path_final)
-    print("\nModelo final guardado en la misma carpeta que el script (polyp_resnet18.pth)")
+    print(f"\nModelo final guardado en {model_path_final}")
+    
+    # Registro en el Tracker
+    tracker = ExperimentTracker()
+    tracker.log_experiment(
+        model_name="PolypResNet18",
+        metrics=test_metrics,
+        hyperparameters={"epochs": epochs, "learning_rate": 1e-4, "batch_size": 32},
+        dataset_path="huggingface:nkasmanoff/kvasir-seg",
+        model_path=model_path_best,
+        train_size=train_size,
+        test_size=test_size,
+        training_history=training_history
+    )
 
 
 #####################################################################################################

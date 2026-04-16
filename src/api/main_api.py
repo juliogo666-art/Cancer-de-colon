@@ -186,12 +186,12 @@ async def predict_risk(
         # Crear recomendación
         recomendacion = ""
         if fobt_resultado == -1 or cea_level == -1.0:
-            recomendacion = "⚠️ Es necesario realizar analítica de sangre (CEA) y muestra de heces (FOBT) para confirmar diagnóstico."
+            recomendacion = "Es necesario realizar analitica de sangre (CEA) y muestra de heces (FOBT) para confirmar diagnostico."
         else:
             if risk_lvl in ["Medium", "High"]:
-                recomendacion = "🚨 Riesgo elevado confirmado por marcadores analíticos. Se recomienda derivación urgente para COLONOSCOPIA."
+                recomendacion = "Riesgo elevado confirmado por marcadores analiticos. Se recomienda derivacion urgente para COLONOSCOPIA."
             else:
-                recomendacion = "✅ Riesgo bajo. Mantener controles rutinarios y hábitos saludables."
+                recomendacion = "Riesgo bajo. Mantener controles rutinarios y habitos saludables."
 
         logger.log_risk_prediction(
             patient_id=patient_id,

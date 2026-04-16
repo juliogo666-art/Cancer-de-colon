@@ -15,6 +15,9 @@ from sklearn.metrics import (
     recall_score,
     classification_report,
 )
+from src.tracking.experiment_tracker import ExperimentTracker
+
+tracker = ExperimentTracker()
 
 warnings.filterwarnings("ignore")
 
@@ -75,7 +78,7 @@ lgbm_model = LGBMClassifier(
 lgbm_model.fit(X_train, y_train)
 
 # --- 4. FUNCIÓN DE EVALUACIÓN ---
-def evaluar_sistema(y_real, y_pred, nombre):
+def evaluar_sistema(y_real, y_pred, nombre, is_ensemble=False):
     acc = accuracy_score(y_real, y_pred)
     rec_high = recall_score(
         y_real, y_pred, labels=[2], average="macro"
@@ -103,6 +106,20 @@ def evaluar_sistema(y_real, y_pred, nombre):
     plt.xlabel("Predicción")
     plt.tight_layout()
     plt.savefig(f"artifacts/confusion_matrix_{nombre.replace(' ', '_')}.png")
+    
+    # Loguear experimento
+    if not is_ensemble:
+        archivo = f"{nombre.replace(' ', '_').lower()}.pkl"
+    else:
+        archivo = "modelo_ensemble.pkl"
+        
+    tracker.log_experiment(
+        model_name=nombre,
+        metrics={"Accuracy": acc, "Recall_High": rec_high},
+        features=features,
+        dataset_path=RUTA_DATA,
+        model_path=os.path.join(SAVE_DIR, archivo)
+    )
 
 # --- 5. LÓGICA DE ENSAMBLE CLÍNICO (Súper Sensible) ---
 def obtener_preds_ensamble(modelos, X_input, umbral_alto=0.15):
@@ -131,7 +148,7 @@ evaluar_sistema(y_test, lgbm_model.predict(X_test), "LightGBM")
 
 print("\nCALCULANDO ENSAMBLE CON MARCADORES CLÍNICOS...")
 y_pred_ensamble = obtener_preds_ensamble([rf_model, xgb_model, lgbm_model], X_test)
-evaluar_sistema(y_test, y_pred_ensamble, "Ensamble Final (Máxima Seguridad)")
+evaluar_sistema(y_test, y_pred_ensamble, "Ensamble Final (Máxima Seguridad)", is_ensemble=True)
 
 # --- 7. GUARDADO ---
 # EN LUGAR DE GUARDAR LAS PREDICCIONES, GUARDA UNA LISTA CON LOS 3 MODELOS

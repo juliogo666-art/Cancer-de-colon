@@ -15,6 +15,7 @@ from torchvision import datasets, models, transforms
 from torch.utils.data import DataLoader, random_split
 from sklearn.metrics import precision_score, recall_score, f1_score
 from PIL import ImageFile
+from src.tracking.experiment_tracker import ExperimentTracker
 
 # Para evitar errores si hay imágenes corruptas o truncadas en el dataset original
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -208,6 +209,13 @@ def train_biopsy_model():
 
     epochs = 10  # Veces que el modelo verá todos los datos del dataset
     best_val_loss = float("inf")
+    
+    training_history = {
+        "train_loss": [],
+        "val_loss": [],
+        "val_accuracy": [],
+        "val_f1": []
+    }
 
     # Preparamos rutas relativas para el guardado
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -255,6 +263,12 @@ def train_biopsy_model():
             f"Val F1: {val_metrics['f1']:.4f}"
         )
 
+        # Guardamos estadísticas para el historial
+        training_history["train_loss"].append(train_loss)
+        training_history["val_loss"].append(val_metrics['loss'])
+        training_history["val_accuracy"].append(val_metrics['accuracy'])
+        training_history["val_f1"].append(val_metrics['f1'])
+
         # Guardamos el modelo solo cuando se supere a si mismo (Mejor Pérdida / Loss de Validación)
         if val_metrics["loss"] < best_val_loss:
             best_val_loss = val_metrics["loss"]
@@ -277,6 +291,19 @@ def train_biopsy_model():
     # Guardo una copia de la versión de la última época por si nos interesase analizar sobreajuste.
     torch.save(model.state_dict(), final_model_path)
     print(f"\nFinalizado. Check Final guardado en: {final_model_path}")
+    
+    # Registro en el Tracker
+    tracker = ExperimentTracker()
+    tracker.log_experiment(
+        model_name="BiopsyResNet18",
+        metrics=test_metrics,
+        hyperparameters={"epochs": epochs, "learning_rate": 1e-4, "batch_size": 32},
+        dataset_path=DATA_DIR,
+        model_path=best_model_path,
+        train_size=train_size,
+        test_size=test_size,
+        training_history=training_history
+    )
 
 
 if __name__ == "__main__":

@@ -65,6 +65,12 @@ class Settings:
             RAIZ_DEL_PROYECTO, "src", "data", "ready", "pacientes_master.csv"
         )
 
+        # CSV de factores de riesgo limpio para entrenamiento del modelo ML
+        # Contiene las 11 features + Risk_Level_n como target
+        self.CSV_RISK_PATH = os.path.join(
+            RAIZ_DEL_PROYECTO, "src", "data", "clean", "cancer_risk_final.csv"
+        )
+
         ##########################################################################
         # Rutas a modelos de IA
         ##########################################################################

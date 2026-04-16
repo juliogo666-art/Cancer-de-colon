@@ -12,6 +12,16 @@ Arrancar con:
 """
 
 import streamlit as st
+
+# IMPORTANTE: set_page_config debe ser la primera llamada a Streamlit.
+# Si se coloca despues de otros widgets (columns, selectbox...),
+# Streamlit lanza un error o warning.
+st.set_page_config(
+    page_title="Galeno - Cancer de Colon",
+    page_icon="",
+    layout="wide",
+)
+
 import os
 import sys
 import yaml
@@ -51,18 +61,9 @@ except Exception as e:
     modelo_ensemble = None
     print(f"No se pudo cargar el modelo ensemble para SHAP: {e}")
 
-# =============================================================================
-# Configuración Inicial y Carga de Rutas
-# =============================================================================
-
-# Definimos las rutas relativas para poder importar la configuración general
-directorio_actual = os.path.dirname(os.path.abspath(__file__))
-directorio_raiz = os.path.dirname(os.path.dirname(directorio_actual))
-sys.path.append(directorio_raiz)
-
-
 # URL base de nuestra API (FastAPI) a la que le haremos las peticiones HTTP
 API_BASE_URL = "http://localhost:8000/api/v1"
+
 
 # =============================================================================
 # Carga de Idiomas (Internacionalización)
@@ -94,14 +95,8 @@ with col_idioma:
 textos = traducciones[idioma_seleccionado]
 
 # =============================================================================
-# Configuración de la Página de Streamlit
+# Estilos Visuales (CSS)
 # =============================================================================
-
-st.set_page_config(
-    page_title="Galeno - Cáncer de Colon",
-    page_icon="⚕️",
-    layout="wide",
-)
 
 # Estilo visual (Blanco y Verde Clínico)
 st.markdown(
@@ -120,11 +115,13 @@ st.markdown(
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
     }
-    .stTabs [data-baseweb="tab-list"] { gap: 24px; background-color: #f8fafc; padding: 0 20px; border-radius: 12px 12px 0 0; }
-    .stTabs [data-baseweb="tab"] { height: 50px; color: #64748b; }
-    .stTabs [aria-selected="true"] { color: #22c55e !important; border-bottom-color: #22c55e !important; font-weight: bold; }
+    .stTabs [data-baseweb="tab-list"] { gap: 24px; background-color: #0f172a; padding: 0 20px; border-radius: 12px 12px 0 0; }
+    .stTabs [data-baseweb="tab"] { height: 50px; color: #cbd5e1; }
+    .stTabs [aria-selected="true"] { color: #ffffff !important; border-bottom-color: #22c55e !important; background-color: #1e293b !important; font-weight: bold; border-radius: 8px 8px 0 0; }
     .stTextInput>div>div>input, .stSelectbox>div>div>div { border-radius: 8px; border: 1px solid #e2e8f0; }
     .stTextInput>div>div>input:focus { border-color: #22c55e; box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); }
+    [data-testid="stFileUploaderFileName"] { color: #0f172a !important; }
+    [data-testid="stFileUploaderFile"] { color: #0f172a !important; }
     h1, h2, h3, h4, [data-testid="stHeader"] { color: #0f172a !important; font-family: 'Inter', sans-serif !important; }
     .main-title { color: #0f172a; font-size: 3rem !important; font-weight: 800 !important; margin-bottom: 0.5rem !important; }
     .main-subtitle { color: #64748b; font-size: 1.1rem; margin-bottom: 2rem; }
@@ -437,22 +434,22 @@ with pestana_datos:
     val_bmi = 0.0
     if val_altura > 0:
         val_bmi = round(val_peso / ((val_altura / 100.0) ** 2), 2)
-    
+
     st.markdown(f"**{textos['habits_header']}**")
     c_hab1, c_hab2, c_hab3 = st.columns(3)
-    val_Fumar = c_hab1.number_input(
+    valor_tabaquismo = c_hab1.number_input(
         textos["smoking"],
         min_value=0,
         max_value=10,
         value=st.session_state.form_datos_paciente["smoking"],
     )
-    val_Alcohol = c_hab2.number_input(
+    valor_consumo_alcohol = c_hab2.number_input(
         textos["alcohol"],
         min_value=0,
         max_value=10,
         value=st.session_state.form_datos_paciente["alcohol_use"],
     )
-    val_Obesidad = c_hab3.number_input(
+    valor_nivel_obesidad = c_hab3.number_input(
         textos["obesity"],
         min_value=0,
         max_value=10,
@@ -492,21 +489,19 @@ with pestana_datos:
     val_familia = c_fac1.checkbox(
         textos["family"], value=st.session_state.form_datos_paciente["family_history"]
     )
-    
+
     st.markdown("**Analíticas Confirmadas (Dejar en Blanco si Triaje)**")
     c_ana1, c_ana2 = st.columns(2)
-    
+
     fobt_opts = ["Desconocido (-)", "Negativo", "Positivo"]
     fobt_opt_idx = 0
     if st.session_state.form_datos_paciente["fobt_resultado_n"] == 0:
         fobt_opt_idx = 1
     elif st.session_state.form_datos_paciente["fobt_resultado_n"] == 1:
         fobt_opt_idx = 2
-        
+
     val_fobt_ui = c_ana1.selectbox(
-        "Prueba sangre oculta heces (FOBT)",
-        fobt_opts,
-        index=fobt_opt_idx
+        "Prueba sangre oculta heces (FOBT)", fobt_opts, index=fobt_opt_idx
     )
     # Re-mapeo visual a valor numérico
     if val_fobt_ui == "Negativo":
@@ -519,19 +514,18 @@ with pestana_datos:
     cea_input_str = ""
     if st.session_state.form_datos_paciente["cea_level_ng_ml"] >= 0:
         cea_input_str = str(st.session_state.form_datos_paciente["cea_level_ng_ml"])
-        
+
     val_cea_ui = c_ana2.text_input(
         "Marcador tumoral CEA (ng/mL)",
         value=cea_input_str,
-        placeholder="Ej: 3.42 (Dejar vacío si no hay)"
+        placeholder="Ej: 3.42 (Dejar vacío si no hay)",
     )
-    
+
     try:
         val_cea_num = float(val_cea_ui)
         st.session_state.form_datos_paciente["cea_level_ng_ml"] = val_cea_num
     except ValueError:
         st.session_state.form_datos_paciente["cea_level_ng_ml"] = -1.0
-
 
     st.divider()
 
@@ -557,17 +551,16 @@ with pestana_datos:
                 df_master.at[idx, "Gender"] = (
                     "Male" if val_genero == textos["gender_m"] else "Female"
                 )
-                df_master.at[idx, "Smoking"] = val_Fumar
-                df_master.at[idx, "Alcohol_Use"] = val_Alcohol
-                df_master.at[idx, "Obesity"] = val_Obesidad
+                df_master.at[idx, "Smoking"] = valor_tabaquismo
+                df_master.at[idx, "Alcohol_Use"] = valor_consumo_alcohol
+                df_master.at[idx, "Obesity"] = valor_nivel_obesidad
                 df_master.at[idx, "Family_History"] = 1 if val_familia else 0
                 df_master.at[idx, "Diet_Red_Meat"] = val_carne_roja
                 df_master.at[idx, "Diet_Salted_Processed"] = val_salados
                 df_master.at[idx, "Fruit_Veg_Intake"] = val_fruta
                 df_master.at[idx, "Physical_Activity"] = val_actividad
                 df_master.at[idx, "BMI"] = val_bmi
-                df_master.at[idx, "BMI"] = val_bmi
-                # No actualizamos manualmente Overall_Risk_Score ni Risk_Level_n 
+                # No actualizamos manualmente Overall_Risk_Score ni Risk_Level_n
                 # porque eso ahora solo se hace a través del botón "Calcular" (IA).
 
                 df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
@@ -585,19 +578,22 @@ with pestana_datos:
         # 1. Empaquetamos los datos en formato diccionario (JSON / Query params)
         parametros_api = {
             "patient_id": st.session_state.form_datos_paciente.get("patient_id") or 0,
-            "smoking": val_Fumar,
-            "alcohol_use": val_Alcohol,
-            "obesity": val_Obesidad,
+            "smoking": valor_tabaquismo,
+            "alcohol_use": valor_consumo_alcohol,
+            "obesity": valor_nivel_obesidad,
             "family_history": 1 if val_familia else 0,
             "diet_red_meat": val_carne_roja,
             "diet_salted_processed": val_salados,
             "fruit_veg_intake": val_fruta,
             "physical_activity": val_actividad,
             "bmi": val_bmi,
-            "fobt_resultado": st.session_state.form_datos_paciente.get("fobt_resultado_n", 0),
-            "cea_level": st.session_state.form_datos_paciente.get("cea_level_ng_ml", 0.0),
+            "fobt_resultado": st.session_state.form_datos_paciente.get(
+                "fobt_resultado_n", 0
+            ),
+            "cea_level": st.session_state.form_datos_paciente.get(
+                "cea_level_ng_ml", 0.0
+            ),
         }
-
 
         # 2. Hacemos la llamada HTTP a nuestra API de FastAPI que está sirviendo los modelos
         try:
@@ -616,8 +612,12 @@ with pestana_datos:
                 recomendacion = datos_respuesta.get("recommendation", "")
 
                 # Actualizar el riesgo en el state de manera oculta
-                st.session_state.form_datos_paciente["risk_level"] = nivel_riesgo_devuelto
-                st.session_state.form_datos_paciente["overall_risk_score"] = score_riesgo_devuelto
+                st.session_state.form_datos_paciente["risk_level"] = (
+                    nivel_riesgo_devuelto
+                )
+                st.session_state.form_datos_paciente["overall_risk_score"] = (
+                    score_riesgo_devuelto
+                )
 
                 st.success(
                     f"Análisis completado. Nivel estimado: {nivel_riesgo_devuelto}"
@@ -646,9 +646,9 @@ with pestana_datos:
                 if modelo_ensemble is not None:
                     # Construir el array de features en el orden correcto
                     features_array = [
-                        val_Fumar,
-                        val_Alcohol,
-                        val_Obesidad,
+                        valor_tabaquismo,
+                        valor_consumo_alcohol,
+                        valor_nivel_obesidad,
                         1 if val_familia else 0,
                         val_carne_roja,
                         val_salados,
@@ -656,19 +656,25 @@ with pestana_datos:
                         val_actividad,
                         val_bmi,
                         st.session_state.form_datos_paciente.get("fobt_resultado_n", 0),
-                        st.session_state.form_datos_paciente.get("cea_level_ng_ml", 0.0),
+                        st.session_state.form_datos_paciente.get(
+                            "cea_level_ng_ml", 0.0
+                        ),
                     ]
                     # Determinar la clase predicha como índice
                     clase_map = {"Low": 0, "Medium": 1, "High": 2}
                     clase_predicha = clase_map.get(nivel_riesgo_devuelto, 0)
-                    fig, df_importancia = generar_explicacion_shap(modelo_ensemble, [features_array], clase_predicha)
+                    fig, df_importancia = generar_explicacion_shap(
+                        modelo_ensemble, [features_array], clase_predicha
+                    )
                     if fig is not None and df_importancia is not None:
-                        st.markdown("### 🧬 Explicación del modelo (SHAP)")
+                        st.markdown("### Explicacion del modelo (SHAP)")
                         st.pyplot(fig)
                         st.write("Importancia de cada variable en tu predicción:")
                         st.dataframe(df_importancia)
                     else:
-                        st.warning("No se pudo generar la explicación SHAP para este caso.")
+                        st.warning(
+                            "No se pudo generar la explicación SHAP para este caso."
+                        )
                 else:
                     st.info("El modelo ensemble para SHAP no está disponible.")
 
@@ -708,9 +714,9 @@ with pestana_datos:
                 "peso_kg": val_peso,
                 "dni": dni_val,
                 "nuss": nuss_val,
-                "Smoking": val_Fumar,
-                "Alcohol_Use": val_Alcohol,
-                "Obesity": val_Obesidad,
+                "Smoking": valor_tabaquismo,
+                "Alcohol_Use": valor_consumo_alcohol,
+                "Obesity": valor_nivel_obesidad,
                 "Family_History": 1 if val_familia else 0,
                 "Diet_Red_Meat": val_carne_roja,
                 "Diet_Salted_Processed": val_salados,
@@ -721,10 +727,15 @@ with pestana_datos:
                 "Risk_Level": "Low",
                 "Risk_Level_n": 0,
                 "FOBT_Resultado": {-1: "Desconocido", 0: "Negativo", 1: "Positivo"}.get(
-                    st.session_state.form_datos_paciente["fobt_resultado_n"], "Desconocido"
+                    st.session_state.form_datos_paciente["fobt_resultado_n"],
+                    "Desconocido",
                 ),
-                "FOBT_Resultado_n": st.session_state.form_datos_paciente["fobt_resultado_n"],
-                "CEA_Level_ng_mL": st.session_state.form_datos_paciente["cea_level_ng_ml"],
+                "FOBT_Resultado_n": st.session_state.form_datos_paciente[
+                    "fobt_resultado_n"
+                ],
+                "CEA_Level_ng_mL": st.session_state.form_datos_paciente[
+                    "cea_level_ng_ml"
+                ],
             }
             df_master = pd.concat(
                 [df_master, pd.DataFrame([nuevo_registro])], ignore_index=True
@@ -761,9 +772,9 @@ with pestana_datos:
                             "Gender": "Male"
                             if val_genero == textos["gender_m"]
                             else "Female",
-                            "Smoking": val_Fumar,
-                            "Alcohol_Use": val_Alcohol,
-                            "Obesity": val_Obesidad,
+                            "Smoking": valor_tabaquismo,
+                            "Alcohol_Use": valor_consumo_alcohol,
+                            "Obesity": valor_nivel_obesidad,
                             "Family_History": 1 if val_familia else 0,
                             "Diet_Red_Meat": val_carne_roja,
                             "Diet_Salted_Processed": val_salados,
@@ -773,11 +784,22 @@ with pestana_datos:
                             "Overall_Risk_Score": 0.0,
                             "Risk_Level": "Low",
                             "Risk_Level_n": 0,
-                            "FOBT_Resultado": {-1: "Desconocido", 0: "Negativo", 1: "Positivo"}.get(
-                                st.session_state.form_datos_paciente["fobt_resultado_n"], "Desconocido"
+                            "FOBT_Resultado": {
+                                -1: "Desconocido",
+                                0: "Negativo",
+                                1: "Positivo",
+                            }.get(
+                                st.session_state.form_datos_paciente[
+                                    "fobt_resultado_n"
+                                ],
+                                "Desconocido",
                             ),
-                            "FOBT_Resultado_n": st.session_state.form_datos_paciente["fobt_resultado_n"],
-                            "CEA_Level_ng_mL": st.session_state.form_datos_paciente["cea_level_ng_ml"],
+                            "FOBT_Resultado_n": st.session_state.form_datos_paciente[
+                                "fobt_resultado_n"
+                            ],
+                            "CEA_Level_ng_mL": st.session_state.form_datos_paciente[
+                                "cea_level_ng_ml"
+                            ],
                         }
                         df_master = pd.concat(
                             [df_master, pd.DataFrame([nuevo_registro])],
@@ -887,12 +909,13 @@ with pestana_vision:
                                 or "BENIGNO" in diagnostico_final
                                 else "#ef4444"
                             )
+                            # Etiqueta resultado (Maligno o benigno + confianza + comentario)
                             st.markdown(
                                 f"""
                             <div style="background-color: #f8fafc; border-left: 5px solid {color_alerta}; padding: 15px; border-radius: 8px; margin-top: 20px;">
                                 <h3 style="margin-top: 0; color: #1e293b;">{diagnostico_final}</h3>
-                                <p style="font-size: 1.1em;">Confianza: <b>{confianza_final * 100:.1f}%</b></p>
-                                <p style="margin-bottom: 0;"><i>{recomendacion}</i></p>
+                                <p style="font-size: 1.1em;color: #1e293b;">Confianza: <b>{confianza_final * 100:.1f}%</b></p>
+                                <p style="margin-bottom: 0; color: #1e293b;"><i>{recomendacion}</i></p>
                             </div>
                             """,
                                 unsafe_allow_html=True,

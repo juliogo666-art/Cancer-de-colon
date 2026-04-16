@@ -675,10 +675,10 @@ def eda_datos_Kaggle_f(df):
         plt.close(fig_heat_small)
 
 def eda_datos_riesgo(df):
-    st.subheader("📊 Análisis Exploratorio de Factores de Riesgo")
+    st.subheader("Análisis Exploratorio de Factores de Riesgo")
 
     # 1. Heatmap
-    st.write("#### 🔥 Mapa de Calor de Correlaciones")
+    st.write("#### Mapa de Calor de Correlaciones")
     fig_corr, ax_corr = plt.subplots(figsize=(10, 8))
     df_numeric = df.select_dtypes(include=['number']) # Más robusto que enumerar float/int
     if not df_numeric.empty:
@@ -688,7 +688,7 @@ def eda_datos_riesgo(df):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.write("#### 🎯 Distribución de Niveles de Riesgo")
+        st.write("#### Distribución de Niveles de Riesgo")
         if 'Risk_Level' in df.columns:
             fig_risk, ax_risk = plt.subplots()
             # Corregido: hue=x para evitar el warning de palette
@@ -697,14 +697,14 @@ def eda_datos_riesgo(df):
             st.pyplot(fig_risk)
 
     with col2:
-        st.write("#### 📈 Distribución del Score Global")
+        st.write("#### Distribución del Score Global")
         if 'Overall_Risk_Score' in df.columns:
             fig_score, ax_score = plt.subplots()
             sns.histplot(df['Overall_Risk_Score'], kde=True, color='skyblue', ax=ax_score)
             st.pyplot(fig_score)
 
     # 4. Boxplot corregido para evitar Warnings
-    st.write("#### ⚖️ Impacto del BMI según el Nivel de Riesgo")
+    st.write("#### Impacto del BMI según el Nivel de Riesgo")
     if 'BMI' in df.columns and 'Risk_Level' in df.columns:
         fig_box, ax_box = plt.subplots(figsize=(8, 5))
         sns.boxplot(data=df, x='Risk_Level', y='BMI', hue='Risk_Level', palette='Set2', 

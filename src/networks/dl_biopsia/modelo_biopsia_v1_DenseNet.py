@@ -61,6 +61,12 @@ transform_eval = transforms.Compose(
 
 
 class TransformSubset(torch.utils.data.Dataset):
+    """
+    Clase auxiliar para aplicar transformaciones (data augmentation) 
+    solamente a un subconjunto específico de datos (train, val o test).
+    Esto soluciona el problema de PyTorch donde random_split hereda 
+    la misma transformación para todos los splits.
+    """
     def __init__(self, subset, transform):
         self.subset = subset
         self.transform = transform
@@ -96,6 +102,11 @@ class DenseNetClassifier(nn.Module):
 #####################################################################################################
 
 def evaluate_model(model, data_loader, criterion, device):
+    """
+    Evalúa el modelo en un conjunto de datos dado (validación o test).
+    Calcula la pérdida (loss) y varias métricas clínicas clave:
+    accuracy, precision, recall y f1-score.
+    """
     model.eval()
     running_loss = 0.0
     all_preds = []
@@ -164,9 +175,13 @@ def train_biopsy_model():
     epochs = 10 
     best_val_loss = float("inf")
 
-    model_dir = os.path.dirname(os.path.abspath(__file__))
-    best_model_path = os.path.join(model_dir, "biopsia_densenet121_best.pth")
-    final_model_path = os.path.join(model_dir, "biopsia_densenet121_final.pth")
+    # Corregimos la ruta de guardado para que vaya a la carpeta centralizada de pesos
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    weights_dir = os.path.join(project_root, "artifacts", "weights")
+    os.makedirs(weights_dir, exist_ok=True)
+    
+    best_model_path = os.path.join(weights_dir, "biopsia_densenet121_best.pth")
+    final_model_path = os.path.join(weights_dir, "biopsia_densenet121_final.pth")
 
     print("\n-------------------- Empezando Entrenamiento DenseNet --------------------")
     for epoch in range(epochs):

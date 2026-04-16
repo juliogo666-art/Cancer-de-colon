@@ -195,5 +195,7 @@ async def lifespan(app: FastAPI):
     # Cleanup al parar
     print("[INFO] Liberando recursos de modelos...")
     app.state.modelo_ml = None
+    app.state.modelo_ml_triage = None
     app.state.modelo_cnn = None
     app.state.modelo_biopsia = None
+

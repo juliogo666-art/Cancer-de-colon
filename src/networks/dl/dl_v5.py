@@ -69,6 +69,21 @@ val_gen = datagen.flow_from_directory(
 
 # --- 3. CONSTRUCCIÓN DEL MODELO ---
 def crear_modelo_completo():
+    """
+    Crea un modelo de red neuronal de doble rama (ensemble interno):
+    
+    - RAMA A (MobileNetV2): Usa transfer learning de un modelo preentrenado 
+      en ImageNet para extraer características generales de alto nivel (bordes, texturas).
+      Se congela (trainable=False) para evitar sobreajuste y acelerar entrenamiento.
+      
+    - RAMA B (CNN Personalizada): Red convolucional simple entrenada desde cero,
+      diseñada para captar características específicas de las imágenes médicas
+      (ej. patrones de color o morfología de los pólipos).
+      
+    Las características de ambas ramas se concatenan y procesan juntas
+    por una red densa final con regularización L2 y alta tasa de Dropout (0.6)
+    para minimizar el sobreajuste.
+    """
     input_layer = Input(shape=(150, 150, 3))
 
     # RAMA A: MobileNetV2

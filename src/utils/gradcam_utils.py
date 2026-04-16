@@ -114,6 +114,7 @@ def generate_gradcam(model, img_pil, target_layer):
 
     return superimposed_img_rgb, prob
 
+
 def generate_gradcam_colon(model, img_array):
     """
     Versión blindada contra errores de 'output_shape' en Keras 3.
@@ -151,14 +152,13 @@ def generate_gradcam_colon(model, img_array):
 
     # 3. Construir el modelo de gradientes
     grad_model = tf.keras.models.Model(
-        [model.inputs], 
-        [model.get_layer(last_conv_layer_name).output, model.output]
+        [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
     )
 
     with tf.GradientTape() as tape:
         last_conv_layer_output, preds = grad_model(img_pre)
         pred_val = preds[0][0]
-        
+
         # Clase 0 es Pólipo (según tu lógica < 0.5)
         # Si es pólipo, queremos ver qué activó esa probabilidad baja
         if pred_val < 0.5:
@@ -182,25 +182,35 @@ def generate_gradcam_colon(model, img_array):
     # 6. Post-procesado visual
     heatmap_resized = cv2.resize(heatmap, (150, 150))
     # Limpiamos ruido: solo mostramos el 30% superior de intensidad
-    heatmap_resized[heatmap_resized < 0.3] = 0 
-    
+    heatmap_resized[heatmap_resized < 0.3] = 0
+
     heatmap_color = cv2.applyColorMap(np.uint8(255 * heatmap_resized), cv2.COLORMAP_JET)
-    
+
     # Superposición
     img_cv = img_res.copy()
-    if img_cv.max() <= 1.0: img_cv = (img_cv * 255).astype(np.uint8)
-    
+    if img_cv.max() <= 1.0:
+        img_cv = (img_cv * 255).astype(np.uint8)
+
     superimposed = cv2.addWeighted(img_cv, 0.6, heatmap_color, 0.4, 0)
     superimposed_rgb = cv2.cvtColor(superimposed, cv2.COLOR_BGR2RGB)
 
     return superimposed_rgb, float(pred_val)
-    
+
+
 def generar_explicacion_shap(modelo, features_array, target_class):
     try:
         nombres_columnas = [
-            'Smoking', 'Alcohol_Use', 'Obesity', 'Family_History', 
-            'Diet_Red_Meat', 'Diet_Salted_Processed', 'Fruit_Veg_Intake', 
-            'Physical_Activity', 'BMI', 'FOBT_Resultado_n', 'CEA_Level_ng_mL'
+            "Smoking",
+            "Alcohol_Use",
+            "Obesity",
+            "Family_History",
+            "Diet_Red_Meat",
+            "Diet_Salted_Processed",
+            "Fruit_Veg_Intake",
+            "Physical_Activity",
+            "BMI",
+            "FOBT_Resultado_n",
+            "CEA_Level_ng_mL",
         ]
         X_df = pd.DataFrame(features_array, columns=nombres_columnas)
 
@@ -208,6 +218,14 @@ def generar_explicacion_shap(modelo, features_array, target_class):
         # para cada modelo y promediamos los valores. Esto evita errores
         # al pasar directamente una lista a TreeExplainer.
         def _extract_raw_shap(shap_values_obj, target_cls):
+            """
+            Extrae los valores raw de SHAP independientemente del formato devuelto 
+            por la librería, que puede variar según la versión de SHAP y el tipo de modelo:
+            - Puede ser una lista de arrays (uno por cada clase).
+            - Puede ser un tensor 3D de numpy [batch_size, num_features, num_classes].
+            - Puede ser una matriz 2D si hay múltiples muestras.
+            - Puede ser un vector plano 1D si es una sola muestra y modelo binario.
+            """
             if isinstance(shap_values_obj, list):
                 try:
                     return np.array(shap_values_obj[target_cls][0])
@@ -253,28 +271,34 @@ def generar_explicacion_shap(modelo, features_array, target_class):
         # Usamos el valor absoluto para entender cuánto "pesa" cada variable
         abs_shap = np.abs(raw_shap)
         total_impact = np.sum(abs_shap)
-        
+
         influencia = []
         for i in range(len(nombres_columnas)):
             porcentaje = (abs_shap[i] / total_impact * 100) if total_impact > 0 else 0
-            influencia.append({
-                "Variable": nombres_columnas[i],
-                "Impacto": f"{porcentaje:.1f}%",
-                "Sentido": "Sube riesgo" if raw_shap[i] > 0 else "Baja riesgo"
-            })
-        
-        df_importancia = pd.DataFrame(influencia).sort_values(by="Impacto", ascending=False)
+            influencia.append(
+                {
+                    "Variable": nombres_columnas[i],
+                    "Impacto": f"{porcentaje:.1f}%",
+                    "Sentido": "Sube riesgo" if raw_shap[i] > 0 else "Baja riesgo",
+                }
+            )
+
+        df_importancia = pd.DataFrame(influencia).sort_values(
+            by="Impacto", ascending=False
+        )
 
         # 3. Crear Gráfico
         fig, ax = plt.subplots(figsize=(10, 5))
         plt.gcf().set_facecolor("#ffffff")
         ax.set_facecolor("#ffffff")
-        
-        shap.bar_plot(raw_shap, feature_names=nombres_columnas, max_display=11, show=False)
-        plt.title("Factores que definen tu perfil de riesgo", color="white")
-        
+
+        shap.bar_plot(
+            raw_shap, feature_names=nombres_columnas, max_display=11, show=False
+        )
+        plt.title("Factores que definen tu perfil de riesgo", color="black")
+
         return fig, df_importancia
-        
+
     except Exception as e:
         print(f"Error SHAP: {e}")
         return None, None
