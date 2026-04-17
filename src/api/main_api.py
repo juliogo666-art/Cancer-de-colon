@@ -130,7 +130,9 @@ async def predict_risk(
     fobt_resultado: int = Query(
         ..., ge=-1, le=1, description="FOBT (-1=Desc, 0=Neg, 1=Pos)"
     ),
-    cea_level: float = Query(..., ge=-1.0, description="Nivel CEA en ng/mL (-1.0=Desc)"),
+    cea_level: float = Query(
+        ..., ge=-1.0, description="Nivel CEA en ng/mL (-1.0=Desc)"
+    ),
 ):
     """
     Predice el nivel de riesgo de cáncer de colon a partir de factores clínicos.
@@ -141,29 +143,52 @@ async def predict_risk(
         # TRIAGE MODEL (No Analytics)
         modelo = getattr(request.app.state, "modelo_ml_triage", None)
         if modelo is None:
-            raise HTTPException(status_code=503, detail="Modelo ML de triaje no disponible.")
-            
-        features = np.array([
+            raise HTTPException(
+                status_code=503, detail="Modelo ML de triaje no disponible."
+            )
+
+        features = np.array(
             [
-                smoking, alcohol_use, obesity, family_history, diet_red_meat,
-                diet_salted_processed, fruit_veg_intake, physical_activity, bmi
+                [
+                    smoking,
+                    alcohol_use,
+                    obesity,
+                    family_history,
+                    diet_red_meat,
+                    diet_salted_processed,
+                    fruit_veg_intake,
+                    physical_activity,
+                    bmi,
+                ]
             ]
-        ])
+        )
         features_dict = dict(zip(ML_FEATURE_NAMES[:9], features[0].tolist()))
-        
+
     else:
         # FULL CLINICAL MODEL
         modelo = getattr(request.app.state, "modelo_ml", None)
         if modelo is None:
-            raise HTTPException(status_code=503, detail="Modelo ML clínico no disponible.")
+            raise HTTPException(
+                status_code=503, detail="Modelo ML clínico no disponible."
+            )
 
-        features = np.array([
+        features = np.array(
             [
-                smoking, alcohol_use, obesity, family_history, diet_red_meat,
-                diet_salted_processed, fruit_veg_intake, physical_activity, bmi,
-                fobt_resultado, cea_level
+                [
+                    smoking,
+                    alcohol_use,
+                    obesity,
+                    family_history,
+                    diet_red_meat,
+                    diet_salted_processed,
+                    fruit_veg_intake,
+                    physical_activity,
+                    bmi,
+                    fobt_resultado,
+                    cea_level,
+                ]
             ]
-        ])
+        )
         features_dict = dict(zip(ML_FEATURE_NAMES, features[0].tolist()))
 
     try:
@@ -182,7 +207,7 @@ async def predict_risk(
         # Registro de auditoría
         risk_lvl = RISK_LEVEL_MAP.get(clase_predicha, "Unknown")
         max_prob = float(np.max(probabilidades))
-        
+
         # Crear recomendación
         recomendacion = ""
         if fobt_resultado == -1 or cea_level == -1.0:
@@ -191,7 +216,9 @@ async def predict_risk(
             if risk_lvl in ["Medium", "High"]:
                 recomendacion = "Riesgo elevado confirmado por marcadores analiticos. Se recomienda derivacion urgente para COLONOSCOPIA."
             else:
-                recomendacion = "Riesgo bajo. Mantener controles rutinarios y habitos saludables."
+                recomendacion = (
+                    "Riesgo bajo. Mantener controles rutinarios y habitos saludables."
+                )
 
         logger.log_risk_prediction(
             patient_id=patient_id,
@@ -227,7 +254,7 @@ async def predict_risk(
 
 @app.post("/api/v1/analyze/colonoscopy", tags=["Análisis de Imagen"])
 async def analyze_colonoscopy(
-    request: Request, 
+    request: Request,
     file: UploadFile = File(...),
     patient_id: Optional[int] = Query(None, description="ID del paciente (opcional)"),
 ):
@@ -272,7 +299,7 @@ async def analyze_colonoscopy(
             pass  # Si falla Grad-CAM, devolvemos resultado sin heatmap
 
         diagnosis_text = "POLIPO DETECTADO" if es_polipo else "TEJIDO SANO"
-        
+
         # Registro de auditoría
         logger.log_image_prediction(
             analysis_type="colonoscopy",
@@ -288,7 +315,7 @@ async def analyze_colonoscopy(
             "confidence": round(confianza, 4),
             "raw_prediction": round(pred_val, 4),
             "recommendation": (
-                "Se recomienda revisión inmediata por especialista."
+                "Revisión inmediata por especialista y con su aprobación realizar biopsia."
                 if es_polipo
                 else "No se observan anomalías evidentes."
             ),
@@ -304,7 +331,7 @@ async def analyze_colonoscopy(
 
 @app.post("/api/v1/analyze/biopsy", tags=["Análisis de Imagen"])
 async def analyze_biopsy(
-    request: Request, 
+    request: Request,
     file: UploadFile = File(...),
     patient_id: Optional[int] = Query(None, description="ID del paciente (opcional)"),
 ):
@@ -355,7 +382,9 @@ async def analyze_biopsy(
         except Exception:
             pass
 
-        diagnosis_text = "BENIGNO (NORMAL)" if es_benigno else "MALIGNO (ADENOCARCINOMA)"
+        diagnosis_text = (
+            "BENIGNO (NORMAL)" if es_benigno else "MALIGNO (ADENOCARCINOMA)"
+        )
 
         # Registro de auditoría
         logger.log_image_prediction(
@@ -374,7 +403,7 @@ async def analyze_biopsy(
             "recommendation": (
                 "Tejido dentro de los parámetros normales."
                 if es_benigno
-                else "Sospecha de malignidad. Se recomienda estudio histopatológico completo."
+                else "Sospecha de malignidad. Se debe hacer un estudio histopatológico completo."
             ),
             "gradcam_base64": heatmap_b64,
         }
