@@ -42,7 +42,7 @@ def eda(base_path):
 
     file_path_kaggle_f = os.path.join(ruta_historial, "datos_finales_Kaggle.csv")
 
-    file_path_riesgo = os.path.join(ruta_historial, "historiales_factor_riesgo", "cancer_risk_clean.csv")
+    file_path_riesgo = os.path.join(base_path, "src", "data", "clean", "cancer_risk_final.csv")
     file_path_risego_clean = os.path.join(ruta_historial, "historiales_factor_riesgo", "cancer_risk_factors_augmented.csv")
 
     # Menú lateral para navegación
