@@ -5004,3 +5004,4 @@ Patient_ID,Gender,City,Country,nombre,apellido1,apellido2,Age,altura_cm,peso_kg,
 5002,Male,Barceloma,Spain,Juan,primero,devista,49,175.0,75.0,12345677A,81111111123,2,2,1,0,4,7,1,2,24.49,0.0,Low,0,Desconocido,-1,-1.0
 5003,Male,Barcelona,España,Anchon,herrero,lopez,50,175.0,72.0,39028885L,81111111111,0,0,0,0,2,1,8,5,23.51,0.0,Low,0,Desconocido,-1,-1.0
 5004,Male,Barcelona,España,Pol,Perez,Sanchez,50,185.0,80.0,48234567P,81234567411,0,0,1,0,4,2,6,8,23.37,0.0,Low,0,Desconocido,-1,-1.0
+5005,Male,Barcelona,España,Lucas,Rodriguez,Perez,48,174.0,102.0,28097558L,87777777777,8,7,8,1,9,8,1,1,33.69,0.0,Low,0,Desconocido,-1,-1.0

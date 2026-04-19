@@ -30,6 +30,7 @@ Uso:
 
 import os
 import json
+import logging
 from datetime import datetime
 from typing import Any, Optional
 
@@ -37,6 +38,9 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+
+logging.basicConfig(level=logging.INFO, format='[%(levelname)s] [%(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger(__name__)
 
 from src.metrics import (
     AccuracyMetric,
@@ -133,7 +137,7 @@ class TrainingPipeline:
         -------
         self (para encadenamiento)
         """
-        print(f"[INFO] Cargando datos desde: {self.csv_path}")
+        logger.info(f"Cargando datos desde: {self.csv_path}")
         self.df = pd.read_csv(self.csv_path)
 
         # Verificar que las columnas existen
@@ -151,10 +155,10 @@ class TrainingPipeline:
             X, y, test_size=self.test_size, random_state=self.random_state, stratify=y
         )
 
-        print(f"[INFO] Datos cargados: {len(self.df)} registros")
-        print(f"[INFO] Split: {len(self.X_train)} train / {len(self.X_test)} test")
-        print(f"[INFO] Features: {self.features}")
-        print(f"[INFO] Target: {self.target_col}")
+        logger.info(f"Datos cargados: {len(self.df)} registros")
+        logger.info(f"Split: {len(self.X_train)} train / {len(self.X_test)} test")
+        logger.info(f"Features: {self.features}")
+        logger.info(f"Target: {self.target_col}")
 
         return self
 
@@ -181,7 +185,7 @@ class TrainingPipeline:
             raise RuntimeError("Ejecuta load_and_prepare() primero.")
 
         # Entrenamiento
-        print(f"\n[ENTRENANDO] {model_name}...")
+        logger.info(f"\n[ENTRENANDO] {model_name}...")
         model.fit(self.X_train, self.y_train)
 
         # Predicción
@@ -238,7 +242,7 @@ class TrainingPipeline:
         # Guardar modelo
         model_path = os.path.join(output_dir, f"{filename}.pkl")
         joblib.dump(model, model_path)
-        print(f"[GUARDADO] Modelo → {model_path}")
+        logger.info(f"[GUARDADO] Modelo → {model_path}")
 
         # Guardar métricas
         if save_metrics and self.eval_pipeline.results:
@@ -255,7 +259,7 @@ class TrainingPipeline:
 
             with open(metrics_path, "w", encoding="utf-8") as f:
                 json.dump(serializable, f, indent=2, ensure_ascii=False, default=str)
-            print(f"[GUARDADO] Métricas → {metrics_path}")
+            logger.info(f"[GUARDADO] Métricas → {metrics_path}")
 
         return model_path
 

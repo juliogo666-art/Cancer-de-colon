@@ -61,3 +61,7 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-16T23:48:34.871405,risk_ml,4999,Riesgo: Low,0.9996,0.0052,Low,"{'Smoking': 7.0, 'Alcohol_Use': 1.0, 'Obesity': 9.0, 'Family_History': 0.0, 'Diet_Red_Meat': 6.0, 'Diet_Salted_Processed': 2.0, 'Fruit_Veg_Intake': 9.0, 'Physical_Activity': 8.0, 'BMI': 28.78, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 0.0}"
 2026-04-17T13:36:50.222461,image_colonoscopy,,POLIPO DETECTADO,0.9953,,,image: 000012.jpg
 2026-04-17T13:47:26.856878,image_biopsy,,MALIGNO (ADENOCARCINOMA),0.9997,,,image: GT2001838-1-400-003.png
+2026-04-19T22:49:20.697948,risk_ml,,Riesgo: High,0.9787,0.9928,High,"{'Smoking': 8.0, 'Alcohol_Use': 7.0, 'Obesity': 8.0, 'Family_History': 1.0, 'Diet_Red_Meat': 9.0, 'Diet_Salted_Processed': 8.0, 'Fruit_Veg_Intake': 1.0, 'Physical_Activity': 1.0, 'BMI': 33.69}"
+2026-04-19T22:49:36.532445,risk_ml,5005,Riesgo: High,0.9787,0.9928,High,"{'Smoking': 8.0, 'Alcohol_Use': 7.0, 'Obesity': 8.0, 'Family_History': 1.0, 'Diet_Red_Meat': 9.0, 'Diet_Salted_Processed': 8.0, 'Fruit_Veg_Intake': 1.0, 'Physical_Activity': 1.0, 'BMI': 33.69}"
+2026-04-19T22:50:39.037705,image_colonoscopy,5005,TEJIDO SANO,0.7978,,,image: 000006.jpg
+2026-04-19T22:51:02.943974,image_biopsy,5005,BENIGNO (NORMAL),0.9998,,,image: GT2001814-1-400-001.png

@@ -58,6 +58,9 @@ app.add_middleware(
 # Utilidades internas
 ###############################################################################
 
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
 
 def _image_to_base64(img_array: np.ndarray) -> str:
     """Convierte un array numpy (imagen RGB) a string base64 para JSON."""
@@ -90,9 +93,9 @@ async def health_check(request: Request):
     return {
         "status": "online",
         "models": {
-            "ml_clinico": request.app.state.modelo_ml is not None,
-            "cnn_colonoscopia": request.app.state.modelo_cnn is not None,
-            "resnet_biopsia": request.app.state.modelo_biopsia is not None,
+            "ml_clinico": getattr(request.app.state, "modelo_ml", None) is not None,
+            "cnn_colonoscopia": getattr(request.app.state, "modelo_cnn", None) is not None,
+            "resnet_biopsia": getattr(request.app.state, "modelo_biopsia", None) is not None,
         },
     }
 
@@ -276,6 +279,9 @@ async def analyze_colonoscopy(
 
         # 1. Leer imagen
         contents = await file.read()
+        if len(contents) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="El archivo excede el límite de 5MB.")
+            
         img_array = _read_upload_as_array(contents)
 
         # 2. Preprocesar (150x150 como en el entrenamiento)
@@ -348,6 +354,9 @@ async def analyze_biopsy(
     try:
         # 1. Leer imagen
         contents = await file.read()
+        if len(contents) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="El archivo excede el límite de 5MB.")
+            
         img_array = _read_upload_as_array(contents)
         img_pil = Image.fromarray(img_array)
 
