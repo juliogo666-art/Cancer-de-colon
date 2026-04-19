@@ -2,7 +2,7 @@
 
 ## Datos historial de pacientes
 
-### Datos de pacientes con cancer de colon
+### Datos de pacientes con cancer de colon ( descartados por no haber sanos)
 
 1.- Conjunto datos grupo pacientes con cancer de colon que han sido operados.
 
@@ -15,6 +15,16 @@
   3.- Conjutno de datos gobales --> Extendido a 167.497 filas --> Sin datos de españa
 
 - Enalce: https://www.kaggle.com/datasets/ankushpanday2/colorectal-cancer-global-dataset-and-predictions?select=colorectal_cancer_dataset.csv
+
+  4.- Conjunto de datos de pacientes con cáncer colorrectal, que incluye información demográfica, historial médico, factores de riesgo, diagnóstico, tratamiento y resultados de supervivencia.
+
+- Enlace: https://www.kaggle.com/datasets/ankushpanday2/colorectal-cancer-global-dataset-and-predictions?select=colorectal_cancer_dataset.csv
+
+## Factores de riesgo 
+
+  1.- Conjunto de datos de pacientes con factores de riesgo de cancer con un riesgo definido de cancer.
+
+- Enlace: https://www.kaggle.com/datasets/tarekmasryo/cancer-risk-factors-dataset
 
 ## Datos imagenes de microscopio de colon con y sin polipos
 
