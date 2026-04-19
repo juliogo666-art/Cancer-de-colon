@@ -1,0 +1,66 @@
+{
+  "a3a2fad4": {
+    "model_name": "LightGBM_Clinico",
+    "timestamp": "2026-04-19T23:40:11.348021",
+    "metrics": {
+      "Accuracy": 0.956088,
+      "Recall_Macro": 0.928098,
+      "F1_Macro": 0.932931
+    },
+    "hyperparameters": {
+      "n_estimators": 300,
+      "learning_rate": 0.02
+    },
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src\\data\\ready\\pacientes_master.csv",
+    "model_path": "artifacts\\weights\\lgbm_clinico.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "08873bb0": {
+    "model_name": "LightGBM_Triaje",
+    "timestamp": "2026-04-19T23:40:11.890931",
+    "metrics": {
+      "Accuracy": 0.889222,
+      "Recall_Macro": 0.825708,
+      "F1_Macro": 0.846921
+    },
+    "hyperparameters": {
+      "n_estimators": 300,
+      "learning_rate": 0.02
+    },
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI"
+    ],
+    "dataset_path": "src\\data\\ready\\pacientes_master.csv",
+    "model_path": "artifacts\\weights\\lgbm_triage.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  }
+}
