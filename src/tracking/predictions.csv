@@ -52,3 +52,12 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-16T17:39:36.828874,image_biopsy,,BENIGNO (NORMAL),0.9967,,,image: GT2012221-2-400-001.png
 2026-04-16T17:40:35.236403,image_colonoscopy,,POLIPO DETECTADO,0.9643,,,image: 000008.jpg
 2026-04-16T17:59:13.902901,image_colonoscopy,,POLIPO DETECTADO,0.9953,,,image: 000012.jpg
+2026-04-16T23:24:36.025092,risk_ml,,Riesgo: Low,0.9885,0.0104,Low,"{'Smoking': 1.0, 'Alcohol_Use': 3.0, 'Obesity': 1.0, 'Family_History': 0.0, 'Diet_Red_Meat': 3.0, 'Diet_Salted_Processed': 2.0, 'Fruit_Veg_Intake': 2.0, 'Physical_Activity': 5.0, 'BMI': 25.25}"
+2026-04-16T23:25:38.091646,risk_ml,,Riesgo: Low,0.9948,0.0074,Low,"{'Smoking': 0.0, 'Alcohol_Use': 2.0, 'Obesity': 1.0, 'Family_History': 0.0, 'Diet_Red_Meat': 2.0, 'Diet_Salted_Processed': 2.0, 'Fruit_Veg_Intake': 5.0, 'Physical_Activity': 5.0, 'BMI': 25.25}"
+2026-04-16T23:26:00.903791,risk_ml,,Riesgo: Low,0.9985,0.0058,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 0.0, 'Family_History': 0.0, 'Diet_Red_Meat': 2.0, 'Diet_Salted_Processed': 0.0, 'Fruit_Veg_Intake': 5.0, 'Physical_Activity': 5.0, 'BMI': 25.25}"
+2026-04-16T23:26:23.235949,risk_ml,,Riesgo: Low,0.9991,0.0055,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 0.0, 'Family_History': 0.0, 'Diet_Red_Meat': 0.0, 'Diet_Salted_Processed': 0.0, 'Fruit_Veg_Intake': 8.0, 'Physical_Activity': 7.0, 'BMI': 22.09}"
+2026-04-16T23:35:31.015235,risk_ml,,Riesgo: Low,0.9986,0.0058,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 0.0, 'Family_History': 0.0, 'Diet_Red_Meat': 2.0, 'Diet_Salted_Processed': 1.0, 'Fruit_Veg_Intake': 8.0, 'Physical_Activity': 5.0, 'BMI': 23.51}"
+2026-04-16T23:37:46.112260,risk_ml,5004,Riesgo: Low,0.9983,0.0059,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 1.0, 'Family_History': 0.0, 'Diet_Red_Meat': 4.0, 'Diet_Salted_Processed': 2.0, 'Fruit_Veg_Intake': 6.0, 'Physical_Activity': 8.0, 'BMI': 23.37}"
+2026-04-16T23:48:34.871405,risk_ml,4999,Riesgo: Low,0.9996,0.0052,Low,"{'Smoking': 7.0, 'Alcohol_Use': 1.0, 'Obesity': 9.0, 'Family_History': 0.0, 'Diet_Red_Meat': 6.0, 'Diet_Salted_Processed': 2.0, 'Fruit_Veg_Intake': 9.0, 'Physical_Activity': 8.0, 'BMI': 28.78, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 0.0}"
+2026-04-17T13:36:50.222461,image_colonoscopy,,POLIPO DETECTADO,0.9953,,,image: 000012.jpg
+2026-04-17T13:47:26.856878,image_biopsy,,MALIGNO (ADENOCARCINOMA),0.9997,,,image: GT2001838-1-400-003.png
