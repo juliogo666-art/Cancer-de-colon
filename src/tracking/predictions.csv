@@ -72,3 +72,4 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-20T18:34:35.747529,image_colonoscopy,,POLIPO DETECTADO,0.9349,,,image: 000001.jpg
 2026-04-20T18:39:04.692461,image_colonoscopy,,POLIPO DETECTADO,0.9676,,,image: 000002.jpg
 2026-04-20T18:39:42.692517,image_colonoscopy,,TEJIDO SANO,0.9101,,,image: 008629.png
+2026-04-20T19:32:45.972179,image_colonoscopy,,POLIPO DETECTADO,0.9636,,,image: 000007.jpg
