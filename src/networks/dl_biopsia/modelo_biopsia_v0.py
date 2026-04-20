@@ -199,9 +199,9 @@ def train_biopsy_model():
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=0)
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=0)
 
-    # Forzamos CPU debido a incompatibilidad temporal de drivers CUDA con RTX 50xx en esta versión de PyTorch
-    device = torch.device("cpu")
-    print(f"Entrenando usando: {device} (Forzado por compatibilidad)")
+    # Usar GPU si está disponible para acelerar dramáticamente el entrenamiento
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Entrenando usando: {device}")
 
     model = BiopsyClassifier().to(device)
     criterion = nn.BCEWithLogitsLoss()

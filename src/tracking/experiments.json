@@ -62,5 +62,131 @@
     "duration_seconds": null,
     "training_history": null,
     "notes": null
+  },
+  "faa27c57": {
+    "model_name": "BiopsyResNet18",
+    "timestamp": "2026-04-20T10:15:29.266098",
+    "metrics": {
+      "loss": 3.2e-05,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "hyperparameters": {
+      "epochs": 10,
+      "learning_rate": 0.0001,
+      "batch_size": 32
+    },
+    "features": [],
+    "dataset_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\src\\data\\raw\\colon_image_sets",
+    "model_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\artifacts\\checkpoints\\biopsia_resnet18_best.pth",
+    "train_size": 7000,
+    "test_size": 1500,
+    "duration_seconds": null,
+    "training_history": {
+      "train_loss": [
+        0.02823050553889437,
+        0.0056925051347323325,
+        0.0007689794164264445,
+        0.0017647156677263061,
+        0.0041814800872138945,
+        0.004221317746523875,
+        0.0009013442795632112,
+        0.0008386467351012313,
+        0.00010788379364534543,
+        8.233736829856648e-05
+      ],
+      "val_loss": [
+        0.0008014239748708279,
+        0.00028163028729706754,
+        6.482821684953029e-05,
+        0.00021260067521151096,
+        0.00021235764793249126,
+        0.00016367156323657912,
+        0.001002975256209964,
+        5.70383129904277e-05,
+        3.378750901166759e-05,
+        1.9063189396779598e-05
+      ],
+      "val_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "val_f1": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "notes": null
+  },
+  "b71088db": {
+    "model_name": "PolypResNet18",
+    "timestamp": "2026-04-20T10:32:15.271609",
+    "metrics": {
+      "loss": 0.646136,
+      "accuracy": 0.676596,
+      "precision": 0.674797,
+      "recall": 0.697479,
+      "f1": 0.68595
+    },
+    "hyperparameters": {
+      "epochs": 5,
+      "learning_rate": 0.0001,
+      "batch_size": 32
+    },
+    "features": [],
+    "dataset_path": "huggingface:nkasmanoff/kvasir-seg",
+    "model_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\artifacts\\weights\\polyp_resnet18_best.pth",
+    "train_size": 5476,
+    "test_size": 1175,
+    "duration_seconds": null,
+    "training_history": {
+      "train_loss": [
+        0.6743913254765577,
+        0.6475431681718937,
+        0.6398460234320441,
+        0.6382432155484377,
+        0.6294331652827041
+      ],
+      "val_loss": [
+        0.6608370212284295,
+        0.6309382295286333,
+        0.646981007344014,
+        0.6590988426595121,
+        0.6447225132504025
+      ],
+      "val_accuracy": [
+        0.6248934356351236,
+        0.6760443307757886,
+        0.6470588235294118,
+        0.659846547314578,
+        0.6717817561807332
+      ],
+      "val_f1": [
+        0.5426195426195426,
+        0.6735395189003437,
+        0.637478108581436,
+        0.6167146974063401,
+        0.6577777777777778
+      ]
+    },
+    "notes": null
   }
 }
