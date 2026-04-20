@@ -274,35 +274,40 @@ async def analyze_colonoscopy(
         )
 
     try:
-        import tensorflow as tf
-        from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-
         # 1. Leer imagen
         contents = await file.read()
-        if len(contents) > MAX_FILE_SIZE:
-            raise HTTPException(status_code=413, detail="El archivo excede el límite de 5MB.")
-            
         img_array = _read_upload_as_array(contents)
+        img_pil = Image.fromarray(img_array)
 
-        # 2. Preprocesar (150x150 como en el entrenamiento)
-        img_res = cv2.resize(img_array, (150, 150))
-        img_batch = np.expand_dims(img_res, axis=0).astype(np.float32)
-        img_preprocessed = preprocess_input(img_batch)
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)), # IMPORTANTE: Tu entrenamiento usa 224
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        input_tensor = transform(img_pil).unsqueeze(0)
 
-        # 3. Predicción
-        pred_val = float(modelo.predict(img_preprocessed, verbose=0)[0][0])
-        es_polipo = pred_val < 0.5
-        confianza = (1.0 - pred_val) if es_polipo else pred_val
+        # 2. INFERENCIA PURA EN PYTORCH
+        with torch.no_grad():
+            output = modelo(input_tensor)
+            # Como tu modelo ya tiene Sigmoid() al final, output es la probabilidad
+            prob = output.item()
 
-        # 4. Grad-CAM simplificado
+        # 3. INTERPRETACIÓN SEGÚN IMAGEFOLDER
+        # Clase 0: Polipo (alfabéticamente primero)
+        # Clase 1: Sano
+        es_polipo = prob < 0.5 
+        confianza = (1.0 - prob) if es_polipo else prob
+
+        # 4. Grad-CAM si el modelo está disponible y la capa objetivo existe
         heatmap_b64 = None
         try:
-            from src.utils.gradcam_utils import generate_gradcam_colon
+            from src.utils.gradcam_utils import generate_gradcam
 
-            heatmap_img, _ = generate_gradcam_colon(modelo, img_array)
+            target_layer = modelo.features[-1]
+            heatmap_img, _ = generate_gradcam(modelo, img_pil, target_layer)
             heatmap_b64 = _image_to_base64(heatmap_img)
         except Exception:
-            pass  # Si falla Grad-CAM, devolvemos resultado sin heatmap
+            pass
 
         diagnosis_text = "POLIPO DETECTADO" if es_polipo else "TEJIDO SANO"
 
@@ -319,7 +324,7 @@ async def analyze_colonoscopy(
             "diagnosis": diagnosis_text,
             "is_polyp": es_polipo,
             "confidence": round(confianza, 4),
-            "raw_prediction": round(pred_val, 4),
+            "raw_prediction": round(prob, 4),
             "recommendation": (
                 "Revisión inmediata por especialista y con su aprobación realizar biopsia."
                 if es_polipo

@@ -214,7 +214,7 @@ src/data/raw/colonoscopic_processed
 
 
 # No subir pesos de modelos (usar almacenamiento externo: Google Drive, HF Hub, etc.)
-*.pth
+# *.pth
 *.pkl
 *.joblib
 

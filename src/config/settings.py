@@ -88,7 +88,10 @@ class Settings:
         # Modelo de Deep Learning (CNN TensorFlow) para detectar pólipos en colonoscopia
         # Entrada: Imagen 150x150 → Salida: Pólipo / Sano
         self.MODEL_CNN_PATH = os.path.join(
-            RAIZ_DEL_PROYECTO, "artifacts", "weights", "modelo_pro_agresivo.keras"
+            RAIZ_DEL_PROYECTO,
+            "artifacts",
+            "weights",
+            "mejor_modelo_anti_overfit.pth",
         )
 
         # Modelo de Deep Learning (ResNet18 PyTorch) para clasificar biopsias

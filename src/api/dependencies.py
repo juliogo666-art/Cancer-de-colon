@@ -44,6 +44,38 @@ RISK_LEVEL_MAP = settings.RISK_LEVEL_MAP
 # Arquitectura del modelo de biopsias (PyTorch)
 ###############################################################################
 
+class ColonoscopyClassifier(nn.Module):
+    """
+    Clasificador binario MobileNetV2 para colonoscopia.
+    Arquitectura idéntica a la usada en el entrenamiento del modelo
+    `mejor_modelo_anti_overfit.pth`.
+    """
+
+    def __init__(self):
+        super(ColonoscopyClassifier, self).__init__()
+        self.base = models.mobilenet_v2(weights=None)
+
+        for param in self.base.parameters():
+            param.requires_grad = False
+
+        self.features = self.base.features
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.bn = nn.BatchNorm1d(1280)
+        self.classifier = nn.Sequential(
+            nn.Linear(1280, 256),
+            nn.ReLU(),
+            nn.Dropout(0.8),
+            nn.Linear(256, 1),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.pool(x).view(x.size(0), -1)
+        x = self.bn(x)
+        x = self.classifier(x)
+        return x
+
 
 class BiopsyClassifier(nn.Module):
     """
@@ -111,33 +143,26 @@ def load_triage_model(path: str = "artifacts/weights/lgbm_triage.pkl"):
 
 
 def load_cnn_model(path: str = MODEL_CNN_PATH):
-    """
-    Carga el modelo CNN de colonoscopia (TensorFlow/Keras).
-    Incluye parche de compatibilidad para Keras 3.
-    """
     if not os.path.exists(path):
         print(f"[AVISO] Modelo CNN no encontrado en: {path}")
         return None
 
     try:
-        import tensorflow as tf
-
-        # Parche de compatibilidad para Keras 3 (quantization_config)
-        original_dense_init = tf.keras.layers.Dense.__init__
-
-        def patched_dense_init(self, *args, **kwargs):
-            kwargs.pop("quantization_config", None)
-            return original_dense_init(self, *args, **kwargs)
-
-        tf.keras.layers.Dense.__init__ = patched_dense_init
-
-        modelo = tf.keras.models.load_model(path, compile=False)
-        print(f"[OK] Modelo CNN cargado desde {path}")
-        return modelo
+        model = ColonoscopyClassifier()
+        # Carga segura
+        state_dict = torch.load(path, map_location=torch.device("cpu"), weights_only=True)
+        
+        # Si el state_dict viene envuelto en un diccionario
+        if isinstance(state_dict, dict) and "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+            
+        model.load_state_dict(state_dict)
+        model.eval()
+        print(f"[OK] Modelo CNN de colonoscopia cargado desde {path}")
+        return model
     except Exception as e:
         print(f"[ERROR] Fallo al cargar modelo CNN: {e}")
         return None
-
 
 def load_biopsy_model(path: str = MODEL_BIOPSY_PATH):
     """Carga los pesos del clasificador ResNet18 de biopsias (PyTorch)."""

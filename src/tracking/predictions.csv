@@ -65,3 +65,10 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-19T22:49:36.532445,risk_ml,5005,Riesgo: High,0.9787,0.9928,High,"{'Smoking': 8.0, 'Alcohol_Use': 7.0, 'Obesity': 8.0, 'Family_History': 1.0, 'Diet_Red_Meat': 9.0, 'Diet_Salted_Processed': 8.0, 'Fruit_Veg_Intake': 1.0, 'Physical_Activity': 1.0, 'BMI': 33.69}"
 2026-04-19T22:50:39.037705,image_colonoscopy,5005,TEJIDO SANO,0.7978,,,image: 000006.jpg
 2026-04-19T22:51:02.943974,image_biopsy,5005,BENIGNO (NORMAL),0.9998,,,image: GT2001814-1-400-001.png
+2026-04-20T15:58:41.304014,image_colonoscopy,,TEJIDO SANO,0.9692,,,image: 000006.jpg
+2026-04-20T18:24:50.876213,image_colonoscopy,,TEJIDO SANO,0.7661,,,image: 008699.png
+2026-04-20T18:25:30.201302,image_colonoscopy,,TEJIDO SANO,0.6264,,,image: 0008645.png
+2026-04-20T18:25:51.938624,image_colonoscopy,,TEJIDO SANO,0.7684,,,image: 08086378.png
+2026-04-20T18:34:35.747529,image_colonoscopy,,POLIPO DETECTADO,0.9349,,,image: 000001.jpg
+2026-04-20T18:39:04.692461,image_colonoscopy,,POLIPO DETECTADO,0.9676,,,image: 000002.jpg
+2026-04-20T18:39:42.692517,image_colonoscopy,,TEJIDO SANO,0.9101,,,image: 008629.png
