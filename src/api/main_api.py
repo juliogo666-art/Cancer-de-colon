@@ -32,6 +32,7 @@ from src.api.dependencies import (
     lifespan,
 )
 from src.tracking.prediction_logger import PredictionLogger
+from src.utils.gradcam_utils import generate_gradcam_pytorch
 
 ###############################################################################
 # Inicialización
@@ -254,90 +255,73 @@ async def predict_risk(
 # Análisis de imagen (DL)
 ###############################################################################
 
-
 @app.post("/api/v1/analyze/colonoscopy", tags=["Análisis de Imagen"])
 async def analyze_colonoscopy(
     request: Request,
     file: UploadFile = File(...),
-    patient_id: Optional[int] = Query(None, description="ID del paciente (opcional)"),
+    patient_id: Optional[int] = Query(None),
 ):
-    """
-    Analiza una imagen de colonoscopia para detectar pólipos.
-
-    Devuelve la probabilidad, el diagnóstico y el mapa de calor Grad-CAM
-    codificado en base64.
-    """
     modelo = request.app.state.modelo_cnn
     if modelo is None:
-        raise HTTPException(
-            status_code=503, detail="Modelo CNN de colonoscopia no disponible."
-        )
+        raise HTTPException(status_code=503, detail="Modelo CNN no cargado.")
 
     try:
-        # 1. Leer imagen
+        # 1. Cargar imagen
         contents = await file.read()
-        img_array = _read_upload_as_array(contents)
-        img_pil = Image.fromarray(img_array)
+        img_array = np.frombuffer(contents, np.uint8)
+        img_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(img_rgb)
 
+        # 2. Inferencia (Predicción)
         transform = transforms.Compose([
-            transforms.Resize((224, 224)), # IMPORTANTE: Tu entrenamiento usa 224
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         input_tensor = transform(img_pil).unsqueeze(0)
 
-        # 2. INFERENCIA PURA EN PYTORCH
+        # Usamos no_grad solo para la probabilidad rápida
         with torch.no_grad():
             output = modelo(input_tensor)
-            # Como tu modelo ya tiene Sigmoid() al final, output es la probabilidad
             prob = output.item()
 
-        # 3. INTERPRETACIÓN SEGÚN IMAGEFOLDER
-        # Clase 0: Polipo (alfabéticamente primero)
-        # Clase 1: Sano
+        # Interpretación (0=Polipo, 1=Sano)
         es_polipo = prob < 0.5 
         confianza = (1.0 - prob) if es_polipo else prob
 
-        # 4. Grad-CAM si el modelo está disponible y la capa objetivo existe
+        # 3. Generar Grad-CAM (Requiere gradientes activos)
         heatmap_b64 = None
         try:
-            from src.utils.gradcam_utils import generate_gradcam
+            # Intenta primero con esta capa que es la última convolucional real de MobileNetV2
+            if hasattr(modelo, 'features'):
+                target_layer = modelo.features[-1]
+            else:
+                # Fallback genérico: busca la última capa convolucional
+                target_layers = [m for m in modelo.modules() if isinstance(m, torch.nn.Conv2d)]
+                target_layer = target_layers[-1]
 
-            target_layer = modelo.features[-1]
-            heatmap_img, _ = generate_gradcam(modelo, img_pil, target_layer)
-            heatmap_b64 = _image_to_base64(heatmap_img)
-        except Exception:
-            pass
+            gradcam_img = generate_gradcam_pytorch(modelo, img_pil, target_layer)
+            
+            _, buffer = cv2.imencode('.jpg', gradcam_img)
+            heatmap_b64 = base64.b64encode(buffer).decode('utf-8')
+        except Exception as e:
+            print(f"[ERROR Grad-CAM]: {e}")
+            heatmap_b64 = None
 
         diagnosis_text = "POLIPO DETECTADO" if es_polipo else "TEJIDO SANO"
-
-        # Registro de auditoría
-        logger.log_image_prediction(
-            analysis_type="colonoscopy",
-            diagnosis=diagnosis_text,
-            confidence=confianza,
-            patient_id=patient_id,
-            image_name=file.filename,
-        )
 
         return {
             "diagnosis": diagnosis_text,
             "is_polyp": es_polipo,
-            "confidence": round(confianza, 4),
-            "raw_prediction": round(prob, 4),
-            "recommendation": (
-                "Revisión inmediata por especialista y con su aprobación realizar biopsia."
-                if es_polipo
-                else "No se observan anomalías evidentes."
-            ),
+            "confidence": round(float(confianza), 4),
+            "raw_prediction": round(float(prob), 4),
             "gradcam_base64": heatmap_b64,
+            "recommendation": "Se recomienda biopsia" if es_polipo else "Seguimiento rutinario"
         }
-    except HTTPException:
-        raise
+
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error analizando colonoscopia: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error en el análisis: {str(e)}")
 
 
 @app.post("/api/v1/analyze/biopsy", tags=["Análisis de Imagen"])
