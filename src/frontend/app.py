@@ -22,6 +22,23 @@ st.set_page_config(
     layout="wide",
 )
 
+# ======= SISTEMA DE APAGADO AUTOMÁTICO =======
+import streamlit.components.v1 as components
+
+components.html(
+    """
+    <script>
+    // Heartbeat: Envía un pulso a la API local cada 2 segundos
+    // Si el navegador se cierra, el pulso dejará de llegar y main.py matará los procesos.
+    setInterval(function(){
+        fetch('http://localhost:8000/api/v1/heartbeat', { method: 'GET', keepalive: true }).catch(e => {});
+    }, 2000);
+    </script>
+    """,
+    height=0,
+    width=0,
+)
+
 import os
 import sys
 import yaml

@@ -61,9 +61,29 @@ def ejecutar_todo():
     frontend_proc = subprocess.Popen(["streamlit", "run", "src/frontend/app.py"])
 
     try:
-        api_proc.wait()
-        frontend_proc.wait()
+        import urllib.request
+        while True:
+            # Si alguno de los dos cierra de forma natural, salimos
+            if api_proc.poll() is not None or frontend_proc.poll() is not None:
+                break
+            
+            # Watchdog - Comprobar si el navegador se ha cerrado (heartbeat via HTTP)
+            try:
+                req = urllib.request.Request("http://localhost:8000/api/v1/heartbeat_status")
+                with urllib.request.urlopen(req, timeout=1.0) as response:
+                    last_beat = float(response.read().decode("utf-8"))
+                    
+                # Si last_beat es mayor a 0 (alguien se conectó) y han pasado +5 seg sin ping, asumimos cerrado
+                if last_beat > 0.0 and time.time() - last_beat > 5.0:
+                    print("\n[Galeno] Navegador cerrado. Apagando el servidor internamente...")
+                    break
+            except Exception:
+                pass # Si no contesta temporalmente, ignoramos
+                
+            time.sleep(1)
     except KeyboardInterrupt:
+        pass
+    finally:
         print("\n Deteniendo los servidores (API y Frontend)...")
         api_proc.terminate()
         frontend_proc.terminate()

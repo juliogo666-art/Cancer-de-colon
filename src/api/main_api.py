@@ -84,8 +84,23 @@ logger = PredictionLogger()
 
 
 ###############################################################################
-# Verificación de estado
+# Verificación de estado y Heartbeat
 ###############################################################################
+
+import time
+last_heartbeat_time = 0.0
+
+@app.get("/api/v1/heartbeat")
+async def heartbeat_ping():
+    """Recibe un ping desde el JS del cliente."""
+    global last_heartbeat_time
+    last_heartbeat_time = time.time()
+    return {"status": "ok"}
+
+@app.get("/api/v1/heartbeat_status")
+async def heartbeat_status():
+    """Retorna el último timestamp del cliente."""
+    return last_heartbeat_time
 
 
 @app.get("/", tags=["Health"])
@@ -99,7 +114,6 @@ async def health_check(request: Request):
             "resnet_biopsia": getattr(request.app.state, "modelo_biopsia", None) is not None,
         },
     }
-
 
 ###############################################################################
 # Predicción de riesgo clínico (ML)

@@ -73,3 +73,8 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-20T18:39:04.692461,image_colonoscopy,,POLIPO DETECTADO,0.9676,,,image: 000002.jpg
 2026-04-20T18:39:42.692517,image_colonoscopy,,TEJIDO SANO,0.9101,,,image: 008629.png
 2026-04-20T19:32:45.972179,image_colonoscopy,,POLIPO DETECTADO,0.9636,,,image: 000007.jpg
+2026-04-21T10:39:47.769633,risk_ml,11,Riesgo: Medium,0.9996,0.455,Medium,"{'Smoking': 2.0, 'Alcohol_Use': 9.0, 'Obesity': 4.0, 'Family_History': 0.0, 'Diet_Red_Meat': 7.0, 'Diet_Salted_Processed': 9.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 1.0, 'BMI': 29.19, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 4.41}"
+2026-04-21T10:40:20.944532,image_biopsy,11,MALIGNO (ADENOCARCINOMA),1.0,,,image: GT2001838-1-400-004.png
+2026-04-21T10:40:37.447459,image_biopsy,11,BENIGNO (NORMAL),0.9369,,,image: GT2012173-1-400-005.png
+2026-04-21T10:51:45.336605,image_biopsy,,BENIGNO (NORMAL),0.89,,,image: GT1815603-1-400-001.png
+2026-04-21T11:08:47.751386,image_biopsy,,BENIGNO (NORMAL),0.9786,,,image: GT2001814-1-400-001.png
