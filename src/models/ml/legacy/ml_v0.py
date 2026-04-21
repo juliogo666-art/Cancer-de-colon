@@ -2,6 +2,7 @@
 
 import pandas as pd
 import numpy as np
+import warnings
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
@@ -11,10 +12,15 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score
 )
 import joblib
+from src.tracking.experiment_tracker import ExperimentTracker
 
+tracker = ExperimentTracker()
+
+warnings.filterwarnings("ignore")
+    
 # 1. Cargar datos
 print("⏳ Cargando registros...")
-file_path = 'C:/Users/Ana-L/Desktop/cosas de Juan/Programacion/cancer de colon/prueba'
+file_path = r'C:\Users\juanp\OneDrive\Documentos\stucom\2 Trimestre\proyecto2\Cancer-de-colon\src\data\raw\historial_pacientes'
 file_modelos = file_path + '/modelos/ml'
 df = pd.read_csv(file_path + '/datos_finales_Kaggle.csv')
 

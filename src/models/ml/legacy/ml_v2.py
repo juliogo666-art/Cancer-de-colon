@@ -16,11 +16,16 @@ from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, fbeta_score
 
+from src.tracking.experiment_tracker import ExperimentTracker
+
+tracker = ExperimentTracker()
+
 # --- 1. CONFIGURACIÓN DE RUTAS ---
 directorio_actual = os.path.dirname(os.path.abspath(__file__))
 # src/models/ml -> src/data/raw/historial_pacientes
-directorio_src = os.path.dirname(os.path.dirname(directorio_actual))
+directorio_src = os.path.dirname(os.path.dirname(os.path.dirname(directorio_actual)))
 file_path_data = os.path.join(directorio_src, 'data', 'raw', 'historial_pacientes')
+
 file_modelos = directorio_actual
 os.makedirs(file_modelos, exist_ok=True)
 

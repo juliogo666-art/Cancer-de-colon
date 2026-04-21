@@ -261,5 +261,121 @@
       ]
     },
     "notes": null
+  },
+  "776198d5": {
+    "model_name": "Random Forest",
+    "timestamp": "2026-04-21T15:32:37.507527",
+    "metrics": {
+      "Accuracy": 0.959,
+      "Recall_High": 0.789474
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\random_forest.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "385f6e2d": {
+    "model_name": "XGBoost",
+    "timestamp": "2026-04-21T15:32:37.866462",
+    "metrics": {
+      "Accuracy": 0.955,
+      "Recall_High": 0.81203
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\xgboost.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "59a83f31": {
+    "model_name": "LightGBM",
+    "timestamp": "2026-04-21T15:32:38.219700",
+    "metrics": {
+      "Accuracy": 0.956,
+      "Recall_High": 0.81203
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\lightgbm.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "a4604e73": {
+    "model_name": "Ensamble Final (Máxima Seguridad)",
+    "timestamp": "2026-04-21T15:32:38.641918",
+    "metrics": {
+      "Accuracy": 0.953,
+      "Recall_High": 0.984962
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\modelo_ensemble.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
   }
 }

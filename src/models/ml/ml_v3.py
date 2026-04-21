@@ -22,8 +22,8 @@ tracker = ExperimentTracker()
 warnings.filterwarnings("ignore")
 
 # --- 1. CONFIGURACIÓN ---
-RUTA_DATA = r"src\data\clean\cancer_risk_final.csv"
-SAVE_DIR = r"artifacts\weights"
+RUTA_DATA = r"src/data/clean/cancer_risk_final.csv"
+SAVE_DIR = r"artifacts/weights"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # --- 2. CARGA Y SELECCIÓN (ACTUALIZADO) ---
