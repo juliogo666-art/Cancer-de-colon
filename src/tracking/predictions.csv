@@ -78,3 +78,21 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-21T10:40:37.447459,image_biopsy,11,BENIGNO (NORMAL),0.9369,,,image: GT2012173-1-400-005.png
 2026-04-21T10:51:45.336605,image_biopsy,,BENIGNO (NORMAL),0.89,,,image: GT1815603-1-400-001.png
 2026-04-21T11:08:47.751386,image_biopsy,,BENIGNO (NORMAL),0.9786,,,image: GT2001814-1-400-001.png
+2026-04-21T22:12:06.565865,risk_ml,,Riesgo: Medium,0.8379,0.3935,Medium,"{'Smoking': 0.0, 'Alcohol_Use': 8.0, 'Obesity': 5.0, 'Family_History': 0.0, 'Diet_Red_Meat': 5.0, 'Diet_Salted_Processed': 6.0, 'Fruit_Veg_Intake': 2.0, 'Physical_Activity': 2.0, 'BMI': 27.76}"
+2026-04-21T22:13:44.951992,image_biopsy,,MALIGNO (ADENOCARCINOMA),0.9997,,,image: GT2001838-1-400-003.png
+2026-04-21T22:21:56.912989,risk_ml,11,Riesgo: Medium,0.9996,0.455,Medium,"{'Smoking': 2.0, 'Alcohol_Use': 9.0, 'Obesity': 4.0, 'Family_History': 0.0, 'Diet_Red_Meat': 7.0, 'Diet_Salted_Processed': 9.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 1.0, 'BMI': 29.19, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 4.41}"
+2026-04-21T22:22:20.349267,risk_ml,11,Riesgo: Medium,0.9996,0.455,Medium,"{'Smoking': 2.0, 'Alcohol_Use': 9.0, 'Obesity': 4.0, 'Family_History': 0.0, 'Diet_Red_Meat': 7.0, 'Diet_Salted_Processed': 9.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 1.0, 'BMI': 29.19, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 4.41}"
+2026-04-21T22:23:25.837024,image_biopsy,11,diag_malignant,0.9892,,,image: GT2001838-1-400-002.png
+2026-04-21T22:23:49.866138,image_biopsy,11,diag_malignant,1.0,,,image: GT2001837-1-400-003.png
+2026-04-21T22:24:11.524275,image_biopsy,11,diag_malignant,0.9755,,,image: GT2000000-1-400-007.png
+2026-04-21T22:24:25.547530,image_biopsy,11,diag_malignant,0.8989,,,image: GT2000000-1-400-003.png
+2026-04-21T22:24:46.312502,image_biopsy,11,diag_benign,0.9786,,,image: GT2001814-1-400-001.png
+2026-04-21T22:25:01.922890,image_biopsy,11,diag_malignant,0.5393,,,image: GT1815553-1-400-001.png
+2026-04-21T22:25:18.744253,image_biopsy,11,diag_benign,0.9988,,,image: GT1815550-1-400-001.png
+2026-04-21T22:25:43.465641,image_biopsy,11,diag_benign,0.9887,,,image: GT2012154-2-400-005.png
+2026-04-21T22:41:42.397404,risk_ml,11,Riesgo: Medium,0.9996,0.455,Medium,"{'Smoking': 2.0, 'Alcohol_Use': 9.0, 'Obesity': 4.0, 'Family_History': 0.0, 'Diet_Red_Meat': 7.0, 'Diet_Salted_Processed': 9.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 1.0, 'BMI': 29.19, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 4.41}"
+2026-04-21T22:52:35.936107,risk_ml,11,Riesgo: Medium,0.9996,0.455,Medium,"{'Smoking': 2.0, 'Alcohol_Use': 9.0, 'Obesity': 4.0, 'Family_History': 0.0, 'Diet_Red_Meat': 7.0, 'Diet_Salted_Processed': 9.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 1.0, 'BMI': 29.19, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 4.41}"
+2026-04-21T22:53:00.504225,risk_ml,11,Riesgo: Medium,0.9996,0.455,Medium,"{'Smoking': 2.0, 'Alcohol_Use': 9.0, 'Obesity': 4.0, 'Family_History': 0.0, 'Diet_Red_Meat': 7.0, 'Diet_Salted_Processed': 9.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 1.0, 'BMI': 29.19, 'FOBT_Resultado_n': 0.0, 'CEA_Level_ng_mL': 4.41}"
+2026-04-21T23:05:42.534675,risk_ml,,Riesgo: Low,0.9808,0.0146,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 0.0, 'Family_History': 0.0, 'Diet_Red_Meat': 0.0, 'Diet_Salted_Processed': 0.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 0.0, 'BMI': 24.22}"
+2026-04-21T23:06:03.221898,risk_ml,,Riesgo: Low,0.9808,0.0146,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 0.0, 'Family_History': 0.0, 'Diet_Red_Meat': 0.0, 'Diet_Salted_Processed': 0.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 0.0, 'BMI': 24.22}"
+2026-04-21T23:19:58.180762,risk_ml,5006,Riesgo: Low,0.9832,0.0127,Low,"{'Smoking': 2.0, 'Alcohol_Use': 2.0, 'Obesity': 2.0, 'Family_History': 0.0, 'Diet_Red_Meat': 5.0, 'Diet_Salted_Processed': 2.0, 'Fruit_Veg_Intake': 6.0, 'Physical_Activity': 3.0, 'BMI': 28.91}"

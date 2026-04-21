@@ -197,7 +197,7 @@ def generate_gradcam_colon(model, img_array):
     return superimposed_rgb, float(pred_val)
 
 
-def generar_explicacion_shap(modelo, features_array, target_class):
+def generar_explicacion_shap(modelo, features_array, target_class, textos=None):
     try:
         nombres_columnas = [
             "Smoking",
@@ -213,6 +213,14 @@ def generar_explicacion_shap(modelo, features_array, target_class):
             "CEA_Level_ng_mL",
         ]
         X_df = pd.DataFrame(features_array, columns=nombres_columnas)
+
+        # Textos por defecto (español) si no se pasan traducciones
+        col_variable = textos.get("shap_col_variable", "Variable") if textos else "Variable"
+        col_impact = textos.get("shap_col_impact", "Impacto") if textos else "Impacto"
+        col_direction = textos.get("shap_col_direction", "Sentido") if textos else "Sentido"
+        txt_increases = textos.get("shap_increases_risk", "Sube riesgo") if textos else "Sube riesgo"
+        txt_decreases = textos.get("shap_decreases_risk", "Baja riesgo") if textos else "Baja riesgo"
+        chart_title = textos.get("shap_chart_title", "Factores que definen tu perfil de riesgo") if textos else "Factores que definen tu perfil de riesgo"
 
         # Si nos han pasado una lista de modelos (ensamble), calculamos SHAP
         # para cada modelo y promediamos los valores. Esto evita errores
@@ -277,14 +285,14 @@ def generar_explicacion_shap(modelo, features_array, target_class):
             porcentaje = (abs_shap[i] / total_impact * 100) if total_impact > 0 else 0
             influencia.append(
                 {
-                    "Variable": nombres_columnas[i],
-                    "Impacto": f"{porcentaje:.1f}%",
-                    "Sentido": "Sube riesgo" if raw_shap[i] > 0 else "Baja riesgo",
+                    col_variable: nombres_columnas[i],
+                    col_impact: f"{porcentaje:.1f}%",
+                    col_direction: txt_increases if raw_shap[i] > 0 else txt_decreases,
                 }
             )
 
         df_importancia = pd.DataFrame(influencia).sort_values(
-            by="Impacto", ascending=False
+            by=col_impact, ascending=False
         )
 
         # 3. Crear Gráfico
@@ -295,7 +303,7 @@ def generar_explicacion_shap(modelo, features_array, target_class):
         shap.bar_plot(
             raw_shap, feature_names=nombres_columnas, max_display=11, show=False
         )
-        plt.title("Factores que definen tu perfil de riesgo", color="black")
+        plt.title(chart_title, color="black")
 
         return fig, df_importancia
 

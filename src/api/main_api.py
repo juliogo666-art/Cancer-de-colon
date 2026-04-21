@@ -226,17 +226,15 @@ async def predict_risk(
         risk_lvl = RISK_LEVEL_MAP.get(clase_predicha, "Unknown")
         max_prob = float(np.max(probabilidades))
 
-        # Crear recomendación
+        # Crear recomendación (clave de traducción, el frontend la traduce)
         recomendacion = ""
         if fobt_resultado == -1 or cea_level == -1.0:
-            recomendacion = "Es necesario realizar analitica de sangre (CEA) y muestra de heces (FOBT) para confirmar diagnostico."
+            recomendacion = "rec_need_analytics"
         else:
             if risk_lvl in ["Medium", "High"]:
-                recomendacion = "Riesgo elevado confirmado por marcadores analiticos. Se recomienda derivacion urgente para COLONOSCOPIA."
+                recomendacion = "rec_high_risk"
             else:
-                recomendacion = (
-                    "Riesgo bajo. Mantener controles rutinarios y habitos saludables."
-                )
+                recomendacion = "rec_low_risk"
 
         logger.log_risk_prediction(
             patient_id=patient_id,
@@ -323,15 +321,15 @@ async def analyze_colonoscopy(
             print(f"[ERROR Grad-CAM]: {e}")
             heatmap_b64 = None
 
-        diagnosis_text = "POLIPO DETECTADO" if es_polipo else "TEJIDO SANO"
+        diagnosis_key = "diag_polyp_detected" if es_polipo else "diag_healthy_tissue"
 
         return {
-            "diagnosis": diagnosis_text,
+            "diagnosis": diagnosis_key,
             "is_polyp": es_polipo,
             "confidence": round(float(confianza), 4),
             "raw_prediction": round(float(prob), 4),
             "gradcam_base64": heatmap_b64,
-            "recommendation": "Se recomienda biopsia" if es_polipo else "Seguimiento rutinario"
+            "recommendation": "rec_biopsy" if es_polipo else "rec_routine_followup"
         }
 
     except Exception as e:
@@ -394,28 +392,28 @@ async def analyze_biopsy(
         except Exception:
             pass
 
-        diagnosis_text = (
-            "BENIGNO (NORMAL)" if es_benigno else "MALIGNO (ADENOCARCINOMA)"
+        diagnosis_key = (
+            "diag_benign" if es_benigno else "diag_malignant"
         )
 
         # Registro de auditoría
         logger.log_image_prediction(
             analysis_type="biopsy",
-            diagnosis=diagnosis_text,
+            diagnosis=diagnosis_key,
             confidence=confianza,
             patient_id=patient_id,
             image_name=file.filename,
         )
 
         return {
-            "diagnosis": diagnosis_text,
+            "diagnosis": diagnosis_key,
             "is_benign": es_benigno,
             "confidence": round(confianza, 4),
             "raw_probability": round(prob, 4),
             "recommendation": (
-                "Tejido dentro de los parámetros normales."
+                "rec_benign_tissue"
                 if es_benigno
-                else "Sospecha de malignidad. Se debe hacer un estudio histopatológico completo."
+                else "rec_malignant_tissue"
             ),
             "gradcam_base64": heatmap_b64,
         }

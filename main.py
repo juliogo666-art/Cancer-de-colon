@@ -88,6 +88,9 @@ def ejecutar_todo():
         api_proc.terminate()
         frontend_proc.terminate()
         print("Adios!")
+        # Forzar el cierre de la terminal de Windows usando el título de la ventana
+        if os.name == "nt":
+            os.system('taskkill /F /FI "WINDOWTITLE eq Lanzador Galeno*" /T > nul 2>&1')
 
 
 def ejecutar_eda():

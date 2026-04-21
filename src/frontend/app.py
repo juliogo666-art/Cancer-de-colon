@@ -145,6 +145,10 @@ st.markdown(
     label, [data-testid="stWidgetLabel"] p, [data-testid="stRadio"] label p { color: #1e293b !important; font-weight: 600 !important; font-size: 1rem !important; }
     [data-testid="stRadio"] div[role="radiogroup"] { background-color: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
     [data-testid="stMetric"] { background-color: #f1f5f9; padding: 15px; border-radius: 12px; border-left: 5px solid #22c55e; }
+    [data-testid="stExpander"] { background-color: #f1f5f9; border: 1px solid #e2e8f0; border-left: 4px solid #22c55e; border-radius: 8px; }
+    [data-testid="stExpander"] summary { color: #1e293b !important; font-weight: 600; }
+    [data-testid="stExpander"] summary:hover { background-color: #e2e8f0; border-radius: 8px; }
+    [data-testid="stExpander"] [data-testid="stExpanderDetails"] { color: #334155 !important; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -250,7 +254,7 @@ with pestana_datos:
         texto_buscar = st.text_input(textos["search_placeholder"], key="txt_search")
         btn_cargar = st.button(textos["btn_load"], use_container_width=True)
         btn_actualizar = st.button(textos["btn_update"], use_container_width=True)
-        btn_nuevo = st.button("Nuevo Paciente", use_container_width=True)
+        btn_nuevo = st.button(textos["btn_new"], use_container_width=True)
 
     # Memoria de la aplicación (Session State) para no perder los datos del formulario al recargar
     if "modo_nuevo_paciente" not in st.session_state:
@@ -369,16 +373,16 @@ with pestana_datos:
         datos_paciente = st.session_state.info_sesion_paciente
 
         if st.session_state.modo_nuevo_paciente:
-            st.info("Modo de Inscripción Continua: Rellene los datos de identidad.")
-            st.text_input("Documento (DNI/NIE)", key="form_new_dni")
-            st.text_input("NUSS / Seguridad Social", key="form_new_nuss")
-            st.text_input("Nombre", key="form_new_nombre")
+            st.info(textos["new_patient_mode"])
+            st.text_input(textos["form_document"], key="form_new_dni")
+            st.text_input(textos["form_nuss"], key="form_new_nuss")
+            st.text_input(textos["form_name"], key="form_new_nombre")
             ext1, ext2 = st.columns(2)
-            ext1.text_input("Primer Apellido", key="form_new_ape1")
-            ext2.text_input("Segundo Apellido", key="form_new_ape2")
+            ext1.text_input(textos["form_surname1"], key="form_new_ape1")
+            ext2.text_input(textos["form_surname2"], key="form_new_ape2")
             loc1, loc2 = st.columns(2)
-            loc1.text_input("Ciudad", key="form_new_city")
-            loc2.text_input("País", key="form_new_country")
+            loc1.text_input(textos["form_city"], key="form_new_city")
+            loc2.text_input(textos["form_country"], key="form_new_country")
 
         elif datos_paciente:
             # Reporte visual bonito y legible en lugar de texto pequeño
@@ -432,14 +436,14 @@ with pestana_datos:
         index=0 if st.session_state.form_datos_paciente["gender"] == "Male" else 1,
     )
     val_altura = c_altura.number_input(
-        "Altura (cm)",
+        textos["height"],
         min_value=50.0,
         max_value=250.0,
         step=1.0,
         value=float(st.session_state.form_datos_paciente.get("altura_cm", 170.0)),
     )
     val_peso = c_peso.number_input(
-        "Peso (kg)",
+        textos["weight"],
         min_value=20.0,
         max_value=300.0,
         step=1.0,
@@ -507,23 +511,25 @@ with pestana_datos:
         textos["family"], value=st.session_state.form_datos_paciente["family_history"]
     )
 
-    st.markdown("**Analíticas Confirmadas (Dejar en Blanco si Triaje)**")
+    st.markdown(f"**{textos['analytics_header']}**")
     c_ana1, c_ana2 = st.columns(2)
 
-    fobt_opts = ["Desconocido (-)", "Negativo", "Positivo"]
+    fobt_opts = [
+        textos["fobt_unknown"],
+        textos["fobt_negative"],
+        textos["fobt_positive"],
+    ]
     fobt_opt_idx = 0
     if st.session_state.form_datos_paciente["fobt_resultado_n"] == 0:
         fobt_opt_idx = 1
     elif st.session_state.form_datos_paciente["fobt_resultado_n"] == 1:
         fobt_opt_idx = 2
 
-    val_fobt_ui = c_ana1.selectbox(
-        "Prueba sangre oculta heces (FOBT)", fobt_opts, index=fobt_opt_idx
-    )
+    val_fobt_ui = c_ana1.selectbox(textos["fobt_label"], fobt_opts, index=fobt_opt_idx)
     # Re-mapeo visual a valor numérico
-    if val_fobt_ui == "Negativo":
+    if val_fobt_ui == textos["fobt_negative"]:
         st.session_state.form_datos_paciente["fobt_resultado_n"] = 0
-    elif val_fobt_ui == "Positivo":
+    elif val_fobt_ui == textos["fobt_positive"]:
         st.session_state.form_datos_paciente["fobt_resultado_n"] = 1
     else:
         st.session_state.form_datos_paciente["fobt_resultado_n"] = -1
@@ -533,9 +539,9 @@ with pestana_datos:
         cea_input_str = str(st.session_state.form_datos_paciente["cea_level_ng_ml"])
 
     val_cea_ui = c_ana2.text_input(
-        "Marcador tumoral CEA (ng/mL)",
+        textos["cea_label"],
         value=cea_input_str,
-        placeholder="Ej: 3.42 (Dejar vacío si no hay)",
+        placeholder=textos["cea_placeholder"],
     )
 
     try:
@@ -626,7 +632,8 @@ with pestana_datos:
                 nivel_riesgo_devuelto = datos_respuesta.get("risk_level", "Unknown")
                 score_riesgo_devuelto = datos_respuesta.get("risk_score", 0.0)
                 probabilidades = datos_respuesta.get("probabilities", {})
-                recomendacion = datos_respuesta.get("recommendation", "")
+                rec_key = datos_respuesta.get("recommendation", "")
+                recomendacion = textos.get(rec_key, rec_key)
 
                 # Actualizar el riesgo en el state de manera oculta
                 st.session_state.form_datos_paciente["risk_level"] = (
@@ -636,9 +643,7 @@ with pestana_datos:
                     score_riesgo_devuelto
                 )
 
-                st.success(
-                    f"Análisis completado. Nivel estimado: {nivel_riesgo_devuelto}"
-                )
+                st.success(f"{textos['analysis_complete']} {nivel_riesgo_devuelto}")
 
                 # Armamos un reporte visual moderno
                 st.markdown(
@@ -650,7 +655,7 @@ with pestana_datos:
                     <p style="color: #b91c1c; font-size: 1.1em; background-color: #fef2f2; padding: 10px; border-radius: 5px;">{recomendacion}</p>
                     <hr style="margin: 10px 0; border: none; border-top: 1px solid #e2e8f0;">
                     <p style="margin: 0; color: #475569; font-size: 1em;">
-                    <b>Probabilidades</b> — Low: {probabilidades.get("Low", 0) * 100:.1f}% | 
+                    <b>{textos["probabilities_label"]}</b> — Low: {probabilidades.get("Low", 0) * 100:.1f}% | 
                     Medium: {probabilidades.get("Medium", 0) * 100:.1f}% | 
                     High: {probabilidades.get("High", 0) * 100:.1f}%
                     </p>
@@ -681,19 +686,19 @@ with pestana_datos:
                     clase_map = {"Low": 0, "Medium": 1, "High": 2}
                     clase_predicha = clase_map.get(nivel_riesgo_devuelto, 0)
                     fig, df_importancia = generar_explicacion_shap(
-                        modelo_ensemble, [features_array], clase_predicha
+                        modelo_ensemble, [features_array], clase_predicha, textos=textos
                     )
                     if fig is not None and df_importancia is not None:
-                        st.markdown("### Explicacion del modelo (SHAP)")
+                        st.markdown(f"### {textos['shap_title']}")
                         st.pyplot(fig)
-                        st.write("Importancia de cada variable en tu predicción:")
+                        st.write(textos["shap_importance"])
                         st.dataframe(df_importancia)
+                        with st.expander("Info" + textos.get("shap_title", "SHAP")):
+                            st.info(textos["shap_disclaimer"])
                     else:
-                        st.warning(
-                            "No se pudo generar la explicación SHAP para este caso."
-                        )
+                        st.warning(textos["shap_error"])
                 else:
-                    st.info("El modelo ensemble para SHAP no está disponible.")
+                    st.info(textos["shap_unavailable"])
 
             else:
                 st.error(
@@ -758,9 +763,7 @@ with pestana_datos:
                 [df_master, pd.DataFrame([nuevo_registro])], ignore_index=True
             )
             df_master.to_csv(settings.CSV_MASTER_PATH, index=False)
-            st.success(
-                "¡Paciente creado y guardado permanentemente en la base de datos!"
-            )
+            st.success(textos["success_new_patient"])
 
             # Quitar modo nuevo y auto-cargar la vista solo lectura
             st.session_state.modo_nuevo_paciente = False
@@ -891,9 +894,11 @@ with pestana_vision:
 
                     if respuesta_imagen.status_code == 200:
                         datos_json = respuesta_imagen.json()
-                        diagnostico_final = datos_json.get("diagnosis", "")
+                        diag_key = datos_json.get("diagnosis", "")
+                        diagnostico_final = textos.get(diag_key, diag_key)
                         confianza_final = datos_json.get("confidence", 0.0)
-                        recomendacion = datos_json.get("recommendation", "")
+                        rec_key = datos_json.get("recommendation", "")
+                        recomendacion = textos.get(rec_key, rec_key)
                         base64_heatmap = datos_json.get("gradcam_base64")
 
                         # Mostramos resultados visuales en la columna derecha
@@ -917,21 +922,23 @@ with pestana_vision:
                                         use_container_width=True,
                                     )
                                 else:
-                                    st.info("Heatmap no disponible desde la API.")
+                                    st.info(textos["heatmap_unavailable"])
 
                             # Reporte HTML Bonito
+                            # Usamos la clave del diagnóstico para decidir el color (verde=benigno/sano, rojo=maligno/pólipo)
+                            es_resultado_positivo = diag_key in (
+                                "diag_healthy_tissue",
+                                "diag_benign",
+                            )
                             color_alerta = (
-                                "#22c55e"
-                                if "SANO" in diagnostico_final
-                                or "BENIGNO" in diagnostico_final
-                                else "#ef4444"
+                                "#22c55e" if es_resultado_positivo else "#ef4444"
                             )
                             # Etiqueta resultado (Maligno o benigno + confianza + comentario)
                             st.markdown(
                                 f"""
                             <div style="background-color: #f8fafc; border-left: 5px solid {color_alerta}; padding: 15px; border-radius: 8px; margin-top: 20px;">
                                 <h3 style="margin-top: 0; color: #1e293b;">{diagnostico_final}</h3>
-                                <p style="font-size: 1.1em;color: #1e293b;">Confianza: <b>{confianza_final * 100:.1f}%</b></p>
+                                <p style="font-size: 1.1em;color: #1e293b;">{textos["confidence_label"]}: <b>{confianza_final * 100:.1f}%</b></p>
                                 <p style="margin-bottom: 0; color: #1e293b;"><i>{recomendacion}</i></p>
                             </div>
                             """,
