@@ -7,7 +7,7 @@ una sola vez al arrancar la API y se comparten entre todos los endpoints.
 Modelos gestionados:
     1. LightGBM clínico  → Predicción de nivel de riesgo (Low/Medium/High)
     2. CNN TensorFlow     → Detección de pólipos en colonoscopia
-    3. ResNet18 PyTorch   → Clasificación de biopsias (benigno/maligno)
+    3. DenseNet121 PyTorch → Clasificación de biopsias (benigno/maligno)
 """
 
 import os
@@ -27,6 +27,7 @@ from src.config.settings import settings
 
 MODEL_ML_PATH = settings.MODEL_ML_PATH
 MODEL_ML_FINAL_PATH = settings.MODEL_ML_FINAL_PATH
+MODEL_ML_TRIAGE_PATH = settings.MODEL_ML_TRIAGE_PATH
 MODEL_CNN_PATH = settings.MODEL_CNN_PATH
 MODEL_BIOPSY_PATH = settings.MODEL_BIOPSY_PATH
 
@@ -79,16 +80,16 @@ class ColonoscopyClassifier(nn.Module):
 
 class BiopsyClassifier(nn.Module):
     """
-    Clasificador binario ResNet18 para biopsias de colon.
+    Clasificador binario DenseNet121 para biopsias de colon.
     Arquitectura idéntica a la usada en el entrenamiento
-    (src/networks/dl_biopsia/modelo_biopsia_v0.py).
+    (src/networks/dl_biopsia/modelo_biopsia_v1_DenseNet.py).
     """
 
     def __init__(self):
         super(BiopsyClassifier, self).__init__()
-        self.model = models.resnet18(weights=None)
-        num_ftrs = self.model.fc.in_features
-        self.model.fc = nn.Linear(num_ftrs, 1)
+        self.model = models.densenet121(weights=None)
+        num_ftrs = self.model.classifier.in_features
+        self.model.classifier = nn.Linear(num_ftrs, 1)
 
     def forward(self, x):
         return self.model(x)
@@ -127,7 +128,7 @@ def load_ml_final_model(path: str = MODEL_ML_FINAL_PATH):
         print(f"[ERROR] Fallo al cargar modelo ML final: {e}")
         return None
 
-def load_triage_model(path: str = "artifacts/weights/lgbm_triage.pkl"):
+def load_triage_model(path: str = MODEL_ML_TRIAGE_PATH):
     """Carga el modelo LightGBM de triaje desde disco."""
     if not os.path.exists(path):
         print(f"[AVISO] Modelo Triaje no encontrado en: {path}")

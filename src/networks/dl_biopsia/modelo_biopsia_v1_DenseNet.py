@@ -183,13 +183,13 @@ def train_biopsy_model():
         "val_f1": []
     }
 
-    # Corregimos la ruta de guardado para que vaya a la carpeta centralizada de pesos
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    weights_dir = os.path.join(project_root, "artifacts", "weights")
-    os.makedirs(weights_dir, exist_ok=True)
+    # Corregimos la ruta de guardado para que vaya a la carpeta centralizada de checkpoints
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    checkpoints_dir = os.path.join(project_root, "artifacts", "checkpoints")
+    os.makedirs(checkpoints_dir, exist_ok=True)
     
-    best_model_path = os.path.join(weights_dir, "biopsia_densenet121_best.pth")
-    final_model_path = os.path.join(weights_dir, "biopsia_densenet121_final.pth")
+    best_model_path = os.path.join(checkpoints_dir, "biopsia_densenet121_best.pth")
+    final_model_path = os.path.join(checkpoints_dir, "biopsia_densenet121_final.pth")
 
     print("\n-------------------- Empezando Entrenamiento DenseNet --------------------")
     for epoch in range(epochs):

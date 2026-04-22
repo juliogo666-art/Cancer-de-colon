@@ -111,7 +111,7 @@ async def health_check(request: Request):
         "models": {
             "ml_clinico": getattr(request.app.state, "modelo_ml", None) is not None,
             "cnn_colonoscopia": getattr(request.app.state, "modelo_cnn", None) is not None,
-            "resnet_biopsia": getattr(request.app.state, "modelo_biopsia", None) is not None,
+            "densenet_biopsia": getattr(request.app.state, "modelo_biopsia", None) is not None,
         },
     }
 
@@ -386,7 +386,7 @@ async def analyze_biopsy(
         try:
             from src.utils.gradcam_utils import generate_gradcam
 
-            target_layer = modelo.model.layer4[-1]
+            target_layer = modelo.model.features.denseblock4
             heatmap_img, _ = generate_gradcam(modelo, img_pil, target_layer)
             heatmap_b64 = _image_to_base64(heatmap_img)
         except Exception:

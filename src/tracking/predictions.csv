@@ -96,3 +96,6 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-21T23:05:42.534675,risk_ml,,Riesgo: Low,0.9808,0.0146,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 0.0, 'Family_History': 0.0, 'Diet_Red_Meat': 0.0, 'Diet_Salted_Processed': 0.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 0.0, 'BMI': 24.22}"
 2026-04-21T23:06:03.221898,risk_ml,,Riesgo: Low,0.9808,0.0146,Low,"{'Smoking': 0.0, 'Alcohol_Use': 0.0, 'Obesity': 0.0, 'Family_History': 0.0, 'Diet_Red_Meat': 0.0, 'Diet_Salted_Processed': 0.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 0.0, 'BMI': 24.22}"
 2026-04-21T23:19:58.180762,risk_ml,5006,Riesgo: Low,0.9832,0.0127,Low,"{'Smoking': 2.0, 'Alcohol_Use': 2.0, 'Obesity': 2.0, 'Family_History': 0.0, 'Diet_Red_Meat': 5.0, 'Diet_Salted_Processed': 2.0, 'Fruit_Veg_Intake': 6.0, 'Physical_Activity': 3.0, 'BMI': 28.91}"
+2026-04-22T14:05:49.986668,image_biopsy,,diag_malignant,0.9996,,,image: GT2001838-1-400-002.png
+2026-04-22T14:06:05.317322,image_biopsy,,diag_benign,0.9992,,,image: GT2000000-1-400-003.png
+2026-04-22T14:06:16.066944,image_biopsy,,diag_benign,0.9987,,,image: GT2000000-1-400-001.png

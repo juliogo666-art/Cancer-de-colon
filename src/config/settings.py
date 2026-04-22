@@ -85,6 +85,12 @@ class Settings:
             RAIZ_DEL_PROYECTO, "artifacts", "weights", "modelo_ensemble.pkl"
         )
 
+        # Modelo de Machine Learning (LightGBM) para triaje rápido (sin analíticas)
+        # Entrada: 9 factores de riesgo (sin FOBT ni CEA) → Salida: Low / Medium / High
+        self.MODEL_ML_TRIAGE_PATH = os.path.join(
+            RAIZ_DEL_PROYECTO, "artifacts", "weights", "lgbm_triage.pkl"
+        )
+
         # Modelo de Deep Learning (CNN TensorFlow) para detectar pólipos en colonoscopia
         # Entrada: Imagen 150x150 → Salida: Pólipo / Sano
         self.MODEL_CNN_PATH = os.path.join(
@@ -94,13 +100,13 @@ class Settings:
             "mejor_modelo_anti_overfit.pth",
         )
 
-        # Modelo de Deep Learning (ResNet18 PyTorch) para clasificar biopsias
+        # Modelo de Deep Learning (DenseNet121 PyTorch) para clasificar biopsias
         # Entrada: Imagen 224x224 → Salida: Benigno / Maligno
         self.MODEL_BIOPSY_PATH = os.path.join(
             RAIZ_DEL_PROYECTO,
             "artifacts",
             "checkpoints",
-            "biopsia_resnet18_best.pth",
+            "biopsia_densenet121_best.pth",
         )
 
         ##########################################################################

@@ -56,7 +56,7 @@ class TestHealthCheck:
         assert "models" in datos
         assert "ml_clinico" in datos["models"]
         assert "cnn_colonoscopia" in datos["models"]
-        assert "resnet_biopsia" in datos["models"]
+        assert "densenet_biopsia" in datos["models"]
 
 
 ###############################################################################
