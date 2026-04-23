@@ -1,0 +1,12 @@
+Modelo,Accuracy,Precision (macro),Recall (macro),F1-Score (macro),ROC-AUC (macro),Confusion Matrix
+best_rf_model,0.5992,0.4426,0.4998,0.3754,0.4961,
+xgb_sensible,0.5979,0.4844,0.4996,0.3798,0.5011,
+lgbm_sensible,0.5991,0.502,0.5,0.3773,0.4951,
+lgbm_clinico,0.9561,0.9381,0.9281,0.9329,0.9937,
+rf_clinico,0.8812,0.8708,0.8051,0.8338,0.9605,
+xgb_clinico,0.8912,0.8676,0.836,0.8505,0.9617,
+lgbm_triage,0.8892,0.8736,0.8257,0.8469,0.9634,
+biopsia_densenet121_best,1.0,1.0,1.0,1.0,0.0,
+biopsia_resnet18_best,1.0,1.0,1.0,1.0,0.0,
+polyp_resnet18_best,0.6766,0.6767,0.6763,0.6763,0.0,
+mejor_modelo_anti_overfit,0.0036,0.0,0.0048,0.0,0.0,0.0

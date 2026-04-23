@@ -18,7 +18,7 @@ datos$nombre <- ifelse(
 )
 
 # Apellidos
-datos$apellido1 <- sample(apellidos, n, replace = TRUE)
+datos$apellido1 <- sample(apellidos, n, replace = TRUE)AC
 datos$apellido2 <- sample(apellidos, n, replace = TRUE)
 
 # Altura según género (más realista)

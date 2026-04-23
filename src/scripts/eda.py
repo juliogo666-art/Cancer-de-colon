@@ -8,19 +8,16 @@ from src.scripts.data_cleaning import (
     limpiar_datos_sinteticos,
     combinar_datos_s_g,
     limpiar_datos_kaggle,
-    
+    limpiar_datos_riesgo_def,
 )
 from src.utils.eda_visualization import (
     eda_datos_globales,
     eda_datos_sinteticos,
     eda_datos_combinados,
     eda_datos_kaggle,
-    eda_datos_Kaggle_f
+    eda_datos_Kaggle_f,
+    eda_datos_riesgo,
 )
-
-# Configuración principal de la página de Streamlit
-st.set_page_config(page_title="Cancer Colon ML", layout="wide")
-
 
 def mostrar_vista_previa(df):
     """Muestra una vista previa y descripción estadística del DataFrame."""
@@ -37,13 +34,16 @@ def eda(base_path):
 
     file_path_globales = os.path.join(ruta_historial,"pacientes_con_cancer_tratado","global_cancer_patients_2015_2024.csv",)
     file_path_sinteticos = os.path.join(ruta_historial, "historiales_sinteticos", "pacientes_simulador_colon.csv")
-    file_path_combinados = ruta_historial
+    dir_combinados = ruta_historial
 
     file_path_final = os.path.join(ruta_historial, "datos_combinados_global_extendido_3.csv")
 
     file_path_kaggle = os.path.join(ruta_historial,"pacientes_con_cancer_tratado","colorectal_cancer_dataset.csv",)
 
     file_path_kaggle_f = os.path.join(ruta_historial, "datos_finales_Kaggle.csv")
+
+    file_path_riesgo = os.path.join(base_path, "src", "data", "clean", "cancer_risk_final.csv")
+    file_path_risego_clean = os.path.join(ruta_historial, "historiales_factor_riesgo", "cancer_risk_factors_augmented.csv")
 
     # Menú lateral para navegación
     menu = st.sidebar.radio(
@@ -54,6 +54,7 @@ def eda(base_path):
             "3. Datos combinados",
             "4. Datos Kaggle", 
             "5. Datos finales",
+            "6. Datos nuevos finales"
         ],
     )
 
@@ -109,7 +110,7 @@ def eda(base_path):
                 df_g = limpiar_datos_globales(df_g, file_path_globales)
 
                 # Combinar los datos limpios
-                df = combinar_datos_s_g(df_g, file_path_combinados)
+                df = combinar_datos_s_g(df_g, dir_combinados)
 
                 mostrar_vista_previa(df)
 
@@ -157,13 +158,40 @@ def eda(base_path):
                 df_g = limpiar_datos_kaggle(df_g, file_path_kaggle)
 
                 # Combinar los datos limpios
-                df = limpiar_datos_kaggle_finales(df_g, file_path_combinados)
+                df = limpiar_datos_kaggle_finales(df_g, dir_combinados)
 
                 mostrar_vista_previa(df)
 
                 with st.container():
                     st.write("Generando gráficos...")
                     eda_datos_Kaggle_f(df)
+            else:
+                st.error(
+                    "Faltan archivos necesarios para combinar los datos. Verifica las rutas."
+                )
+    elif menu == "6. Datos nuevos finales":
+        st.header("Análisis de nuevos Datos Finales")
+
+        if os.path.exists(file_path_riesgo):
+            df_combinados = pd.read_csv(file_path_riesgo)
+            mostrar_vista_previa(df_combinados)
+
+            with st.container():
+                st.write("Generando gráficos...")
+                eda_datos_riesgo(df_combinados)
+
+        else:
+            if os.path.exists(file_path_risego_clean):
+                # Cargar y limpiar ambos datasets
+                df = pd.read_csv(file_path_risego_clean, sep=',')
+
+                df = limpiar_datos_riesgo_def(df, file_path_riesgo)
+
+                mostrar_vista_previa(df)
+
+                with st.container():
+                    st.write("Generando gráficos...")
+                    eda_datos_riesgo(df)
             else:
                 st.error(
                     "Faltan archivos necesarios para combinar los datos. Verifica las rutas."

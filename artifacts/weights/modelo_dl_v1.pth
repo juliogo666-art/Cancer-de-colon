@@ -1,0 +1,3 @@
+# Modelo PolipoModel (MobileNetV2 fine-tuned) para detección de pólipos en colonoscopia
+# Entrenado y exportado desde src/networks/dl/dl_v1_pytorch.py
+# Guardado automáticamente tras entrenamiento.

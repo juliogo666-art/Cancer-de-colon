@@ -1,0 +1,381 @@
+{
+  "a3a2fad4": {
+    "model_name": "LightGBM_Clinico",
+    "timestamp": "2026-04-19T23:40:11.348021",
+    "metrics": {
+      "Accuracy": 0.956088,
+      "Recall_Macro": 0.928098,
+      "F1_Macro": 0.932931
+    },
+    "hyperparameters": {
+      "n_estimators": 300,
+      "learning_rate": 0.02
+    },
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src\\data\\ready\\pacientes_master.csv",
+    "model_path": "artifacts\\weights\\lgbm_clinico.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "08873bb0": {
+    "model_name": "LightGBM_Triaje",
+    "timestamp": "2026-04-19T23:40:11.890931",
+    "metrics": {
+      "Accuracy": 0.889222,
+      "Recall_Macro": 0.825708,
+      "F1_Macro": 0.846921
+    },
+    "hyperparameters": {
+      "n_estimators": 300,
+      "learning_rate": 0.02
+    },
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI"
+    ],
+    "dataset_path": "src\\data\\ready\\pacientes_master.csv",
+    "model_path": "artifacts\\weights\\lgbm_triage.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "faa27c57": {
+    "model_name": "BiopsyResNet18",
+    "timestamp": "2026-04-20T10:15:29.266098",
+    "metrics": {
+      "loss": 3.2e-05,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "hyperparameters": {
+      "epochs": 10,
+      "learning_rate": 0.0001,
+      "batch_size": 32
+    },
+    "features": [],
+    "dataset_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\src\\data\\raw\\colon_image_sets",
+    "model_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\artifacts\\checkpoints\\biopsia_resnet18_best.pth",
+    "train_size": 7000,
+    "test_size": 1500,
+    "duration_seconds": null,
+    "training_history": {
+      "train_loss": [
+        0.02823050553889437,
+        0.0056925051347323325,
+        0.0007689794164264445,
+        0.0017647156677263061,
+        0.0041814800872138945,
+        0.004221317746523875,
+        0.0009013442795632112,
+        0.0008386467351012313,
+        0.00010788379364534543,
+        8.233736829856648e-05
+      ],
+      "val_loss": [
+        0.0008014239748708279,
+        0.00028163028729706754,
+        6.482821684953029e-05,
+        0.00021260067521151096,
+        0.00021235764793249126,
+        0.00016367156323657912,
+        0.001002975256209964,
+        5.70383129904277e-05,
+        3.378750901166759e-05,
+        1.9063189396779598e-05
+      ],
+      "val_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "val_f1": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "notes": null
+  },
+  "b71088db": {
+    "model_name": "PolypResNet18",
+    "timestamp": "2026-04-20T10:32:15.271609",
+    "metrics": {
+      "loss": 0.646136,
+      "accuracy": 0.676596,
+      "precision": 0.674797,
+      "recall": 0.697479,
+      "f1": 0.68595
+    },
+    "hyperparameters": {
+      "epochs": 5,
+      "learning_rate": 0.0001,
+      "batch_size": 32
+    },
+    "features": [],
+    "dataset_path": "huggingface:nkasmanoff/kvasir-seg",
+    "model_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\artifacts\\weights\\polyp_resnet18_best.pth",
+    "train_size": 5476,
+    "test_size": 1175,
+    "duration_seconds": null,
+    "training_history": {
+      "train_loss": [
+        0.6743913254765577,
+        0.6475431681718937,
+        0.6398460234320441,
+        0.6382432155484377,
+        0.6294331652827041
+      ],
+      "val_loss": [
+        0.6608370212284295,
+        0.6309382295286333,
+        0.646981007344014,
+        0.6590988426595121,
+        0.6447225132504025
+      ],
+      "val_accuracy": [
+        0.6248934356351236,
+        0.6760443307757886,
+        0.6470588235294118,
+        0.659846547314578,
+        0.6717817561807332
+      ],
+      "val_f1": [
+        0.5426195426195426,
+        0.6735395189003437,
+        0.637478108581436,
+        0.6167146974063401,
+        0.6577777777777778
+      ]
+    },
+    "notes": null
+  },
+  "c8b576c5": {
+    "model_name": "BiopsyDenseNet121",
+    "timestamp": "2026-04-20T11:10:08.139933",
+    "metrics": {
+      "loss": 5.2e-05,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "hyperparameters": {
+      "epochs": 10,
+      "learning_rate": 0.0001,
+      "batch_size": 32
+    },
+    "features": [],
+    "dataset_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\src\\data\\raw\\colon_image_sets",
+    "model_path": "C:\\Users\\User\\Desktop\\Programacion\\Proyecto 2 - Cancer colon\\src\\artifacts\\weights\\biopsia_densenet121_best.pth",
+    "train_size": 7000,
+    "test_size": 1500,
+    "duration_seconds": null,
+    "training_history": {
+      "train_loss": [
+        0.03993450981335179,
+        0.005808591567693261,
+        0.0021723167024304043,
+        0.001875287045251055,
+        0.0032688809024381607,
+        0.0003614366961139165,
+        0.00021933510427902235,
+        0.00035343677330827,
+        0.00011940029159453528,
+        7.826085229306993e-05
+      ],
+      "val_loss": [
+        0.0010737384907267195,
+        0.0007510584379060868,
+        0.00027941622411549845,
+        0.00035002433488695345,
+        0.0007234331461269052,
+        0.00014938541859551828,
+        9.907468592381462e-05,
+        6.124686540793032e-05,
+        6.13893526144935e-05,
+        4.2132129895803026e-05
+      ],
+      "val_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "val_f1": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "notes": null
+  },
+  "776198d5": {
+    "model_name": "Random Forest",
+    "timestamp": "2026-04-21T15:32:37.507527",
+    "metrics": {
+      "Accuracy": 0.959,
+      "Recall_High": 0.789474
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\random_forest.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "385f6e2d": {
+    "model_name": "XGBoost",
+    "timestamp": "2026-04-21T15:32:37.866462",
+    "metrics": {
+      "Accuracy": 0.955,
+      "Recall_High": 0.81203
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\xgboost.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "59a83f31": {
+    "model_name": "LightGBM",
+    "timestamp": "2026-04-21T15:32:38.219700",
+    "metrics": {
+      "Accuracy": 0.956,
+      "Recall_High": 0.81203
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\lightgbm.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  },
+  "a4604e73": {
+    "model_name": "Ensamble Final (Máxima Seguridad)",
+    "timestamp": "2026-04-21T15:32:38.641918",
+    "metrics": {
+      "Accuracy": 0.953,
+      "Recall_High": 0.984962
+    },
+    "hyperparameters": {},
+    "features": [
+      "Smoking",
+      "Alcohol_Use",
+      "Obesity",
+      "Family_History",
+      "Diet_Red_Meat",
+      "Diet_Salted_Processed",
+      "Fruit_Veg_Intake",
+      "Physical_Activity",
+      "BMI",
+      "FOBT_Resultado_n",
+      "CEA_Level_ng_mL"
+    ],
+    "dataset_path": "src/data/clean/cancer_risk_final.csv",
+    "model_path": "artifacts/weights\\modelo_ensemble.pkl",
+    "train_size": null,
+    "test_size": null,
+    "duration_seconds": null,
+    "training_history": null,
+    "notes": null
+  }
+}

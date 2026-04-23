@@ -211,3 +211,16 @@ __marimo__/
 src/data/raw/colon_image_sets/colon_aca/*.jpeg
 src/data/raw/colon_image_sets/colon_n/*.jpeg
 src/data/raw/colonoscopic_processed
+
+
+# No subir pesos de modelos (usar almacenamiento externo: Google Drive, HF Hub, etc.)
+# *.pth
+*.pkl
+*.joblib
+
+
+# No compartir passwords, key y tokens
+.env
+
+# No subir carpeta info
+info/

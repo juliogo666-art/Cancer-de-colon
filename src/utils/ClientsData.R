@@ -1,3 +1,13 @@
+# ClientsData.R
+#
+# Script exploratorio en R para generar datos ficticios de pacientes españoles.
+# Fue utilizado en fases tempranas del proyecto como referencia para la estructura
+# de datos de pacientes.
+#
+# NOTA: Este script NO se integra con el pipeline Python actual.
+# Se mantiene como referencia histórica. La generación de datos sintéticos
+# se realiza ahora con src/scripts/sintetiza_historiales.py
+
 set.seed(123)
 
 n <- 10
