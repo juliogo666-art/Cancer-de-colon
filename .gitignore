@@ -217,7 +217,7 @@ src/data/raw/colonoscopic_processed
 # *.pth
 # *.pkl
 # *.joblib
-
+artifacts/weights/best_rf_model.pkl
 
 # No compartir passwords, key y tokens
 .env
