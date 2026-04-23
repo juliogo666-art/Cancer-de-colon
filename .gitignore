@@ -214,9 +214,9 @@ src/data/raw/colonoscopic_processed
 
 
 # No subir pesos de modelos (usar almacenamiento externo: Google Drive, HF Hub, etc.)
-# *.pth
-# *.pkl
-# *.joblib
+*.pth
+*.pkl
+*.joblib
 
 
 # No compartir passwords, key y tokens
