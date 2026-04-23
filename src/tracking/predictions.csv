@@ -99,3 +99,5 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-22T14:05:49.986668,image_biopsy,,diag_malignant,0.9996,,,image: GT2001838-1-400-002.png
 2026-04-22T14:06:05.317322,image_biopsy,,diag_benign,0.9992,,,image: GT2000000-1-400-003.png
 2026-04-22T14:06:16.066944,image_biopsy,,diag_benign,0.9987,,,image: GT2000000-1-400-001.png
+2026-04-23T19:17:31.008531,image_biopsy,10,diag_benign,0.9963,,,image: GT2012221-2-400-001.png
+2026-04-23T19:17:52.276839,image_biopsy,10,diag_malignant,0.9996,,,image: GT2001838-1-400-002.png
