@@ -62,19 +62,32 @@ def ejecutar_todo():
 
     try:
         import urllib.request
+        # Ventana de gracia: Streamlit necesita tiempo para cargar completamente
+        # y renderizar el componente JS del heartbeat. Sin esta espera, el watchdog
+        # detecta un heartbeat inicial y luego lo ve "muerto" antes de que el
+        # frontend termine de arrancar.
+        GRACIA_INICIO = 15  # segundos de gracia antes de activar el watchdog
+        TIMEOUT_HEARTBEAT = 10  # segundos sin heartbeat para considerar navegador cerrado
+        tiempo_arranque = time.time()
+        
         while True:
             # Si alguno de los dos cierra de forma natural, salimos
             if api_proc.poll() is not None or frontend_proc.poll() is not None:
                 break
             
+            # No comprobar heartbeat hasta que pase el periodo de gracia
+            if time.time() - tiempo_arranque < GRACIA_INICIO:
+                time.sleep(1)
+                continue
+            
             # Watchdog - Comprobar si el navegador se ha cerrado (heartbeat via HTTP)
             try:
                 req = urllib.request.Request("http://localhost:8000/api/v1/heartbeat_status")
-                with urllib.request.urlopen(req, timeout=1.0) as response:
+                with urllib.request.urlopen(req, timeout=2.0) as response:
                     last_beat = float(response.read().decode("utf-8"))
                     
-                # Si last_beat es mayor a 0 (alguien se conectó) y han pasado +5 seg sin ping, asumimos cerrado
-                if last_beat > 0.0 and time.time() - last_beat > 5.0:
+                # Si last_beat es mayor a 0 (alguien se conectó) y han pasado +10 seg sin ping, asumimos cerrado
+                if last_beat > 0.0 and time.time() - last_beat > TIMEOUT_HEARTBEAT:
                     print("\n[Galeno] Navegador cerrado. Apagando el servidor internamente...")
                     break
             except Exception:
