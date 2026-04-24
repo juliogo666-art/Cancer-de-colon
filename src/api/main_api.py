@@ -13,6 +13,7 @@ Arrancar con:
 import io
 import os
 import base64
+import time
 from typing import Optional
 
 import cv2
@@ -59,7 +60,7 @@ app.add_middleware(
 # Utilidades internas
 ###############################################################################
 
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB — Generoso para imágenes médicas de alta resolución
 
 
 
@@ -87,7 +88,6 @@ logger = PredictionLogger()
 # Verificación de estado y Heartbeat
 ###############################################################################
 
-import time
 last_heartbeat_time = 0.0
 
 @app.get("/api/v1/heartbeat")
@@ -280,6 +280,11 @@ async def analyze_colonoscopy(
     try:
         # 1. Cargar imagen
         contents = await file.read()
+        if len(contents) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail="El archivo excede el límite de 20MB.",
+            )
         img_array = np.frombuffer(contents, np.uint8)
         img_cv = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
         img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)

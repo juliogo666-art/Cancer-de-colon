@@ -151,7 +151,9 @@ def ejecutar_entrenamiento_ml():
 
 def ejecutar_tests():
     """Ejecuta todos los tests del proyecto con pytest."""
-    os.system("pytest src/test/ -v --tb=short")
+    import subprocess
+
+    subprocess.run([sys.executable, "-m", "pytest", "src/test/", "-v", "--tb=short"])
 
 
 def ejecutar_generacion_datos():

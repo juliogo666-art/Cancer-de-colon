@@ -134,7 +134,7 @@ def generate_gradcam_colon(model, img_array):
             if len(shape) == 4:
                 last_conv_layer_name = layer.name
                 break
-        except:
+        except Exception:
             continue
 
     if not last_conv_layer_name:
@@ -144,7 +144,7 @@ def generate_gradcam_colon(model, img_array):
                 model.get_layer(fallback)
                 last_conv_layer_name = fallback
                 break
-            except:
+            except Exception:
                 continue
 
     if not last_conv_layer_name:

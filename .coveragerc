@@ -1,0 +1,22 @@
+[run]
+source = src
+omit =
+    # Frontend Streamlit: no es testeable con pytest
+    src/frontend/*
+    # Scripts de un solo uso (EDA, limpieza, generación de datos, evaluación)
+    src/scripts/*
+    # Definiciones de modelos ML (scripts de entrenamiento)
+    src/models/*
+    # Definiciones de redes neuronales (scripts de entrenamiento DL)
+    src/networks/*
+    # Utilidades de EDA y carga de datos (equivalentes a scripts)
+    src/utils/eda_visualization.py
+    src/utils/data_load_s.py
+    # Archivos __pycache__
+    */__pycache__/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__
+    raise NotImplementedError

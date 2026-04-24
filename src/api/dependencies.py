@@ -6,7 +6,7 @@ una sola vez al arrancar la API y se comparten entre todos los endpoints.
 
 Modelos gestionados:
     1. LightGBM clínico  → Predicción de nivel de riesgo (Low/Medium/High)
-    2. CNN TensorFlow     → Detección de pólipos en colonoscopia
+    2. PyTorch MobileNetV2 → Detección de pólipos en colonoscopia
     3. DenseNet121 PyTorch → Clasificación de biopsias (benigno/maligno)
 """
 
@@ -44,6 +44,7 @@ RISK_LEVEL_MAP = settings.RISK_LEVEL_MAP
 ###############################################################################
 # Arquitectura del modelo de biopsias (PyTorch)
 ###############################################################################
+
 
 class ColonoscopyClassifier(nn.Module):
     """
@@ -113,7 +114,8 @@ def load_ml_model(path: str = MODEL_ML_PATH):
     except Exception as e:
         print(f"[ERROR] Fallo al cargar modelo ML: {e}")
         return None
-    
+
+
 def load_ml_final_model(path: str = MODEL_ML_FINAL_PATH):
     """Carga el modelo LightGBM final desde disco."""
     if not os.path.exists(path):
@@ -127,6 +129,7 @@ def load_ml_final_model(path: str = MODEL_ML_FINAL_PATH):
     except Exception as e:
         print(f"[ERROR] Fallo al cargar modelo ML final: {e}")
         return None
+
 
 def load_triage_model(path: str = MODEL_ML_TRIAGE_PATH):
     """Carga el modelo LightGBM de triaje desde disco."""
@@ -151,12 +154,14 @@ def load_cnn_model(path: str = MODEL_CNN_PATH):
     try:
         model = ColonoscopyClassifier()
         # Carga segura
-        state_dict = torch.load(path, map_location=torch.device("cpu"), weights_only=True)
-        
+        state_dict = torch.load(
+            path, map_location=torch.device("cpu"), weights_only=True
+        )
+
         # Si el state_dict viene envuelto en un diccionario
         if isinstance(state_dict, dict) and "state_dict" in state_dict:
             state_dict = state_dict["state_dict"]
-            
+
         model.load_state_dict(state_dict)
         model.eval()
         print(f"[OK] Modelo CNN de colonoscopia cargado desde {path}")
@@ -165,8 +170,9 @@ def load_cnn_model(path: str = MODEL_CNN_PATH):
         print(f"[ERROR] Fallo al cargar modelo CNN: {e}")
         return None
 
+
 def load_biopsy_model(path: str = MODEL_BIOPSY_PATH):
-    """Carga los pesos del clasificador ResNet18 de biopsias (PyTorch)."""
+    """Carga los pesos del clasificador DenseNet121 de biopsias (PyTorch)."""
     if not os.path.exists(path):
         print(f"[AVISO] Modelo de biopsias no encontrado en: {path}")
         return None
@@ -224,4 +230,3 @@ async def lifespan(app: FastAPI):
     app.state.modelo_ml_triage = None
     app.state.modelo_cnn = None
     app.state.modelo_biopsia = None
-

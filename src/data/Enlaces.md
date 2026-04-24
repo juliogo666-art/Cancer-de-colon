@@ -2,7 +2,7 @@
 
 ## Datos historial de pacientes
 
-### Datos de pacientes con cancer de colon ( descartados por no haber sanos)
+### Datos de pacientes con cancer de colon --> descartados por no haber sanos
 
 1.- Conjunto datos grupo pacientes con cancer de colon que han sido operados.
 

@@ -101,3 +101,14 @@ timestamp,prediction_type,patient_id,diagnosis,confidence,risk_score,risk_level,
 2026-04-22T14:06:16.066944,image_biopsy,,diag_benign,0.9987,,,image: GT2000000-1-400-001.png
 2026-04-23T19:17:31.008531,image_biopsy,10,diag_benign,0.9963,,,image: GT2012221-2-400-001.png
 2026-04-23T19:17:52.276839,image_biopsy,10,diag_malignant,0.9996,,,image: GT2001838-1-400-002.png
+2026-04-24T21:56:33.038883,risk_ml,8,Riesgo: Medium,0.8371,0.5424,Medium,"{'Smoking': 10.0, 'Alcohol_Use': 8.0, 'Obesity': 7.0, 'Family_History': 0.0, 'Diet_Red_Meat': 10.0, 'Diet_Salted_Processed': 4.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 10.0, 'BMI': 24.72, 'FOBT_Resultado_n': 1.0, 'CEA_Level_ng_mL': 4.2}"
+2026-04-24T21:57:38.139478,image_biopsy,8,diag_malignant,0.9999,,,image: GT2012223-4-400-001.png
+2026-04-24T21:57:57.156822,image_biopsy,8,diag_benign,0.9983,,,image: GT2100256-1-400-003.png
+2026-04-24T22:22:03.631644,risk_ml,7,Riesgo: Medium,0.8614,0.5298,Medium,"{'Smoking': 7.0, 'Alcohol_Use': 9.0, 'Obesity': 5.0, 'Family_History': 0.0, 'Diet_Red_Meat': 5.0, 'Diet_Salted_Processed': 4.0, 'Fruit_Veg_Intake': 0.0, 'Physical_Activity': 6.0, 'BMI': 24.48, 'FOBT_Resultado_n': 1.0, 'CEA_Level_ng_mL': 9.23}"
+2026-04-24T22:55:15.075132,risk_ml,848,Riesgo: High,0.9469,0.9753,High,"{'Smoking': 6.0, 'Alcohol_Use': 8.0, 'Obesity': 8.0, 'Family_History': 1.0, 'Diet_Red_Meat': 9.0, 'Diet_Salted_Processed': 4.0, 'Fruit_Veg_Intake': 5.0, 'Physical_Activity': 2.0, 'BMI': 27.99, 'FOBT_Resultado_n': 1.0, 'CEA_Level_ng_mL': 6.96}"
+2026-04-24T22:56:40.648195,image_biopsy,848,diag_malignant,0.999,,,image: GT2012165-1-400-006.png
+2026-04-24T22:56:52.965390,image_biopsy,848,diag_malignant,1.0,,,image: GT2012336-1-400-007.png
+2026-04-24T22:57:10.375445,image_biopsy,848,diag_benign,0.9977,,,image: GT2000000-1-400-002.png
+2026-04-24T22:57:26.880142,image_biopsy,848,diag_benign,0.9598,,,image: GT2100256-7-400-002.png
+2026-04-24T22:57:39.014877,image_biopsy,848,diag_benign,0.9998,,,image: GT2100256-1-400-005.png
+2026-04-24T22:57:52.636279,image_biopsy,848,diag_benign,0.7614,,,image: GT2100256-8-400-004.png

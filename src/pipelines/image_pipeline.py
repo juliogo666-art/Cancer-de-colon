@@ -99,8 +99,10 @@ class ImageAnalysisPipeline:
         -------
         ImageAnalysisResult
         """
-        import tensorflow as tf
-        from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+        # TensorFlow imports comentados — El modelo CNN ahora es PyTorch (MobileNetV2).
+        # Si hubiera que volver a TensorFlow, descomentar estas líneas:
+        # import tensorflow as tf
+        # from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
         modelo = self._get_cnn_model()
         if modelo is None:
@@ -112,13 +114,21 @@ class ImageAnalysisPipeline:
                 recommendation="Modelo CNN no disponible.",
             )
 
-        # 1. Preprocesamiento
-        img_res = cv2.resize(img_array, (150, 150))
-        img_batch = np.expand_dims(img_res, axis=0).astype(np.float32)
-        img_preprocessed = preprocess_input(img_batch)
+        # 1. Preprocesamiento (PyTorch MobileNetV2)
+        img_pil = Image.fromarray(img_array)
+        if img_pil.mode != "RGB":
+            img_pil = img_pil.convert("RGB")
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ])
+        input_tensor = transform(img_pil).unsqueeze(0)
 
         # 2. Predicción
-        pred_val = float(modelo.predict(img_preprocessed, verbose=0)[0][0])
+        with torch.no_grad():
+            output = modelo(input_tensor)
+            pred_val = output.item()
         es_polipo = pred_val < 0.5
         confianza = (1.0 - pred_val) if es_polipo else pred_val
 
@@ -209,7 +219,7 @@ class ImageAnalysisPipeline:
             try:
                 from src.utils.gradcam_utils import generate_gradcam
 
-                target_layer = modelo.model.layer4[-1]
+                target_layer = modelo.model.features.denseblock4
                 heatmap, _ = generate_gradcam(modelo, img_pil, target_layer)
             except Exception:
                 pass
