@@ -1,8 +1,8 @@
-# Proyect 2 - Cancer de colon
+# Proyecto 2 - Cáncer de Colon
 
-![Galeno Logo](static/galeno.png)
+![Galeno Logo](static/galeno_tarjeta.png)
 
-## Grupo 1 - Componentes
+## Grupo 1 - Integrantes
 
 - Pol Panyella
 - Juan Xiao Paredes
