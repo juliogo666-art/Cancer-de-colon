@@ -21,7 +21,7 @@ from sklearn.metrics import (
 )
 
 # 1. Configuración de rutas
-file_path = 'C:/Users/Ana-L/Desktop/cosas de Juan/Programacion/cancer de colon/prueba'
+file_path = r'cancer de colon/prueba'
 file_modelos = file_path + '/modelos/ml'
 if not os.path.exists(file_modelos):
     os.makedirs(file_modelos)

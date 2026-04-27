@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
     
 # 1. Cargar datos
 print("⏳ Cargando registros...")
-file_path = r'C:\Users\juanp\OneDrive\Documentos\stucom\2 Trimestre\proyecto2\Cancer-de-colon\src\data\raw\historial_pacientes'
+file_path = r'src\data\raw\historial_pacientes'
 file_modelos = file_path + '/modelos/ml'
 df = pd.read_csv(file_path + '/datos_finales_Kaggle.csv')
 

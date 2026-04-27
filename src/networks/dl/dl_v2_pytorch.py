@@ -18,7 +18,7 @@ torch.backends.cudnn.deterministic = True
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # --- 1. RUTAS ---
-RUTA_DATASET = r'C:\Users\Ana-L\Desktop\cosas de Juan\Programacion\cancer de colon\prueba\dataset_colon_completo\dataset_colon_completo\datos_l'
+RUTA_DATASET = r'dataset_colon_completo\dataset_colon_completo\datos_l'
 SAVE_DIR = r'C:\Users\Ana-L\Desktop\cosas de Juan\Programacion\cancer de colon\prueba\modelos\dl'
 os.makedirs(SAVE_DIR, exist_ok=True)
 
