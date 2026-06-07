@@ -229,10 +229,16 @@ async def predict_risk(
         # Crear recomendación (clave de traducción, el frontend la traduce)
         recomendacion = ""
         if fobt_resultado == -1 or cea_level == -1.0:
-            recomendacion = "rec_need_analytics"
+            if risk_lvl == "Low":
+                recomendacion = "rec_low_risk"
+            else:
+                recomendacion = "rec_need_analytics"
         else:
             if risk_lvl in ["Medium", "High"]:
-                recomendacion = "rec_high_risk"
+                if fobt_resultado == 0 and cea_level < 5.0:
+                    recomendacion = "rec_low_risk"
+                else:
+                    recomendacion = "rec_high_risk"
             else:
                 recomendacion = "rec_low_risk"
 
